@@ -16,8 +16,8 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/stainless-sdks/agentmail-cli/internal/jsonview"
-	"github.com/stainless-sdks/agentmail-go/option"
+	"github.com/agentmail-to/agentmail-cli/internal/jsonview"
+	"github.com/agentmail-to/agentmail-go/option"
 
 	"github.com/charmbracelet/x/term"
 	"github.com/itchyny/json2yaml"
@@ -42,6 +42,18 @@ func getDefaultRequestOptions(cmd *cli.Command) []option.RequestOption {
 	// Override base URL if the --base-url flag is provided
 	if baseURL := cmd.String("base-url"); baseURL != "" {
 		opts = append(opts, option.WithBaseURL(baseURL))
+	}
+
+	// Set environment if the --environment flag is provided
+	if environment := cmd.String("environment"); environment != "" {
+		switch environment {
+		case "production":
+			opts = append(opts, option.WithEnvironmentProduction())
+		case "development":
+			opts = append(opts, option.WithEnvironmentDevelopment())
+		default:
+			log.Fatalf("Unknown environment: %s. Valid environments are %s", environment, "production, development")
+		}
 	}
 
 	return opts

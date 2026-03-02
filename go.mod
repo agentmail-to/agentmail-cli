@@ -1,8 +1,9 @@
-module github.com/stainless-sdks/agentmail-cli
+module github.com/agentmail-to/agentmail-cli
 
 go 1.25
 
 require (
+	github.com/agentmail-to/agentmail-go v0.0.0-20260302203709-5d5f48c3a4bf
 	github.com/charmbracelet/bubbles v0.21.0
 	github.com/charmbracelet/bubbletea v1.3.6
 	github.com/charmbracelet/lipgloss v1.1.0
@@ -10,7 +11,6 @@ require (
 	github.com/goccy/go-yaml v1.18.0
 	github.com/itchyny/json2yaml v0.1.4
 	github.com/muesli/reflow v0.3.0
-	github.com/stainless-sdks/agentmail-go v0.0.0-20260301012335-381b66f6db8d
 	github.com/stretchr/testify v1.10.0
 	github.com/tidwall/gjson v1.18.0
 	github.com/tidwall/pretty v1.2.1

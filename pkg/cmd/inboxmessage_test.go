@@ -5,8 +5,8 @@ package cmd
 import (
 	"testing"
 
-	"github.com/stainless-sdks/agentmail-cli/internal/mocktest"
-	"github.com/stainless-sdks/agentmail-cli/internal/requestflag"
+	"github.com/agentmail-to/agentmail-cli/internal/mocktest"
+	"github.com/agentmail-to/agentmail-cli/internal/requestflag"
 )
 
 func TestInboxesMessagesRetrieve(t *testing.T) {

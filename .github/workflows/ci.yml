@@ -11,8 +11,7 @@ on:
     branches-ignore:
       - 'stl-preview-head/**'
       - 'stl-preview-base/**'
-env:
-  GOPRIVATE: github.com/stainless-sdks/agentmail-go
+
 jobs:
   lint:
     timeout-minutes: 10
@@ -23,9 +22,13 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: ./.github/actions/setup-go
+      - name: Setup go
+        uses: actions/setup-go@v5
         with:
-          stainless-api-key: ${{ secrets.STAINLESS_API_KEY }}
+          go-version-file: ./go.mod
+
+      - name: Bootstrap
+        run: ./scripts/bootstrap
 
       - name: Run lints
         run: ./scripts/lint
@@ -41,9 +44,13 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: ./.github/actions/setup-go
+      - name: Setup go
+        uses: actions/setup-go@v5
         with:
-          stainless-api-key: ${{ secrets.STAINLESS_API_KEY }}
+          go-version-file: ./go.mod
+
+      - name: Bootstrap
+        run: ./scripts/bootstrap
 
       - name: Run goreleaser
         uses: goreleaser/goreleaser-action@v6.1.0
@@ -76,9 +83,13 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: ./.github/actions/setup-go
+      - name: Setup go
+        uses: actions/setup-go@v5
         with:
-          stainless-api-key: ${{ secrets.STAINLESS_API_KEY }}
+          go-version-file: ./go.mod
+
+      - name: Bootstrap
+        run: ./scripts/bootstrap
 
       - name: Run tests
         run: ./scripts/test
