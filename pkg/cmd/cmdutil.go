@@ -17,7 +17,7 @@ import (
 	"syscall"
 
 	"github.com/agentmail-to/agentmail-cli/internal/jsonview"
-	"github.com/agentmail-to/agentmail-go/option"
+	"github.com/stainless-sdks/agentmail-go/option"
 
 	"github.com/charmbracelet/x/term"
 	"github.com/itchyny/json2yaml"
