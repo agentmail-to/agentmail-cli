@@ -10,7 +10,7 @@ require (
 	github.com/goccy/go-yaml v1.18.0
 	github.com/itchyny/json2yaml v0.1.4
 	github.com/muesli/reflow v0.3.0
-	github.com/stainless-sdks/agentmail-go v0.0.0-20260302205612-c6a0f85ee801
+	github.com/stainless-sdks/agentmail-go v0.0.0-20260302212754-451fe612a586
 	github.com/stretchr/testify v1.10.0
 	github.com/tidwall/gjson v1.18.0
 	github.com/tidwall/pretty v1.2.1
