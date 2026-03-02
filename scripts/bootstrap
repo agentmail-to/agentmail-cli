@@ -19,8 +19,5 @@ if [ -f "Brewfile" ] && [ "$(uname -s)" = "Darwin" ] && [ "$SKIP_BREW" != "1" ] 
   }
 fi
 
-# Enable access to private Go modules in the Stainless staging repos
-go env -w 'GOPRIVATE=github.com/stainless-sdks/*'
-
 echo "==> Installing Go dependencies…"
 go mod tidy
