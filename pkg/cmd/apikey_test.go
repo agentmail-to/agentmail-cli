@@ -5,7 +5,7 @@ package cmd
 import (
 	"testing"
 
-	"github.com/stainless-sdks/agentmail-cli/internal/mocktest"
+	"github.com/agentmail-to/agentmail-cli/internal/mocktest"
 )
 
 func TestAPIKeysCreate(t *testing.T) {

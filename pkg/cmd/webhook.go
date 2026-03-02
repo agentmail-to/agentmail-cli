@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/stainless-sdks/agentmail-cli/internal/apiquery"
-	"github.com/stainless-sdks/agentmail-cli/internal/requestflag"
-	"github.com/stainless-sdks/agentmail-go"
-	"github.com/stainless-sdks/agentmail-go/option"
+	"github.com/agentmail-to/agentmail-cli/internal/apiquery"
+	"github.com/agentmail-to/agentmail-cli/internal/requestflag"
+	"github.com/agentmail-to/agentmail-go"
+	"github.com/agentmail-to/agentmail-go/option"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/cli/v3"
 )

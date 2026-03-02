@@ -10,8 +10,8 @@ import (
 	"os"
 	"slices"
 
-	"github.com/stainless-sdks/agentmail-cli/pkg/cmd"
-	"github.com/stainless-sdks/agentmail-go"
+	"github.com/agentmail-to/agentmail-cli/pkg/cmd"
+	"github.com/agentmail-to/agentmail-go"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/cli/v3"
 )

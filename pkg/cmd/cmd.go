@@ -11,8 +11,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/stainless-sdks/agentmail-cli/internal/autocomplete"
-	"github.com/stainless-sdks/agentmail-cli/internal/requestflag"
+	"github.com/agentmail-to/agentmail-cli/internal/autocomplete"
+	"github.com/agentmail-to/agentmail-cli/internal/requestflag"
 	docs "github.com/urfave/cli-docs/v3"
 	"github.com/urfave/cli/v3"
 )
@@ -70,6 +70,10 @@ func init() {
 			&requestflag.Flag[string]{
 				Name:    "api-key",
 				Sources: cli.EnvVars("AGENTMAIL_API_KEY"),
+			},
+			&cli.StringFlag{
+				Name:  "environment",
+				Usage: "Set the environment for API requests",
 			},
 		},
 		Commands: []*cli.Command{
