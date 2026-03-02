@@ -18,7 +18,7 @@ import (
 	"github.com/agentmail-to/agentmail-cli/internal/apiquery"
 	"github.com/agentmail-to/agentmail-cli/internal/debugmiddleware"
 	"github.com/agentmail-to/agentmail-cli/internal/requestflag"
-	"github.com/agentmail-to/agentmail-go/option"
+	"github.com/stainless-sdks/agentmail-go/option"
 
 	"github.com/goccy/go-yaml"
 	"github.com/urfave/cli/v3"
