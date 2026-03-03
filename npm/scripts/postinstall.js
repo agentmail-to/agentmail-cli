@@ -82,7 +82,7 @@ function extract(archive, destDir) {
 async function main() {
   const { platform, arch } = getPlatformArch();
   const pkg = require("../package.json");
-  const version = pkg.version;
+  const version = pkg.binaryVersion || pkg.version;
 
   const assetName = getAssetName(version, platform, arch);
   const url = `https://github.com/${REPO}/releases/download/v${version}/${assetName}`;

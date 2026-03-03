@@ -1,6 +1,6 @@
 {
   "name": "@agentmail/cli",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "The official CLI for the AgentMail API",
   "bin": {
     "agentmail": "./bin/agentmail"
@@ -8,6 +8,7 @@
   "scripts": {
     "postinstall": "node scripts/postinstall.js"
   },
+  "binaryVersion": "0.4.0",
   "keywords": ["agentmail", "cli", "email", "api"],
   "homepage": "https://agentmail.to",
   "repository": {
