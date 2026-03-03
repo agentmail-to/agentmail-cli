@@ -1,0 +1,21 @@
+{
+  "name": "@agentmail/cli",
+  "version": "0.4.0",
+  "description": "The official CLI for the AgentMail API",
+  "bin": {
+    "agentmail": "./bin/agentmail"
+  },
+  "scripts": {
+    "postinstall": "node scripts/postinstall.js"
+  },
+  "keywords": ["agentmail", "cli", "email", "api"],
+  "homepage": "https://agentmail.to",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agentmail-to/agentmail-cli"
+  },
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=16"
+  }
+}

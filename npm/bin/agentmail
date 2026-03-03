@@ -1,0 +1,18 @@
+#!/usr/bin/env node
+
+const { execFileSync } = require("child_process");
+const path = require("path");
+
+const ext = process.platform === "win32" ? ".exe" : "";
+const binary = path.join(__dirname, `.agentmail${ext}`);
+
+try {
+  execFileSync(binary, process.argv.slice(2), { stdio: "inherit" });
+} catch (err) {
+  if (err.status != null) {
+    process.exit(err.status);
+  }
+  console.error(`Failed to run agentmail: ${err.message}`);
+  console.error("Try reinstalling: npm install -g @agentmail/cli");
+  process.exit(1);
+}
