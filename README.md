@@ -11,7 +11,7 @@ npm install -g @agentmail/cli
 ## Setup
 
 ```sh
-export AGENTMAIL_API_KEY=sk_xxx
+export AGENTMAIL_API_KEY=am_us_xxx
 ```
 
 ## Usage
