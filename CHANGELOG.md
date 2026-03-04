@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.2 (2026-03-04)
+
+Full Changelog: [v0.4.1...v0.4.2](https://github.com/agentmail-to/agentmail-cli/compare/v0.4.1...v0.4.2)
+
 ## 0.4.1 (2026-03-03)
 
 Full Changelog: [v0.4.0...v0.4.1](https://github.com/agentmail-to/agentmail-cli/compare/v0.4.0...v0.4.1)
