@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.5.0 (2026-03-05)
+
+Full Changelog: [v0.4.2...v0.5.0](https://github.com/agentmail-to/agentmail-cli/compare/v0.4.2...v0.5.0)
+
+### Features
+
+* **api:** api update ([3a21b41](https://github.com/agentmail-to/agentmail-cli/commit/3a21b416c3a2374838176c783dac7d8f7afa93d6))
+
+
+### Bug Fixes
+
+* avoid printing usage errors twice ([e90106c](https://github.com/agentmail-to/agentmail-cli/commit/e90106ccb35b2eacafd86e15bd7385985a2415ef))
+
 ## 0.4.2 (2026-03-04)
 
 Full Changelog: [v0.4.1...v0.4.2](https://github.com/agentmail-to/agentmail-cli/compare/v0.4.1...v0.4.2)
