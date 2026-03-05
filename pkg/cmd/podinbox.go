@@ -62,7 +62,7 @@ var podsInboxesRetrieve = cli.Command{
 		},
 		&requestflag.Flag[string]{
 			Name:     "inbox-id",
-			Usage:    "ID of inbox.",
+			Usage:    "The ID of the inbox.",
 			Required: true,
 		},
 	},
@@ -107,7 +107,7 @@ var podsInboxesDelete = cli.Command{
 		},
 		&requestflag.Flag[string]{
 			Name:     "inbox-id",
-			Usage:    "ID of inbox.",
+			Usage:    "The ID of the inbox.",
 			Required: true,
 		},
 	},

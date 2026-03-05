@@ -22,7 +22,7 @@ var inboxesMessagesRetrieve = cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "inbox-id",
-			Usage:    "ID of inbox.",
+			Usage:    "The ID of the inbox.",
 			Required: true,
 		},
 		&requestflag.Flag[string]{
@@ -42,7 +42,7 @@ var inboxesMessagesUpdate = cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "inbox-id",
-			Usage:    "ID of inbox.",
+			Usage:    "The ID of the inbox.",
 			Required: true,
 		},
 		&requestflag.Flag[string]{
@@ -72,7 +72,7 @@ var inboxesMessagesList = cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "inbox-id",
-			Usage:    "ID of inbox.",
+			Usage:    "The ID of the inbox.",
 			Required: true,
 		},
 		&requestflag.Flag[any]{
@@ -132,7 +132,7 @@ var inboxesMessagesForward = requestflag.WithInnerFlags(cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "inbox-id",
-			Usage:    "ID of inbox.",
+			Usage:    "The ID of the inbox.",
 			Required: true,
 		},
 		&requestflag.Flag[string]{
@@ -231,7 +231,7 @@ var inboxesMessagesGetAttachment = cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "inbox-id",
-			Usage:    "ID of inbox.",
+			Usage:    "The ID of the inbox.",
 			Required: true,
 		},
 		&requestflag.Flag[string]{
@@ -256,7 +256,7 @@ var inboxesMessagesGetRaw = cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "inbox-id",
-			Usage:    "ID of inbox.",
+			Usage:    "The ID of the inbox.",
 			Required: true,
 		},
 		&requestflag.Flag[string]{
@@ -276,7 +276,7 @@ var inboxesMessagesReply = requestflag.WithInnerFlags(cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "inbox-id",
-			Usage:    "ID of inbox.",
+			Usage:    "The ID of the inbox.",
 			Required: true,
 		},
 		&requestflag.Flag[string]{
@@ -375,7 +375,7 @@ var inboxesMessagesReplyAll = requestflag.WithInnerFlags(cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "inbox-id",
-			Usage:    "ID of inbox.",
+			Usage:    "The ID of the inbox.",
 			Required: true,
 		},
 		&requestflag.Flag[string]{
@@ -457,7 +457,7 @@ var inboxesMessagesSend = requestflag.WithInnerFlags(cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "inbox-id",
-			Usage:    "ID of inbox.",
+			Usage:    "The ID of the inbox.",
 			Required: true,
 		},
 		&requestflag.Flag[any]{

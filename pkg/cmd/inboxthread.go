@@ -22,7 +22,7 @@ var inboxesThreadsRetrieve = cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "inbox-id",
-			Usage:    "ID of inbox.",
+			Usage:    "The ID of the inbox.",
 			Required: true,
 		},
 		&requestflag.Flag[string]{
@@ -42,7 +42,7 @@ var inboxesThreadsList = cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "inbox-id",
-			Usage:    "ID of inbox.",
+			Usage:    "The ID of the inbox.",
 			Required: true,
 		},
 		&requestflag.Flag[any]{
@@ -102,7 +102,7 @@ var inboxesThreadsDelete = cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "inbox-id",
-			Usage:    "ID of inbox.",
+			Usage:    "The ID of the inbox.",
 			Required: true,
 		},
 		&requestflag.Flag[string]{
@@ -122,7 +122,7 @@ var inboxesThreadsGetAttachment = cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "inbox-id",
-			Usage:    "ID of inbox.",
+			Usage:    "The ID of the inbox.",
 			Required: true,
 		},
 		&requestflag.Flag[string]{
