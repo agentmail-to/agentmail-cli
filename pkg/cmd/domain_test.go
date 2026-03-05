@@ -35,6 +35,7 @@ func TestDomainsList(t *testing.T) {
 		t,
 		"domains", "list",
 		"--api-key", "string",
+		"--ascending=true",
 		"--limit", "0",
 		"--page-token", "page_token",
 	)

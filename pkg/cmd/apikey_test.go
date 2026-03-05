@@ -24,6 +24,7 @@ func TestAPIKeysList(t *testing.T) {
 		t,
 		"api-keys", "list",
 		"--api-key", "string",
+		"--ascending=true",
 		"--limit", "0",
 		"--page-token", "page_token",
 	)
