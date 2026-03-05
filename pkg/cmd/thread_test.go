@@ -27,6 +27,7 @@ func TestThreadsList(t *testing.T) {
 		"--after", "'2019-12-27T18:11:19.117Z'",
 		"--ascending=true",
 		"--before", "'2019-12-27T18:11:19.117Z'",
+		"--include-blocked=true",
 		"--include-spam=true",
 		"--label", "[string]",
 		"--limit", "0",

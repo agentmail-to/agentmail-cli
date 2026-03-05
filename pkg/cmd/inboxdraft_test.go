@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/agentmail-to/agentmail-cli/internal/mocktest"
+	"github.com/agentmail-to/agentmail-cli/internal/requestflag"
 )
 
 func TestInboxesDraftsCreate(t *testing.T) {
@@ -15,6 +16,34 @@ func TestInboxesDraftsCreate(t *testing.T) {
 		"inboxes:drafts", "create",
 		"--api-key", "string",
 		"--inbox-id", "inbox_id",
+		"--attachment", "[{content: content, content_disposition: inline, content_id: content_id, content_type: content_type, filename: filename, url: url}]",
+		"--bcc", "[string]",
+		"--cc", "[string]",
+		"--client-id", "client_id",
+		"--html", "html",
+		"--in-reply-to", "in_reply_to",
+		"--label", "[string]",
+		"--reply-to", "[string]",
+		"--send-at", "'2019-12-27T18:11:19.117Z'",
+		"--subject", "subject",
+		"--text", "text",
+		"--to", "[string]",
+	)
+
+	// Check that inner flags have been set up correctly
+	requestflag.CheckInnerFlags(inboxesDraftsCreate)
+
+	// Alternative argument passing style using inner flags
+	mocktest.TestRunMockTestWithFlags(
+		t,
+		"inboxes:drafts", "create",
+		"--inbox-id", "inbox_id",
+		"--attachment.content", "content",
+		"--attachment.content-disposition", "inline",
+		"--attachment.content-id", "content_id",
+		"--attachment.content-type", "content_type",
+		"--attachment.filename", "filename",
+		"--attachment.url", "url",
 		"--bcc", "[string]",
 		"--cc", "[string]",
 		"--client-id", "client_id",
