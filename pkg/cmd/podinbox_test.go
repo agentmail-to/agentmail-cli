@@ -40,6 +40,7 @@ func TestPodsInboxesList(t *testing.T) {
 		"pods:inboxes", "list",
 		"--api-key", "string",
 		"--pod-id", "pod_id",
+		"--ascending=true",
 		"--limit", "0",
 		"--page-token", "page_token",
 	)

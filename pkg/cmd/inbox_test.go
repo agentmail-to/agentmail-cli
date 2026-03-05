@@ -48,6 +48,7 @@ func TestInboxesList(t *testing.T) {
 		t,
 		"inboxes", "list",
 		"--api-key", "string",
+		"--ascending=true",
 		"--limit", "0",
 		"--page-token", "page_token",
 	)
