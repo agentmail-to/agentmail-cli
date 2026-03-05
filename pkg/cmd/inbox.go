@@ -52,7 +52,7 @@ var inboxesRetrieve = cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "inbox-id",
-			Usage:    "ID of inbox.",
+			Usage:    "The ID of the inbox.",
 			Required: true,
 		},
 	},
@@ -67,7 +67,7 @@ var inboxesUpdate = cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "inbox-id",
-			Usage:    "ID of inbox.",
+			Usage:    "The ID of the inbox.",
 			Required: true,
 		},
 		&requestflag.Flag[string]{
@@ -108,7 +108,7 @@ var inboxesDelete = cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "inbox-id",
-			Usage:    "ID of inbox.",
+			Usage:    "The ID of the inbox.",
 			Required: true,
 		},
 	},
@@ -123,7 +123,7 @@ var inboxesListMetrics = cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "inbox-id",
-			Usage:    "ID of inbox.",
+			Usage:    "The ID of the inbox.",
 			Required: true,
 		},
 		&requestflag.Flag[any]{
