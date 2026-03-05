@@ -1,5 +1,5 @@
 {
-  "name": "@agentmail/cli",
+  "name": "agentmail-cli",
   "version": "0.4.1",
   "description": "The official CLI for the AgentMail API",
   "bin": {

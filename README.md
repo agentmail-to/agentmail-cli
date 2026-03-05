@@ -5,7 +5,7 @@ The official CLI for the [AgentMail API](https://docs.agentmail.to).
 ## Installation
 
 ```sh
-npm install -g @agentmail/cli
+npm install -g agentmail-cli
 ```
 
 ## Setup
