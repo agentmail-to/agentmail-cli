@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.0 (2026-03-06)
+
+Full Changelog: [v0.6.0...v0.7.0](https://github.com/agentmail-to/agentmail-cli/compare/v0.6.0...v0.7.0)
+
+### Features
+
+* **api:** api update ([36258c7](https://github.com/agentmail-to/agentmail-cli/commit/36258c780cc78405beed3e3e40ee53559ccbf75c))
+
 ## 0.6.0 (2026-03-05)
 
 Full Changelog: [v0.5.0...v0.6.0](https://github.com/agentmail-to/agentmail-cli/compare/v0.5.0...v0.6.0)
