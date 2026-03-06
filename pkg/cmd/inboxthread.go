@@ -97,7 +97,7 @@ var inboxesThreadsList = cli.Command{
 
 var inboxesThreadsDelete = cli.Command{
 	Name:    "delete",
-	Usage:   "Delete Thread",
+	Usage:   "Moves the thread to trash by adding a trash label to all messages. If the thread\nis already in trash, it will be permanently deleted. Use `permanent=true` to\nforce permanent deletion.",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -109,6 +109,11 @@ var inboxesThreadsDelete = cli.Command{
 			Name:     "thread-id",
 			Usage:    "ID of thread.",
 			Required: true,
+		},
+		&requestflag.Flag[any]{
+			Name:      "permanent",
+			Usage:     "If true, permanently delete the thread instead of moving to trash.",
+			QueryPath: "permanent",
 		},
 	},
 	Action:          handleInboxesThreadsDelete,

@@ -46,6 +46,7 @@ func TestInboxesThreadsDelete(t *testing.T) {
 		"--api-key", "string",
 		"--inbox-id", "inbox_id",
 		"--thread-id", "thread_id",
+		"--permanent=true",
 	)
 }
 
