@@ -79,6 +79,7 @@ func TestInboxesMessagesForward(t *testing.T) {
 	mocktest.TestRunMockTestWithFlags(
 		t,
 		"inboxes:messages", "forward",
+		"--api-key", "string",
 		"--inbox-id", "inbox_id",
 		"--message-id", "message_id",
 		"--attachment.content", "content",
@@ -149,6 +150,7 @@ func TestInboxesMessagesReply(t *testing.T) {
 	mocktest.TestRunMockTestWithFlags(
 		t,
 		"inboxes:messages", "reply",
+		"--api-key", "string",
 		"--inbox-id", "inbox_id",
 		"--message-id", "message_id",
 		"--attachment.content", "content",
@@ -192,6 +194,7 @@ func TestInboxesMessagesReplyAll(t *testing.T) {
 	mocktest.TestRunMockTestWithFlags(
 		t,
 		"inboxes:messages", "reply-all",
+		"--api-key", "string",
 		"--inbox-id", "inbox_id",
 		"--message-id", "message_id",
 		"--attachment.content", "content",
@@ -234,6 +237,7 @@ func TestInboxesMessagesSend(t *testing.T) {
 	mocktest.TestRunMockTestWithFlags(
 		t,
 		"inboxes:messages", "send",
+		"--api-key", "string",
 		"--inbox-id", "inbox_id",
 		"--attachment.content", "content",
 		"--attachment.content-disposition", "inline",
