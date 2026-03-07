@@ -37,6 +37,7 @@ func TestInboxesDraftsCreate(t *testing.T) {
 	mocktest.TestRunMockTestWithFlags(
 		t,
 		"inboxes:drafts", "create",
+		"--api-key", "string",
 		"--inbox-id", "inbox_id",
 		"--attachment.content", "content",
 		"--attachment.content-disposition", "inline",
