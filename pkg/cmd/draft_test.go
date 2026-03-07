@@ -10,25 +10,27 @@ import (
 
 func TestDraftsRetrieve(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
-	mocktest.TestRunMockTestWithFlags(
-		t,
-		"drafts", "retrieve",
-		"--api-key", "string",
-		"--draft-id", "draft_id",
-	)
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t, "drafts", "retrieve",
+			"--api-key", "string",
+			"--draft-id", "draft_id",
+		)
+	})
 }
 
 func TestDraftsList(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
-	mocktest.TestRunMockTestWithFlags(
-		t,
-		"drafts", "list",
-		"--api-key", "string",
-		"--after", "'2019-12-27T18:11:19.117Z'",
-		"--ascending=true",
-		"--before", "'2019-12-27T18:11:19.117Z'",
-		"--label", "[string]",
-		"--limit", "0",
-		"--page-token", "page_token",
-	)
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t, "drafts", "list",
+			"--api-key", "string",
+			"--after", "'2019-12-27T18:11:19.117Z'",
+			"--ascending=true",
+			"--before", "'2019-12-27T18:11:19.117Z'",
+			"--label", "[string]",
+			"--limit", "0",
+			"--page-token", "page_token",
+		)
+	})
 }
