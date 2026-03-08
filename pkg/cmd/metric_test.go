@@ -14,9 +14,12 @@ func TestMetricsList(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t, "metrics", "list",
 			"--api-key", "string",
-			"--end-timestamp", "'2019-12-27T18:11:19.117Z'",
-			"--start-timestamp", "'2019-12-27T18:11:19.117Z'",
+			"--descending=true",
+			"--end", "'2019-12-27T18:11:19.117Z'",
 			"--event-type", "[message.sent]",
+			"--limit", "0",
+			"--period", "period",
+			"--start", "'2019-12-27T18:11:19.117Z'",
 		)
 	})
 }
