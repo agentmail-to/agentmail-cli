@@ -789,12 +789,22 @@ func handleInboxesMessagesGetRaw(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	return client.Inboxes.Messages.GetRaw(
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.Inboxes.Messages.GetRaw(
 		ctx,
 		cmd.Value("message-id").(string),
 		params,
 		options...,
 	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(os.Stdout, "inboxes:messages get-raw", obj, format, transform)
 }
 
 func handleInboxesMessagesReply(ctx context.Context, cmd *cli.Command) error {
