@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.7.2 (2026-03-14)
+
+Full Changelog: [v0.7.1...v0.7.2](https://github.com/agentmail-to/agentmail-cli/compare/v0.7.1...v0.7.2)
+
+### Features
+
+* add `--max-items` flag for paginated/streaming endpoints ([cab651f](https://github.com/agentmail-to/agentmail-cli/commit/cab651f16b51cc0b8fd8197307bd9a2a3149097f))
+* **api:** api update ([5978d7a](https://github.com/agentmail-to/agentmail-cli/commit/5978d7ab85c90ec624165671208606c5d3bb9825))
+* **api:** api update ([212d624](https://github.com/agentmail-to/agentmail-cli/commit/212d6248a314de915377c0fa35c346e7b9fe3549))
+* **api:** api update ([b3aa3b4](https://github.com/agentmail-to/agentmail-cli/commit/b3aa3b49b6b1077ba92aa4146f7860dff0b05920))
+* support passing required body params through pipes ([5caad8a](https://github.com/agentmail-to/agentmail-cli/commit/5caad8a5272b56a28394d040333c420a9f853b56))
+
+
+### Bug Fixes
+
+* fix for encoding arrays with `any` type items ([7898e52](https://github.com/agentmail-to/agentmail-cli/commit/7898e52f357d2232cb5db0c22791692dabc13d30))
+* fix for test cases with newlines in YAML and better error reporting ([d0fbf69](https://github.com/agentmail-to/agentmail-cli/commit/d0fbf69778cfba589c91162a01bc111c19d03054))
+* only set client options when the corresponding CLI flag or env var is explicitly set ([6cfe6d4](https://github.com/agentmail-to/agentmail-cli/commit/6cfe6d4f1d49f539dde18233414d3c6132ec5dc9))
+
+
+### Chores
+
+* **ci:** skip uploading artifacts on stainless-internal branches ([5a4be3e](https://github.com/agentmail-to/agentmail-cli/commit/5a4be3e1c740c2b1f89d116f6cd9348fd81a5dae))
+* **internal:** codegen related update ([41d32f3](https://github.com/agentmail-to/agentmail-cli/commit/41d32f3b7bcb7c421d033e0d18c4cf70f7343dd2))
+
 ## 0.7.1 (2026-03-06)
 
 Full Changelog: [v0.7.0...v0.7.1](https://github.com/agentmail-to/agentmail-cli/compare/v0.7.0...v0.7.1)
