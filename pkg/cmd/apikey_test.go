@@ -12,8 +12,9 @@ func TestAPIKeysCreate(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "api-keys", "create",
+			t,
 			"--api-key", "string",
+			"api-keys", "create",
 			"--name", "name",
 		)
 	})
@@ -22,8 +23,9 @@ func TestAPIKeysCreate(t *testing.T) {
 		// Test piping YAML data over stdin
 		pipeData := []byte("name: name")
 		mocktest.TestRunMockTestWithPipeAndFlags(
-			t, pipeData, "api-keys", "create",
+			t, pipeData,
 			"--api-key", "string",
+			"api-keys", "create",
 		)
 	})
 }
@@ -32,8 +34,9 @@ func TestAPIKeysList(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "api-keys", "list",
+			t,
 			"--api-key", "string",
+			"api-keys", "list",
 			"--ascending=true",
 			"--limit", "0",
 			"--page-token", "page_token",
@@ -45,8 +48,9 @@ func TestAPIKeysDelete(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "api-keys", "delete",
+			t,
 			"--api-key", "string",
+			"api-keys", "delete",
 			"--api-key", "api_key",
 		)
 	})

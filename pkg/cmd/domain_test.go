@@ -12,8 +12,9 @@ func TestDomainsCreate(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "domains", "create",
+			t,
 			"--api-key", "string",
+			"domains", "create",
 			"--domain", "domain",
 			"--feedback-enabled=true",
 		)
@@ -25,8 +26,9 @@ func TestDomainsCreate(t *testing.T) {
 			"domain: domain\n" +
 			"feedback_enabled: true\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
-			t, pipeData, "domains", "create",
+			t, pipeData,
 			"--api-key", "string",
+			"domains", "create",
 		)
 	})
 }
@@ -35,8 +37,9 @@ func TestDomainsRetrieve(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "domains", "retrieve",
+			t,
 			"--api-key", "string",
+			"domains", "retrieve",
 			"--domain-id", "domain_id",
 		)
 	})
@@ -46,8 +49,9 @@ func TestDomainsList(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "domains", "list",
+			t,
 			"--api-key", "string",
+			"domains", "list",
 			"--ascending=true",
 			"--limit", "0",
 			"--page-token", "page_token",
@@ -59,8 +63,9 @@ func TestDomainsDelete(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "domains", "delete",
+			t,
 			"--api-key", "string",
+			"domains", "delete",
 			"--domain-id", "domain_id",
 		)
 	})
@@ -70,8 +75,9 @@ func TestDomainsGetZoneFile(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "domains", "get-zone-file",
+			t,
 			"--api-key", "string",
+			"domains", "get-zone-file",
 			"--domain-id", "domain_id",
 		)
 	})
@@ -81,8 +87,9 @@ func TestDomainsVerify(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "domains", "verify",
+			t,
 			"--api-key", "string",
+			"domains", "verify",
 			"--domain-id", "domain_id",
 		)
 	})

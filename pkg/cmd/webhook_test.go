@@ -12,8 +12,9 @@ func TestWebhooksCreate(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "webhooks", "create",
+			t,
 			"--api-key", "string",
+			"webhooks", "create",
 			"--event-type", "message.received",
 			"--url", "url",
 			"--client-id", "client_id",
@@ -34,8 +35,9 @@ func TestWebhooksCreate(t *testing.T) {
 			"pod_ids:\n" +
 			"  - string\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
-			t, pipeData, "webhooks", "create",
+			t, pipeData,
 			"--api-key", "string",
+			"webhooks", "create",
 		)
 	})
 }
@@ -44,8 +46,9 @@ func TestWebhooksRetrieve(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "webhooks", "retrieve",
+			t,
 			"--api-key", "string",
+			"webhooks", "retrieve",
 			"--webhook-id", "webhook_id",
 		)
 	})
@@ -55,8 +58,9 @@ func TestWebhooksUpdate(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "webhooks", "update",
+			t,
 			"--api-key", "string",
+			"webhooks", "update",
 			"--webhook-id", "webhook_id",
 			"--add-inbox-id", "[string]",
 			"--add-pod-id", "[string]",
@@ -77,8 +81,9 @@ func TestWebhooksUpdate(t *testing.T) {
 			"remove_pod_ids:\n" +
 			"  - string\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
-			t, pipeData, "webhooks", "update",
+			t, pipeData,
 			"--api-key", "string",
+			"webhooks", "update",
 			"--webhook-id", "webhook_id",
 		)
 	})
@@ -88,8 +93,9 @@ func TestWebhooksList(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "webhooks", "list",
+			t,
 			"--api-key", "string",
+			"webhooks", "list",
 			"--ascending=true",
 			"--limit", "0",
 			"--page-token", "page_token",
@@ -101,8 +107,9 @@ func TestWebhooksDelete(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "webhooks", "delete",
+			t,
 			"--api-key", "string",
+			"webhooks", "delete",
 			"--webhook-id", "webhook_id",
 		)
 	})

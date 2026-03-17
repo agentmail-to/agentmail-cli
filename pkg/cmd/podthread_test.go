@@ -12,8 +12,9 @@ func TestPodsThreadsRetrieve(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "pods:threads", "retrieve",
+			t,
 			"--api-key", "string",
+			"pods:threads", "retrieve",
 			"--pod-id", "pod_id",
 			"--thread-id", "thread_id",
 		)
@@ -24,8 +25,9 @@ func TestPodsThreadsList(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "pods:threads", "list",
+			t,
 			"--api-key", "string",
+			"pods:threads", "list",
 			"--pod-id", "pod_id",
 			"--after", "'2019-12-27T18:11:19.117Z'",
 			"--ascending=true",
@@ -44,8 +46,9 @@ func TestPodsThreadsGetAttachment(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "pods:threads", "get-attachment",
+			t,
 			"--api-key", "string",
+			"pods:threads", "get-attachment",
 			"--pod-id", "pod_id",
 			"--thread-id", "thread_id",
 			"--attachment-id", "attachment_id",

@@ -12,8 +12,9 @@ func TestPodsDraftsRetrieve(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "pods:drafts", "retrieve",
+			t,
 			"--api-key", "string",
+			"pods:drafts", "retrieve",
 			"--pod-id", "pod_id",
 			"--draft-id", "draft_id",
 		)
@@ -24,8 +25,9 @@ func TestPodsDraftsList(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "pods:drafts", "list",
+			t,
 			"--api-key", "string",
+			"pods:drafts", "list",
 			"--pod-id", "pod_id",
 			"--after", "'2019-12-27T18:11:19.117Z'",
 			"--ascending=true",
