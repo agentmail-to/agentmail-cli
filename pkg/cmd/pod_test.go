@@ -12,8 +12,9 @@ func TestPodsCreate(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "pods", "create",
+			t,
 			"--api-key", "string",
+			"pods", "create",
 			"--client-id", "client_id",
 			"--name", "name",
 		)
@@ -25,8 +26,9 @@ func TestPodsCreate(t *testing.T) {
 			"client_id: client_id\n" +
 			"name: name\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
-			t, pipeData, "pods", "create",
+			t, pipeData,
 			"--api-key", "string",
+			"pods", "create",
 		)
 	})
 }
@@ -35,8 +37,9 @@ func TestPodsRetrieve(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "pods", "retrieve",
+			t,
 			"--api-key", "string",
+			"pods", "retrieve",
 			"--pod-id", "pod_id",
 		)
 	})
@@ -46,8 +49,9 @@ func TestPodsList(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "pods", "list",
+			t,
 			"--api-key", "string",
+			"pods", "list",
 			"--ascending=true",
 			"--limit", "0",
 			"--page-token", "page_token",
@@ -59,8 +63,9 @@ func TestPodsDelete(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "pods", "delete",
+			t,
 			"--api-key", "string",
+			"pods", "delete",
 			"--pod-id", "pod_id",
 		)
 	})

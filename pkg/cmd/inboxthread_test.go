@@ -12,8 +12,9 @@ func TestInboxesThreadsRetrieve(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "inboxes:threads", "retrieve",
+			t,
 			"--api-key", "string",
+			"inboxes:threads", "retrieve",
 			"--inbox-id", "inbox_id",
 			"--thread-id", "thread_id",
 		)
@@ -24,8 +25,9 @@ func TestInboxesThreadsList(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "inboxes:threads", "list",
+			t,
 			"--api-key", "string",
+			"inboxes:threads", "list",
 			"--inbox-id", "inbox_id",
 			"--after", "'2019-12-27T18:11:19.117Z'",
 			"--ascending=true",
@@ -44,8 +46,9 @@ func TestInboxesThreadsDelete(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "inboxes:threads", "delete",
+			t,
 			"--api-key", "string",
+			"inboxes:threads", "delete",
 			"--inbox-id", "inbox_id",
 			"--thread-id", "thread_id",
 			"--permanent=true",
@@ -57,8 +60,9 @@ func TestInboxesThreadsGetAttachment(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "inboxes:threads", "get-attachment",
+			t,
 			"--api-key", "string",
+			"inboxes:threads", "get-attachment",
 			"--inbox-id", "inbox_id",
 			"--thread-id", "thread_id",
 			"--attachment-id", "attachment_id",

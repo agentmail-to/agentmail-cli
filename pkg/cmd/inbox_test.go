@@ -12,8 +12,9 @@ func TestInboxesCreate(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "inboxes", "create",
+			t,
 			"--api-key", "string",
+			"inboxes", "create",
 			"--client-id", "client_id",
 			"--display-name", "display_name",
 			"--domain", "domain",
@@ -29,8 +30,9 @@ func TestInboxesCreate(t *testing.T) {
 			"domain: domain\n" +
 			"username: username\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
-			t, pipeData, "inboxes", "create",
+			t, pipeData,
 			"--api-key", "string",
+			"inboxes", "create",
 		)
 	})
 }
@@ -39,8 +41,9 @@ func TestInboxesRetrieve(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "inboxes", "retrieve",
+			t,
 			"--api-key", "string",
+			"inboxes", "retrieve",
 			"--inbox-id", "inbox_id",
 		)
 	})
@@ -50,8 +53,9 @@ func TestInboxesUpdate(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "inboxes", "update",
+			t,
 			"--api-key", "string",
+			"inboxes", "update",
 			"--inbox-id", "inbox_id",
 			"--display-name", "display_name",
 		)
@@ -61,8 +65,9 @@ func TestInboxesUpdate(t *testing.T) {
 		// Test piping YAML data over stdin
 		pipeData := []byte("display_name: display_name")
 		mocktest.TestRunMockTestWithPipeAndFlags(
-			t, pipeData, "inboxes", "update",
+			t, pipeData,
 			"--api-key", "string",
+			"inboxes", "update",
 			"--inbox-id", "inbox_id",
 		)
 	})
@@ -72,8 +77,9 @@ func TestInboxesList(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "inboxes", "list",
+			t,
 			"--api-key", "string",
+			"inboxes", "list",
 			"--ascending=true",
 			"--limit", "0",
 			"--page-token", "page_token",
@@ -85,8 +91,9 @@ func TestInboxesDelete(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "inboxes", "delete",
+			t,
 			"--api-key", "string",
+			"inboxes", "delete",
 			"--inbox-id", "inbox_id",
 		)
 	})
@@ -96,8 +103,9 @@ func TestInboxesListMetrics(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "inboxes", "list-metrics",
+			t,
 			"--api-key", "string",
+			"inboxes", "list-metrics",
 			"--inbox-id", "inbox_id",
 			"--descending=true",
 			"--end", "'2019-12-27T18:11:19.117Z'",

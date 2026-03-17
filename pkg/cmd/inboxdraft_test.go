@@ -13,8 +13,9 @@ func TestInboxesDraftsCreate(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "inboxes:drafts", "create",
+			t,
 			"--api-key", "string",
+			"inboxes:drafts", "create",
 			"--inbox-id", "inbox_id",
 			"--attachment", "[{content: content, content_disposition: inline, content_id: content_id, content_type: content_type, filename: filename, url: url}]",
 			"--bcc", "[string]",
@@ -37,8 +38,9 @@ func TestInboxesDraftsCreate(t *testing.T) {
 
 		// Alternative argument passing style using inner flags
 		mocktest.TestRunMockTestWithFlags(
-			t, "inboxes:drafts", "create",
+			t,
 			"--api-key", "string",
+			"inboxes:drafts", "create",
 			"--inbox-id", "inbox_id",
 			"--attachment.content", "content",
 			"--attachment.content-disposition", "inline",
@@ -87,8 +89,9 @@ func TestInboxesDraftsCreate(t *testing.T) {
 			"to:\n" +
 			"  - string\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
-			t, pipeData, "inboxes:drafts", "create",
+			t, pipeData,
 			"--api-key", "string",
+			"inboxes:drafts", "create",
 			"--inbox-id", "inbox_id",
 		)
 	})
@@ -98,8 +101,9 @@ func TestInboxesDraftsRetrieve(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "inboxes:drafts", "retrieve",
+			t,
 			"--api-key", "string",
+			"inboxes:drafts", "retrieve",
 			"--inbox-id", "inbox_id",
 			"--draft-id", "draft_id",
 		)
@@ -110,8 +114,9 @@ func TestInboxesDraftsUpdate(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "inboxes:drafts", "update",
+			t,
 			"--api-key", "string",
+			"inboxes:drafts", "update",
 			"--inbox-id", "inbox_id",
 			"--draft-id", "draft_id",
 			"--bcc", "[string]",
@@ -141,8 +146,9 @@ func TestInboxesDraftsUpdate(t *testing.T) {
 			"to:\n" +
 			"  - string\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
-			t, pipeData, "inboxes:drafts", "update",
+			t, pipeData,
 			"--api-key", "string",
+			"inboxes:drafts", "update",
 			"--inbox-id", "inbox_id",
 			"--draft-id", "draft_id",
 		)
@@ -153,8 +159,9 @@ func TestInboxesDraftsList(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "inboxes:drafts", "list",
+			t,
 			"--api-key", "string",
+			"inboxes:drafts", "list",
 			"--inbox-id", "inbox_id",
 			"--after", "'2019-12-27T18:11:19.117Z'",
 			"--ascending=true",
@@ -170,8 +177,9 @@ func TestInboxesDraftsDelete(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "inboxes:drafts", "delete",
+			t,
 			"--api-key", "string",
+			"inboxes:drafts", "delete",
 			"--inbox-id", "inbox_id",
 			"--draft-id", "draft_id",
 		)
@@ -182,8 +190,9 @@ func TestInboxesDraftsSend(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "inboxes:drafts", "send",
+			t,
 			"--api-key", "string",
+			"inboxes:drafts", "send",
 			"--inbox-id", "inbox_id",
 			"--draft-id", "draft_id",
 			"--add-label", "[string]",
@@ -199,8 +208,9 @@ func TestInboxesDraftsSend(t *testing.T) {
 			"remove_labels:\n" +
 			"  - string\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
-			t, pipeData, "inboxes:drafts", "send",
+			t, pipeData,
 			"--api-key", "string",
+			"inboxes:drafts", "send",
 			"--inbox-id", "inbox_id",
 			"--draft-id", "draft_id",
 		)

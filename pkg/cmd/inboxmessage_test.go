@@ -13,8 +13,9 @@ func TestInboxesMessagesRetrieve(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "inboxes:messages", "retrieve",
+			t,
 			"--api-key", "string",
+			"inboxes:messages", "retrieve",
 			"--inbox-id", "inbox_id",
 			"--message-id", "message_id",
 		)
@@ -25,8 +26,9 @@ func TestInboxesMessagesUpdate(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "inboxes:messages", "update",
+			t,
 			"--api-key", "string",
+			"inboxes:messages", "update",
 			"--inbox-id", "inbox_id",
 			"--message-id", "message_id",
 			"--add-label", "[string]",
@@ -42,8 +44,9 @@ func TestInboxesMessagesUpdate(t *testing.T) {
 			"remove_labels:\n" +
 			"  - string\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
-			t, pipeData, "inboxes:messages", "update",
+			t, pipeData,
 			"--api-key", "string",
+			"inboxes:messages", "update",
 			"--inbox-id", "inbox_id",
 			"--message-id", "message_id",
 		)
@@ -54,8 +57,9 @@ func TestInboxesMessagesList(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "inboxes:messages", "list",
+			t,
 			"--api-key", "string",
+			"inboxes:messages", "list",
 			"--inbox-id", "inbox_id",
 			"--after", "'2019-12-27T18:11:19.117Z'",
 			"--ascending=true",
@@ -74,8 +78,9 @@ func TestInboxesMessagesForward(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "inboxes:messages", "forward",
+			t,
 			"--api-key", "string",
+			"inboxes:messages", "forward",
 			"--inbox-id", "inbox_id",
 			"--message-id", "message_id",
 			"--attachment", "[{content: content, content_disposition: inline, content_id: content_id, content_type: content_type, filename: filename, url: url}]",
@@ -97,8 +102,9 @@ func TestInboxesMessagesForward(t *testing.T) {
 
 		// Alternative argument passing style using inner flags
 		mocktest.TestRunMockTestWithFlags(
-			t, "inboxes:messages", "forward",
+			t,
 			"--api-key", "string",
+			"inboxes:messages", "forward",
 			"--inbox-id", "inbox_id",
 			"--message-id", "message_id",
 			"--attachment.content", "content",
@@ -141,8 +147,9 @@ func TestInboxesMessagesForward(t *testing.T) {
 			"text: text\n" +
 			"to: string\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
-			t, pipeData, "inboxes:messages", "forward",
+			t, pipeData,
 			"--api-key", "string",
+			"inboxes:messages", "forward",
 			"--inbox-id", "inbox_id",
 			"--message-id", "message_id",
 		)
@@ -153,8 +160,9 @@ func TestInboxesMessagesGetAttachment(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "inboxes:messages", "get-attachment",
+			t,
 			"--api-key", "string",
+			"inboxes:messages", "get-attachment",
 			"--inbox-id", "inbox_id",
 			"--message-id", "message_id",
 			"--attachment-id", "attachment_id",
@@ -166,8 +174,9 @@ func TestInboxesMessagesGetRaw(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "inboxes:messages", "get-raw",
+			t,
 			"--api-key", "string",
+			"inboxes:messages", "get-raw",
 			"--inbox-id", "inbox_id",
 			"--message-id", "message_id",
 		)
@@ -178,8 +187,9 @@ func TestInboxesMessagesReply(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "inboxes:messages", "reply",
+			t,
 			"--api-key", "string",
+			"inboxes:messages", "reply",
 			"--inbox-id", "inbox_id",
 			"--message-id", "message_id",
 			"--attachment", "[{content: content, content_disposition: inline, content_id: content_id, content_type: content_type, filename: filename, url: url}]",
@@ -201,8 +211,9 @@ func TestInboxesMessagesReply(t *testing.T) {
 
 		// Alternative argument passing style using inner flags
 		mocktest.TestRunMockTestWithFlags(
-			t, "inboxes:messages", "reply",
+			t,
 			"--api-key", "string",
+			"inboxes:messages", "reply",
 			"--inbox-id", "inbox_id",
 			"--message-id", "message_id",
 			"--attachment.content", "content",
@@ -245,8 +256,9 @@ func TestInboxesMessagesReply(t *testing.T) {
 			"text: text\n" +
 			"to: string\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
-			t, pipeData, "inboxes:messages", "reply",
+			t, pipeData,
 			"--api-key", "string",
+			"inboxes:messages", "reply",
 			"--inbox-id", "inbox_id",
 			"--message-id", "message_id",
 		)
@@ -257,8 +269,9 @@ func TestInboxesMessagesReplyAll(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "inboxes:messages", "reply-all",
+			t,
 			"--api-key", "string",
+			"inboxes:messages", "reply-all",
 			"--inbox-id", "inbox_id",
 			"--message-id", "message_id",
 			"--attachment", "[{content: content, content_disposition: inline, content_id: content_id, content_type: content_type, filename: filename, url: url}]",
@@ -276,8 +289,9 @@ func TestInboxesMessagesReplyAll(t *testing.T) {
 
 		// Alternative argument passing style using inner flags
 		mocktest.TestRunMockTestWithFlags(
-			t, "inboxes:messages", "reply-all",
+			t,
 			"--api-key", "string",
+			"inboxes:messages", "reply-all",
 			"--inbox-id", "inbox_id",
 			"--message-id", "message_id",
 			"--attachment.content", "content",
@@ -312,8 +326,9 @@ func TestInboxesMessagesReplyAll(t *testing.T) {
 			"reply_to: string\n" +
 			"text: text\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
-			t, pipeData, "inboxes:messages", "reply-all",
+			t, pipeData,
 			"--api-key", "string",
+			"inboxes:messages", "reply-all",
 			"--inbox-id", "inbox_id",
 			"--message-id", "message_id",
 		)
@@ -324,8 +339,9 @@ func TestInboxesMessagesSend(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
-			t, "inboxes:messages", "send",
+			t,
 			"--api-key", "string",
+			"inboxes:messages", "send",
 			"--inbox-id", "inbox_id",
 			"--attachment", "[{content: content, content_disposition: inline, content_id: content_id, content_type: content_type, filename: filename, url: url}]",
 			"--bcc", "string",
@@ -346,8 +362,9 @@ func TestInboxesMessagesSend(t *testing.T) {
 
 		// Alternative argument passing style using inner flags
 		mocktest.TestRunMockTestWithFlags(
-			t, "inboxes:messages", "send",
+			t,
 			"--api-key", "string",
+			"inboxes:messages", "send",
 			"--inbox-id", "inbox_id",
 			"--attachment.content", "content",
 			"--attachment.content-disposition", "inline",
@@ -389,8 +406,9 @@ func TestInboxesMessagesSend(t *testing.T) {
 			"text: text\n" +
 			"to: string\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
-			t, pipeData, "inboxes:messages", "send",
+			t, pipeData,
 			"--api-key", "string",
+			"inboxes:messages", "send",
 			"--inbox-id", "inbox_id",
 		)
 	})
