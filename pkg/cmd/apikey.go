@@ -56,21 +56,6 @@ var apiKeysList = cli.Command{
 	HideHelpCommand: true,
 }
 
-var apiKeysDelete = cli.Command{
-	Name:    "delete",
-	Usage:   "Delete API Key",
-	Suggest: true,
-	Flags: []cli.Flag{
-		&requestflag.Flag[string]{
-			Name:     "api-key",
-			Usage:    "ID of api key.",
-			Required: true,
-		},
-	},
-	Action:          handleAPIKeysDelete,
-	HideHelpCommand: true,
-}
-
 func handleAPIKeysCreate(ctx context.Context, cmd *cli.Command) error {
 	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
@@ -137,29 +122,4 @@ func handleAPIKeysList(ctx context.Context, cmd *cli.Command) error {
 	format := cmd.Root().String("format")
 	transform := cmd.Root().String("transform")
 	return ShowJSON(os.Stdout, "api-keys list", obj, format, transform)
-}
-
-func handleAPIKeysDelete(ctx context.Context, cmd *cli.Command) error {
-	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
-	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("api-key") && len(unusedArgs) > 0 {
-		cmd.Set("api-key", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
-	if len(unusedArgs) > 0 {
-		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
-	}
-
-	options, err := flagOptions(
-		cmd,
-		apiquery.NestedQueryFormatBrackets,
-		apiquery.ArrayQueryFormatComma,
-		EmptyBody,
-		false,
-	)
-	if err != nil {
-		return err
-	}
-
-	return client.APIKeys.Delete(ctx, cmd.Value("api-key").(string), options...)
 }
