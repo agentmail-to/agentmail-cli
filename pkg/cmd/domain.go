@@ -22,7 +22,7 @@ var domainsCreate = cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "domain",
-			Usage:    `The name of the domain. (e.g., "example.com")`,
+			Usage:    "The name of the domain (e.g., `example.com`).",
 			Required: true,
 			BodyPath: "domain",
 		},
@@ -44,7 +44,7 @@ var domainsRetrieve = cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "domain-id",
-			Usage:    `The name of the domain. (e.g., " your-domain.com")`,
+			Usage:    "The ID of the domain.",
 			Required: true,
 		},
 	},
@@ -84,7 +84,7 @@ var domainsDelete = cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "domain-id",
-			Usage:    `The name of the domain. (e.g., " your-domain.com")`,
+			Usage:    "The ID of the domain.",
 			Required: true,
 		},
 	},
@@ -99,7 +99,7 @@ var domainsGetZoneFile = cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "domain-id",
-			Usage:    `The name of the domain. (e.g., " your-domain.com")`,
+			Usage:    "The ID of the domain.",
 			Required: true,
 		},
 	},
@@ -114,7 +114,7 @@ var domainsVerify = cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "domain-id",
-			Usage:    `The name of the domain. (e.g., " your-domain.com")`,
+			Usage:    "The ID of the domain.",
 			Required: true,
 		},
 	},
