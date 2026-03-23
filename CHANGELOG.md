@@ -1,5 +1,39 @@
 # Changelog
 
+## 0.7.2 (2026-03-23)
+
+Full Changelog: [v0.7.1...v0.7.2](https://github.com/agentmail-to/agentmail-cli/compare/v0.7.1...v0.7.2)
+
+### Features
+
+* add `--max-items` flag for paginated/streaming endpoints ([cab651f](https://github.com/agentmail-to/agentmail-cli/commit/cab651f16b51cc0b8fd8197307bd9a2a3149097f))
+* **api:** api update ([8930431](https://github.com/agentmail-to/agentmail-cli/commit/8930431afd5c13e99e17d336b8bbf57da7c97b3a))
+* **api:** api update ([93ec607](https://github.com/agentmail-to/agentmail-cli/commit/93ec607579dc3c74a00c1559876f19159f17bf18))
+* **api:** api update ([922d06b](https://github.com/agentmail-to/agentmail-cli/commit/922d06ba6370e908121be1ce2a3dcb60a025a919))
+* **api:** api update ([5978d7a](https://github.com/agentmail-to/agentmail-cli/commit/5978d7ab85c90ec624165671208606c5d3bb9825))
+* **api:** api update ([212d624](https://github.com/agentmail-to/agentmail-cli/commit/212d6248a314de915377c0fa35c346e7b9fe3549))
+* **api:** api update ([b3aa3b4](https://github.com/agentmail-to/agentmail-cli/commit/b3aa3b49b6b1077ba92aa4146f7860dff0b05920))
+* support passing required body params through pipes ([5caad8a](https://github.com/agentmail-to/agentmail-cli/commit/5caad8a5272b56a28394d040333c420a9f853b56))
+
+
+### Bug Fixes
+
+* avoid reading from stdin unless request body is form encoded or json ([32f2697](https://github.com/agentmail-to/agentmail-cli/commit/32f26970e29bc6c1b02d2e543bda76b38d018d5a))
+* better support passing client args in any position ([632158a](https://github.com/agentmail-to/agentmail-cli/commit/632158a4431957bc86e8f0bc1b33adefb7067e59))
+* fix for encoding arrays with `any` type items ([7898e52](https://github.com/agentmail-to/agentmail-cli/commit/7898e52f357d2232cb5db0c22791692dabc13d30))
+* fix for test cases with newlines in YAML and better error reporting ([d0fbf69](https://github.com/agentmail-to/agentmail-cli/commit/d0fbf69778cfba589c91162a01bc111c19d03054))
+* improve linking behavior when developing on a branch not in the Go SDK ([7a56630](https://github.com/agentmail-to/agentmail-cli/commit/7a566301e20873025326c753da2fe601e455879b))
+* improved workflow for developing on branches ([eb3e18e](https://github.com/agentmail-to/agentmail-cli/commit/eb3e18ec65da5b7b9e43ba20993af7943807be89))
+* no longer require an API key when building on production repos ([d82fd7d](https://github.com/agentmail-to/agentmail-cli/commit/d82fd7d528fa133a93bf7d94165382d37fe873df))
+* only set client options when the corresponding CLI flag or env var is explicitly set ([6cfe6d4](https://github.com/agentmail-to/agentmail-cli/commit/6cfe6d4f1d49f539dde18233414d3c6132ec5dc9))
+
+
+### Chores
+
+* **ci:** skip uploading artifacts on stainless-internal branches ([5a4be3e](https://github.com/agentmail-to/agentmail-cli/commit/5a4be3e1c740c2b1f89d116f6cd9348fd81a5dae))
+* **internal:** codegen related update ([41d32f3](https://github.com/agentmail-to/agentmail-cli/commit/41d32f3b7bcb7c421d033e0d18c4cf70f7343dd2))
+* **internal:** tweak CI branches ([6d81988](https://github.com/agentmail-to/agentmail-cli/commit/6d8198801ce6a24c892d313650ef37cc7e3920b1))
+
 ## 0.7.1 (2026-03-06)
 
 Full Changelog: [v0.7.0...v0.7.1](https://github.com/agentmail-to/agentmail-cli/compare/v0.7.0...v0.7.1)
