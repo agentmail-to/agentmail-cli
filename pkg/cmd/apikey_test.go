@@ -17,7 +17,7 @@ func TestAPIKeysCreate(t *testing.T) {
 			"--api-key", "string",
 			"api-keys", "create",
 			"--name", "name",
-			"--permissions", "{create_api_key: true, create_domain: true, create_draft: true, create_inbox: true, create_list_entry: true, create_pod: true, create_webhook: true, delete_api_key: true, delete_domain: true, delete_draft: true, delete_inbox: true, delete_list_entry: true, delete_pod: true, delete_thread: true, delete_webhook: true, read_api_key: true, read_blocked: true, read_domain: true, read_draft: true, read_inbox: true, read_list_entry: true, read_message: true, read_metrics: true, read_pod: true, read_spam: true, read_thread: true, read_trash: true, read_webhook: true, send_draft: true, send_message: true, update_domain: true, update_draft: true, update_inbox: true, update_message: true, update_webhook: true}",
+			"--permissions", "{api_key_create: true, api_key_delete: true, api_key_read: true, domain_create: true, domain_delete: true, domain_read: true, domain_update: true, draft_create: true, draft_delete: true, draft_read: true, draft_send: true, draft_update: true, inbox_create: true, inbox_delete: true, inbox_read: true, inbox_update: true, label_blocked_read: true, label_spam_read: true, label_trash_read: true, list_entry_create: true, list_entry_delete: true, list_entry_read: true, message_read: true, message_send: true, message_update: true, metrics_read: true, pod_create: true, pod_delete: true, pod_read: true, thread_delete: true, thread_read: true, webhook_create: true, webhook_delete: true, webhook_read: true, webhook_update: true}",
 		)
 	})
 
@@ -31,41 +31,41 @@ func TestAPIKeysCreate(t *testing.T) {
 			"--api-key", "string",
 			"api-keys", "create",
 			"--name", "name",
-			"--permissions.create-api-key=true",
-			"--permissions.create-domain=true",
-			"--permissions.create-draft=true",
-			"--permissions.create-inbox=true",
-			"--permissions.create-list-entry=true",
-			"--permissions.create-pod=true",
-			"--permissions.create-webhook=true",
-			"--permissions.delete-api-key=true",
-			"--permissions.delete-domain=true",
-			"--permissions.delete-draft=true",
-			"--permissions.delete-inbox=true",
-			"--permissions.delete-list-entry=true",
-			"--permissions.delete-pod=true",
-			"--permissions.delete-thread=true",
-			"--permissions.delete-webhook=true",
-			"--permissions.read-api-key=true",
-			"--permissions.read-blocked=true",
-			"--permissions.read-domain=true",
-			"--permissions.read-draft=true",
-			"--permissions.read-inbox=true",
-			"--permissions.read-list-entry=true",
-			"--permissions.read-message=true",
-			"--permissions.read-metrics=true",
-			"--permissions.read-pod=true",
-			"--permissions.read-spam=true",
-			"--permissions.read-thread=true",
-			"--permissions.read-trash=true",
-			"--permissions.read-webhook=true",
-			"--permissions.send-draft=true",
-			"--permissions.send-message=true",
-			"--permissions.update-domain=true",
-			"--permissions.update-draft=true",
-			"--permissions.update-inbox=true",
-			"--permissions.update-message=true",
-			"--permissions.update-webhook=true",
+			"--permissions.api-key-create=true",
+			"--permissions.api-key-delete=true",
+			"--permissions.api-key-read=true",
+			"--permissions.domain-create=true",
+			"--permissions.domain-delete=true",
+			"--permissions.domain-read=true",
+			"--permissions.domain-update=true",
+			"--permissions.draft-create=true",
+			"--permissions.draft-delete=true",
+			"--permissions.draft-read=true",
+			"--permissions.draft-send=true",
+			"--permissions.draft-update=true",
+			"--permissions.inbox-create=true",
+			"--permissions.inbox-delete=true",
+			"--permissions.inbox-read=true",
+			"--permissions.inbox-update=true",
+			"--permissions.label-blocked-read=true",
+			"--permissions.label-spam-read=true",
+			"--permissions.label-trash-read=true",
+			"--permissions.list-entry-create=true",
+			"--permissions.list-entry-delete=true",
+			"--permissions.list-entry-read=true",
+			"--permissions.message-read=true",
+			"--permissions.message-send=true",
+			"--permissions.message-update=true",
+			"--permissions.metrics-read=true",
+			"--permissions.pod-create=true",
+			"--permissions.pod-delete=true",
+			"--permissions.pod-read=true",
+			"--permissions.thread-delete=true",
+			"--permissions.thread-read=true",
+			"--permissions.webhook-create=true",
+			"--permissions.webhook-delete=true",
+			"--permissions.webhook-read=true",
+			"--permissions.webhook-update=true",
 		)
 	})
 
@@ -74,41 +74,41 @@ func TestAPIKeysCreate(t *testing.T) {
 		pipeData := []byte("" +
 			"name: name\n" +
 			"permissions:\n" +
-			"  create_api_key: true\n" +
-			"  create_domain: true\n" +
-			"  create_draft: true\n" +
-			"  create_inbox: true\n" +
-			"  create_list_entry: true\n" +
-			"  create_pod: true\n" +
-			"  create_webhook: true\n" +
-			"  delete_api_key: true\n" +
-			"  delete_domain: true\n" +
-			"  delete_draft: true\n" +
-			"  delete_inbox: true\n" +
-			"  delete_list_entry: true\n" +
-			"  delete_pod: true\n" +
-			"  delete_thread: true\n" +
-			"  delete_webhook: true\n" +
-			"  read_api_key: true\n" +
-			"  read_blocked: true\n" +
-			"  read_domain: true\n" +
-			"  read_draft: true\n" +
-			"  read_inbox: true\n" +
-			"  read_list_entry: true\n" +
-			"  read_message: true\n" +
-			"  read_metrics: true\n" +
-			"  read_pod: true\n" +
-			"  read_spam: true\n" +
-			"  read_thread: true\n" +
-			"  read_trash: true\n" +
-			"  read_webhook: true\n" +
-			"  send_draft: true\n" +
-			"  send_message: true\n" +
-			"  update_domain: true\n" +
-			"  update_draft: true\n" +
-			"  update_inbox: true\n" +
-			"  update_message: true\n" +
-			"  update_webhook: true\n")
+			"  api_key_create: true\n" +
+			"  api_key_delete: true\n" +
+			"  api_key_read: true\n" +
+			"  domain_create: true\n" +
+			"  domain_delete: true\n" +
+			"  domain_read: true\n" +
+			"  domain_update: true\n" +
+			"  draft_create: true\n" +
+			"  draft_delete: true\n" +
+			"  draft_read: true\n" +
+			"  draft_send: true\n" +
+			"  draft_update: true\n" +
+			"  inbox_create: true\n" +
+			"  inbox_delete: true\n" +
+			"  inbox_read: true\n" +
+			"  inbox_update: true\n" +
+			"  label_blocked_read: true\n" +
+			"  label_spam_read: true\n" +
+			"  label_trash_read: true\n" +
+			"  list_entry_create: true\n" +
+			"  list_entry_delete: true\n" +
+			"  list_entry_read: true\n" +
+			"  message_read: true\n" +
+			"  message_send: true\n" +
+			"  message_update: true\n" +
+			"  metrics_read: true\n" +
+			"  pod_create: true\n" +
+			"  pod_delete: true\n" +
+			"  pod_read: true\n" +
+			"  thread_delete: true\n" +
+			"  thread_read: true\n" +
+			"  webhook_create: true\n" +
+			"  webhook_delete: true\n" +
+			"  webhook_read: true\n" +
+			"  webhook_update: true\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",
