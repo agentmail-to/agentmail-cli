@@ -61,6 +61,11 @@ var threadsList = cli.Command{
 			QueryPath: "include_spam",
 		},
 		&requestflag.Flag[any]{
+			Name:      "include-trash",
+			Usage:     "Include trash in results.",
+			QueryPath: "include_trash",
+		},
+		&requestflag.Flag[any]{
 			Name:      "label",
 			Usage:     "Labels to filter by.",
 			QueryPath: "labels",

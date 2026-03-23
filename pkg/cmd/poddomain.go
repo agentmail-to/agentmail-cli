@@ -27,7 +27,7 @@ var podsDomainsCreate = cli.Command{
 		},
 		&requestflag.Flag[string]{
 			Name:     "domain",
-			Usage:    `The name of the domain. (e.g., "example.com")`,
+			Usage:    "The name of the domain (e.g., `example.com`).",
 			Required: true,
 			BodyPath: "domain",
 		},
@@ -84,7 +84,7 @@ var podsDomainsDelete = cli.Command{
 		},
 		&requestflag.Flag[string]{
 			Name:     "domain-id",
-			Usage:    `The name of the domain. (e.g., " your-domain.com")`,
+			Usage:    "The ID of the domain.",
 			Required: true,
 		},
 	},
