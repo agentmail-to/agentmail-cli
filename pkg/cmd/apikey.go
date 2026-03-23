@@ -15,7 +15,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-var apiKeysCreate = cli.Command{
+var apiKeysCreate = requestflag.WithInnerFlags(cli.Command{
 	Name:    "create",
 	Usage:   "Create API Key",
 	Suggest: true,
@@ -26,10 +26,193 @@ var apiKeysCreate = cli.Command{
 			Required: true,
 			BodyPath: "name",
 		},
+		&requestflag.Flag[any]{
+			Name:     "permissions",
+			Usage:    "Granular permissions for the API key. When ommitted all permissions are granted. Otherwise, only permissions set to true are granted.",
+			BodyPath: "permissions",
+		},
 	},
 	Action:          handleAPIKeysCreate,
 	HideHelpCommand: true,
-}
+}, map[string][]requestflag.HasOuterFlag{
+	"permissions": {
+		&requestflag.InnerFlag[any]{
+			Name:       "permissions.create-api-key",
+			Usage:      "Create API keys.",
+			InnerField: "create_api_key",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "permissions.create-domain",
+			Usage:      "Create domains.",
+			InnerField: "create_domain",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "permissions.create-draft",
+			Usage:      "Create drafts.",
+			InnerField: "create_draft",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "permissions.create-inbox",
+			Usage:      "Create new inboxes.",
+			InnerField: "create_inbox",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "permissions.create-list-entry",
+			Usage:      "Create list entries.",
+			InnerField: "create_list_entry",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "permissions.create-pod",
+			Usage:      "Create pods.",
+			InnerField: "create_pod",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "permissions.create-webhook",
+			Usage:      "Create webhooks.",
+			InnerField: "create_webhook",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "permissions.delete-api-key",
+			Usage:      "Delete API keys.",
+			InnerField: "delete_api_key",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "permissions.delete-domain",
+			Usage:      "Delete domains.",
+			InnerField: "delete_domain",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "permissions.delete-draft",
+			Usage:      "Delete drafts.",
+			InnerField: "delete_draft",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "permissions.delete-inbox",
+			Usage:      "Delete inboxes.",
+			InnerField: "delete_inbox",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "permissions.delete-list-entry",
+			Usage:      "Delete list entries.",
+			InnerField: "delete_list_entry",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "permissions.delete-pod",
+			Usage:      "Delete pods.",
+			InnerField: "delete_pod",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "permissions.delete-thread",
+			Usage:      "Delete threads.",
+			InnerField: "delete_thread",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "permissions.delete-webhook",
+			Usage:      "Delete webhooks.",
+			InnerField: "delete_webhook",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "permissions.read-api-key",
+			Usage:      "Read API keys.",
+			InnerField: "read_api_key",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "permissions.read-blocked",
+			Usage:      "Access messages labeled blocked.",
+			InnerField: "read_blocked",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "permissions.read-domain",
+			Usage:      "Read domain details.",
+			InnerField: "read_domain",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "permissions.read-draft",
+			Usage:      "Read drafts.",
+			InnerField: "read_draft",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "permissions.read-inbox",
+			Usage:      "Read inbox details.",
+			InnerField: "read_inbox",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "permissions.read-list-entry",
+			Usage:      "Read list entries.",
+			InnerField: "read_list_entry",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "permissions.read-message",
+			Usage:      "Read messages.",
+			InnerField: "read_message",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "permissions.read-metrics",
+			Usage:      "Read metrics.",
+			InnerField: "read_metrics",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "permissions.read-pod",
+			Usage:      "Read pods.",
+			InnerField: "read_pod",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "permissions.read-spam",
+			Usage:      "Access messages labeled spam.",
+			InnerField: "read_spam",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "permissions.read-thread",
+			Usage:      "Read threads.",
+			InnerField: "read_thread",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "permissions.read-trash",
+			Usage:      "Access messages labeled trash.",
+			InnerField: "read_trash",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "permissions.read-webhook",
+			Usage:      "Read webhook configurations.",
+			InnerField: "read_webhook",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "permissions.send-draft",
+			Usage:      "Send drafts.",
+			InnerField: "send_draft",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "permissions.send-message",
+			Usage:      "Send messages.",
+			InnerField: "send_message",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "permissions.update-domain",
+			Usage:      "Update domains.",
+			InnerField: "update_domain",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "permissions.update-draft",
+			Usage:      "Update drafts.",
+			InnerField: "update_draft",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "permissions.update-inbox",
+			Usage:      "Update inbox settings.",
+			InnerField: "update_inbox",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "permissions.update-message",
+			Usage:      "Update message labels.",
+			InnerField: "update_message",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "permissions.update-webhook",
+			Usage:      "Update webhooks.",
+			InnerField: "update_webhook",
+		},
+	},
+})
 
 var apiKeysList = cli.Command{
 	Name:    "list",
