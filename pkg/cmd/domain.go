@@ -22,7 +22,7 @@ var domainsCreate = cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "domain",
-			Usage:    "The name of the domain (e.g., `example.com`).",
+			Usage:    `The name of the domain. (e.g., "example.com")`,
 			Required: true,
 			BodyPath: "domain",
 		},
@@ -44,7 +44,7 @@ var domainsRetrieve = cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "domain-id",
-			Usage:    "The ID of the domain.",
+			Usage:    `The name of the domain. (e.g., " your-domain.com")`,
 			Required: true,
 		},
 	},
@@ -57,11 +57,6 @@ var domainsList = cli.Command{
 	Usage:   "List Domains",
 	Suggest: true,
 	Flags: []cli.Flag{
-		&requestflag.Flag[any]{
-			Name:      "ascending",
-			Usage:     "Sort in ascending temporal order.",
-			QueryPath: "ascending",
-		},
 		&requestflag.Flag[any]{
 			Name:      "limit",
 			Usage:     "Limit of number of items returned.",
@@ -84,7 +79,7 @@ var domainsDelete = cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "domain-id",
-			Usage:    "The ID of the domain.",
+			Usage:    `The name of the domain. (e.g., " your-domain.com")`,
 			Required: true,
 		},
 	},
@@ -99,7 +94,7 @@ var domainsGetZoneFile = cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "domain-id",
-			Usage:    "The ID of the domain.",
+			Usage:    `The name of the domain. (e.g., " your-domain.com")`,
 			Required: true,
 		},
 	},
@@ -114,7 +109,7 @@ var domainsVerify = cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "domain-id",
-			Usage:    "The ID of the domain.",
+			Usage:    `The name of the domain. (e.g., " your-domain.com")`,
 			Required: true,
 		},
 	},

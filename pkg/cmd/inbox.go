@@ -52,7 +52,7 @@ var inboxesRetrieve = cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
+			Usage:    "ID of inbox.",
 			Required: true,
 		},
 	},
@@ -67,7 +67,7 @@ var inboxesUpdate = cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
+			Usage:    "ID of inbox.",
 			Required: true,
 		},
 		&requestflag.Flag[string]{
@@ -86,11 +86,6 @@ var inboxesList = cli.Command{
 	Usage:   "List Inboxes",
 	Suggest: true,
 	Flags: []cli.Flag{
-		&requestflag.Flag[any]{
-			Name:      "ascending",
-			Usage:     "Sort in ascending temporal order.",
-			QueryPath: "ascending",
-		},
 		&requestflag.Flag[any]{
 			Name:      "limit",
 			Usage:     "Limit of number of items returned.",
@@ -113,7 +108,7 @@ var inboxesDelete = cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
+			Usage:    "ID of inbox.",
 			Required: true,
 		},
 	},
@@ -123,43 +118,30 @@ var inboxesDelete = cli.Command{
 
 var inboxesListMetrics = cli.Command{
 	Name:    "list-metrics",
-	Usage:   "Query Metrics",
+	Usage:   "List Metrics",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
+			Usage:    "ID of inbox.",
 			Required: true,
 		},
 		&requestflag.Flag[any]{
-			Name:      "descending",
-			Usage:     "Sort in descending order.",
-			QueryPath: "descending",
+			Name:      "end-timestamp",
+			Usage:     "End timestamp for the metrics query range.",
+			Required:  true,
+			QueryPath: "end_timestamp",
 		},
 		&requestflag.Flag[any]{
-			Name:      "end",
-			Usage:     "End timestamp for the query.",
-			QueryPath: "end",
+			Name:      "start-timestamp",
+			Usage:     "Start timestamp for the metrics query range.",
+			Required:  true,
+			QueryPath: "start_timestamp",
 		},
 		&requestflag.Flag[any]{
 			Name:      "event-type",
-			Usage:     "List of metric event types to query.",
+			Usage:     "List of metric event types to filter by.",
 			QueryPath: "event_types",
-		},
-		&requestflag.Flag[any]{
-			Name:      "limit",
-			Usage:     "Limit on number of buckets to return.",
-			QueryPath: "limit",
-		},
-		&requestflag.Flag[any]{
-			Name:      "period",
-			Usage:     "Period in number of seconds for the query.",
-			QueryPath: "period",
-		},
-		&requestflag.Flag[any]{
-			Name:      "start",
-			Usage:     "Start timestamp for the query.",
-			QueryPath: "start",
 		},
 	},
 	Action:          handleInboxesListMetrics,
