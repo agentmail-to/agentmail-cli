@@ -15,12 +15,9 @@ func TestMetricsList(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"metrics", "list",
-			"--descending=true",
-			"--end", "'2019-12-27T18:11:19.117Z'",
+			"--end-timestamp", "'2019-12-27T18:11:19.117Z'",
+			"--start-timestamp", "'2019-12-27T18:11:19.117Z'",
 			"--event-type", "[message.sent]",
-			"--limit", "0",
-			"--period", "period",
-			"--start", "'2019-12-27T18:11:19.117Z'",
 		)
 	})
 }

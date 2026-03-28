@@ -22,7 +22,7 @@ var inboxesThreadsRetrieve = cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
+			Usage:    "ID of inbox.",
 			Required: true,
 		},
 		&requestflag.Flag[string]{
@@ -42,7 +42,7 @@ var inboxesThreadsList = cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
+			Usage:    "ID of inbox.",
 			Required: true,
 		},
 		&requestflag.Flag[any]{
@@ -61,19 +61,9 @@ var inboxesThreadsList = cli.Command{
 			QueryPath: "before",
 		},
 		&requestflag.Flag[any]{
-			Name:      "include-blocked",
-			Usage:     "Include blocked in results.",
-			QueryPath: "include_blocked",
-		},
-		&requestflag.Flag[any]{
 			Name:      "include-spam",
 			Usage:     "Include spam in results.",
 			QueryPath: "include_spam",
-		},
-		&requestflag.Flag[any]{
-			Name:      "include-trash",
-			Usage:     "Include trash in results.",
-			QueryPath: "include_trash",
 		},
 		&requestflag.Flag[any]{
 			Name:      "label",
@@ -97,23 +87,18 @@ var inboxesThreadsList = cli.Command{
 
 var inboxesThreadsDelete = cli.Command{
 	Name:    "delete",
-	Usage:   "Moves the thread to trash by adding a trash label to all messages. If the thread\nis already in trash, it will be permanently deleted. Use `permanent=true` to\nforce permanent deletion.",
+	Usage:   "Delete Thread",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
+			Usage:    "ID of inbox.",
 			Required: true,
 		},
 		&requestflag.Flag[string]{
 			Name:     "thread-id",
 			Usage:    "ID of thread.",
 			Required: true,
-		},
-		&requestflag.Flag[any]{
-			Name:      "permanent",
-			Usage:     "If true, permanently delete the thread instead of moving to trash.",
-			QueryPath: "permanent",
 		},
 	},
 	Action:          handleInboxesThreadsDelete,
@@ -127,7 +112,7 @@ var inboxesThreadsGetAttachment = cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
+			Usage:    "ID of inbox.",
 			Required: true,
 		},
 		&requestflag.Flag[string]{
