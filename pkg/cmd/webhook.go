@@ -108,11 +108,6 @@ var webhooksList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[any]{
-			Name:      "ascending",
-			Usage:     "Sort in ascending temporal order.",
-			QueryPath: "ascending",
-		},
-		&requestflag.Flag[any]{
 			Name:      "limit",
 			Usage:     "Limit of number of items returned.",
 			QueryPath: "limit",

@@ -32,9 +32,7 @@ func TestInboxesThreadsList(t *testing.T) {
 			"--after", "'2019-12-27T18:11:19.117Z'",
 			"--ascending=true",
 			"--before", "'2019-12-27T18:11:19.117Z'",
-			"--include-blocked=true",
 			"--include-spam=true",
-			"--include-trash=true",
 			"--label", "[string]",
 			"--limit", "0",
 			"--page-token", "page_token",
@@ -51,7 +49,6 @@ func TestInboxesThreadsDelete(t *testing.T) {
 			"inboxes:threads", "delete",
 			"--inbox-id", "inbox_id",
 			"--thread-id", "thread_id",
-			"--permanent=true",
 		)
 	})
 }
