@@ -37,6 +37,12 @@ type Flag[
 	BodyPath   string // location in the request body to put this flag's value
 	BodyRoot   bool   // if true, then use this value as the entire request body
 
+	// Const, when true, marks this flag as a constant. The flag's Default value is used as the fixed value
+	// and always included in the request (IsSet returns true). The user can still see and override the flag,
+	// but isn't required to provide it. This is used for single-value enums and `x-stainless-const`
+	// parameters.
+	Const bool
+
 	// unexported fields for internal use
 	count      int       // number of times the flag has been set
 	hasBeenSet bool      // whether the flag has been set from env or file
@@ -108,6 +114,40 @@ func ExtractRequestContents(cmd *cli.Command) RequestContents {
 		}
 	}
 	return res
+}
+
+func GetMissingRequiredFlags(cmd *cli.Command, body any) []cli.Flag {
+	missing := []cli.Flag{}
+	for _, flag := range cmd.Flags {
+		if flag.IsSet() {
+			continue
+		}
+
+		if required, ok := flag.(cli.RequiredFlag); ok && required.IsRequired() {
+			missing = append(missing, flag)
+			continue
+		}
+
+		if r, ok := flag.(RequiredFlagOrStdin); !ok || !r.IsRequiredAsFlagOrStdin() {
+			continue
+		}
+
+		if toSend, ok := flag.(InRequest); ok {
+			if toSend.IsBodyRoot() {
+				if body != nil {
+					continue
+				}
+			} else if bodyPath := toSend.GetBodyPath(); bodyPath != "" {
+				if bodyMap, ok := body.(map[string]any); ok {
+					if _, found := bodyMap[bodyPath]; found {
+						continue
+					}
+				}
+			}
+		}
+		missing = append(missing, flag)
+	}
+	return missing
 }
 
 // Implementation of the cli.Flag interface
@@ -195,7 +235,7 @@ func (f *Flag[T]) String() string {
 }
 
 func (f *Flag[T]) IsSet() bool {
-	return f.hasBeenSet
+	return f.hasBeenSet || f.Const
 }
 
 func (f *Flag[T]) Names() []string {
@@ -221,6 +261,27 @@ func (f *Flag[T]) SetCategory(c string) {
 var _ cli.RequiredFlag = (*Flag[any])(nil) // Type assertion to ensure interface compliance
 
 func (f *Flag[T]) IsRequired() bool {
+	// Const flags are always auto-set, so never required from the user.
+	if f.Const {
+		return false
+	}
+	// Intentionally don't use `f.Required`, because request flags may be passed
+	// over stdin as well as by flag.
+	if f.BodyPath != "" || f.BodyRoot {
+		return false
+	}
+	return f.Required
+}
+
+type RequiredFlagOrStdin interface {
+	IsRequiredAsFlagOrStdin() bool
+}
+
+func (f *Flag[T]) IsRequiredAsFlagOrStdin() bool {
+	// Const flags are always auto-set, so never required from the user.
+	if f.Const {
+		return false
+	}
 	return f.Required
 }
 
@@ -325,6 +386,14 @@ var _ cli.Countable = (*Flag[any])(nil) // Type assertion to ensure interface co
 
 func (f *Flag[T]) Count() int {
 	return f.count
+}
+
+// Implementation for the cli.LocalFlag interface
+var _ cli.LocalFlag = (*Flag[any])(nil) // Type assertion to ensure interface compliance
+
+func (f Flag[T]) IsLocal() bool {
+	// By default, all request flags are local, i.e. can be provided at any part of the CLI command.
+	return true
 }
 
 // cliValue is a generic implementation of cli.Value for common types

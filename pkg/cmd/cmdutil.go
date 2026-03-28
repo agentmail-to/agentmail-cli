@@ -36,7 +36,9 @@ func getDefaultRequestOptions(cmd *cli.Command) []option.RequestOption {
 		option.WithHeader("X-Stainless-Package-Version", Version),
 		option.WithHeader("X-Stainless-Runtime", "cli"),
 		option.WithHeader("X-Stainless-CLI-Command", cmd.FullName()),
-		option.WithAPIKey(cmd.String("api-key")),
+	}
+	if cmd.IsSet("api-key") {
+		opts = append(opts, option.WithAPIKey(cmd.String("api-key")))
 	}
 
 	// Override base URL if the --base-url flag is provided
@@ -80,9 +82,35 @@ var debugMiddlewareOption = option.WithMiddleware(
 	},
 )
 
+// isInputPiped tries to check for input being piped into the CLI which tells us that we should try to read
+// from stdin. This can be a bit tricky in some cases like when an stdin is connected to a pipe but nothing is
+// being piped in (this may happen in some environments like Cursor's integration terminal or CI), which is
+// why this function is a little more elaborate than it'd be otherwise.
 func isInputPiped() bool {
-	stat, _ := os.Stdin.Stat()
-	return (stat.Mode() & os.ModeCharDevice) == 0
+	stat, err := os.Stdin.Stat()
+	if err != nil {
+		return false
+	}
+
+	mode := stat.Mode()
+
+	// Regular file (redirect like < file.txt) — only if non-empty.
+	//
+	// Notably, on Unix the case like `< /dev/null` is handled below because `/dev/null` is not a regular
+	// file. On Windows, NUL appears as a regular file with size 0, so it's also handled correctly.
+	if mode.IsRegular() && stat.Size() > 0 {
+		return true
+	}
+
+	// For pipes/sockets (e.g. `echo foo | stainlesscli`), use an OS-specific check to determine whether
+	// data is actually available. Some environments like Cursor's integrated terminal connect stdin as a
+	// pipe even when nothing is being piped.
+	if mode&(os.ModeNamedPipe|os.ModeSocket) != 0 {
+		// Defined in either cmdutil_unix.go or cmdutil_windows.go.
+		return isPipedDataAvailableOSSpecific()
+	}
+
+	return false
 }
 
 func isTerminal(w io.Writer) bool {
@@ -362,7 +390,8 @@ type HasRawJSON interface {
 
 // For an iterator over different value types, display its values to the user in
 // different formats.
-func ShowJSONIterator[T any](stdout *os.File, title string, iter jsonview.Iterator[T], format string, transform string) error {
+// -1 is used to signal no limit of items to display
+func ShowJSONIterator[T any](stdout *os.File, title string, iter jsonview.Iterator[T], format string, transform string, itemsToDisplay int64) error {
 	if format == "explore" {
 		return jsonview.ExploreJSONStream(title, iter)
 	}
@@ -377,7 +406,8 @@ func ShowJSONIterator[T any](stdout *os.File, title string, iter jsonview.Iterat
 	usePager := false
 	output := []byte{}
 	numberOfNewlines := 0
-	for iter.Next() {
+	// -1 is used to signal no limit of items to display
+	for itemsToDisplay != 0 && iter.Next() {
 		item := iter.Current()
 		var obj gjson.Result
 		if hasRaw, ok := any(item).(HasRawJSON); ok {
@@ -395,6 +425,7 @@ func ShowJSONIterator[T any](stdout *os.File, title string, iter jsonview.Iterat
 		}
 
 		output = append(output, json...)
+		itemsToDisplay -= 1
 		numberOfNewlines += countTerminalLines(json, terminalWidth)
 
 		// If the output won't fit in the terminal window, stream it to a pager
@@ -421,6 +452,9 @@ func ShowJSONIterator[T any](stdout *os.File, title string, iter jsonview.Iterat
 		}
 
 		for iter.Next() {
+			if itemsToDisplay == 0 {
+				break
+			}
 			item := iter.Current()
 			var obj gjson.Result
 			if hasRaw, ok := any(item).(HasRawJSON); ok {
@@ -435,6 +469,7 @@ func ShowJSONIterator[T any](stdout *os.File, title string, iter jsonview.Iterat
 			if err := ShowJSON(pager, title, obj, format, transform); err != nil {
 				return err
 			}
+			itemsToDisplay -= 1
 		}
 		return iter.Err()
 	})
