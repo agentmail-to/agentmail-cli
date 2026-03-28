@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.7.3 (2026-03-28)
+
+Full Changelog: [v0.7.2...v0.7.3](https://github.com/agentmail-to/agentmail-cli/compare/v0.7.2...v0.7.3)
+
+### Features
+
+* **api:** api update ([9d775cd](https://github.com/agentmail-to/agentmail-cli/commit/9d775cd3a27c5915bfc57576441026b0617b0fd6))
+
+
+### Chores
+
+* update agentmail-go to v0.1.0 ([9ed80ba](https://github.com/agentmail-to/agentmail-cli/commit/9ed80ba6f772e0a60f5da58cd56af25e23890e0a))
+
 ## 0.7.2 (2026-03-28)
 
 Full Changelog: [v0.7.1...v0.7.2](https://github.com/agentmail-to/agentmail-cli/compare/v0.7.1...v0.7.2)
