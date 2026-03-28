@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.4 (2026-03-28)
+
+Full Changelog: [v0.7.3...v0.7.4](https://github.com/agentmail-to/agentmail-cli/compare/v0.7.3...v0.7.4)
+
+### Bug Fixes
+
+* add go.sum entry for agentmail-go v0.1.0 ([36f3175](https://github.com/agentmail-to/agentmail-cli/commit/36f3175a14c51a3bea17589fb7cae7e9cae50c1d))
+
 ## 0.7.3 (2026-03-28)
 
 Full Changelog: [v0.7.2...v0.7.3](https://github.com/agentmail-to/agentmail-cli/compare/v0.7.2...v0.7.3)
