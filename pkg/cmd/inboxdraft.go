@@ -15,15 +15,20 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-var inboxesDraftsCreate = cli.Command{
+var inboxesDraftsCreate = requestflag.WithInnerFlags(cli.Command{
 	Name:    "create",
 	Usage:   "Create Draft",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "inbox-id",
-			Usage:    "ID of inbox.",
+			Usage:    "The ID of the inbox.",
 			Required: true,
+		},
+		&requestflag.Flag[any]{
+			Name:     "attachment",
+			Usage:    "Attachments to include in draft.",
+			BodyPath: "attachments",
 		},
 		&requestflag.Flag[any]{
 			Name:     "bcc",
@@ -83,7 +88,40 @@ var inboxesDraftsCreate = cli.Command{
 	},
 	Action:          handleInboxesDraftsCreate,
 	HideHelpCommand: true,
-}
+}, map[string][]requestflag.HasOuterFlag{
+	"attachment": {
+		&requestflag.InnerFlag[any]{
+			Name:       "attachment.content",
+			Usage:      "Base64 encoded content of attachment.",
+			InnerField: "content",
+		},
+		&requestflag.InnerFlag[string]{
+			Name:       "attachment.content-disposition",
+			Usage:      "Content disposition of attachment.",
+			InnerField: "content_disposition",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "attachment.content-id",
+			Usage:      "Content ID of attachment.",
+			InnerField: "content_id",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "attachment.content-type",
+			Usage:      "Content type of attachment.",
+			InnerField: "content_type",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "attachment.filename",
+			Usage:      "Filename of attachment.",
+			InnerField: "filename",
+		},
+		&requestflag.InnerFlag[any]{
+			Name:       "attachment.url",
+			Usage:      "URL to the attachment.",
+			InnerField: "url",
+		},
+	},
+})
 
 var inboxesDraftsRetrieve = cli.Command{
 	Name:    "retrieve",
@@ -92,7 +130,7 @@ var inboxesDraftsRetrieve = cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "inbox-id",
-			Usage:    "ID of inbox.",
+			Usage:    "The ID of the inbox.",
 			Required: true,
 		},
 		&requestflag.Flag[string]{
@@ -112,7 +150,7 @@ var inboxesDraftsUpdate = cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "inbox-id",
-			Usage:    "ID of inbox.",
+			Usage:    "The ID of the inbox.",
 			Required: true,
 		},
 		&requestflag.Flag[string]{
@@ -172,7 +210,7 @@ var inboxesDraftsList = cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "inbox-id",
-			Usage:    "ID of inbox.",
+			Usage:    "The ID of the inbox.",
 			Required: true,
 		},
 		&requestflag.Flag[any]{
@@ -217,7 +255,7 @@ var inboxesDraftsDelete = cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "inbox-id",
-			Usage:    "ID of inbox.",
+			Usage:    "The ID of the inbox.",
 			Required: true,
 		},
 		&requestflag.Flag[string]{
@@ -237,7 +275,7 @@ var inboxesDraftsSend = cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
 			Name:     "inbox-id",
-			Usage:    "ID of inbox.",
+			Usage:    "The ID of the inbox.",
 			Required: true,
 		},
 		&requestflag.Flag[string]{

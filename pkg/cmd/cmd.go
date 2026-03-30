@@ -203,7 +203,6 @@ func init() {
 				Commands: []*cli.Command{
 					&apiKeysCreate,
 					&apiKeysList,
-					&apiKeysDelete,
 				},
 			},
 			{

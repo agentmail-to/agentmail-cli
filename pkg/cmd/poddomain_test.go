@@ -43,6 +43,7 @@ func TestPodsDomainsList(t *testing.T) {
 			"--api-key", "string",
 			"pods:domains", "list",
 			"--pod-id", "pod_id",
+			"--ascending=true",
 			"--limit", "0",
 			"--page-token", "page_token",
 		)
