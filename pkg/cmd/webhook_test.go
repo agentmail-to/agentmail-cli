@@ -96,6 +96,7 @@ func TestWebhooksList(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"webhooks", "list",
+			"--ascending=true",
 			"--limit", "0",
 			"--page-token", "page_token",
 		)
