@@ -22,4 +22,4 @@ jobs:
           GOMOD=$(gh api repos/$GITHUB_REPOSITORY/contents/go.mod?ref=release-please--branches--main--changes--next --jq '.content' | base64 -d)
           VERSION=$(echo "$GOMOD" | grep 'agentmail-to/agentmail-go' | head -1 | awk '{print $2}')
           git ls-remote --tags https://github.com/agentmail-to/agentmail-go.git "refs/tags/$VERSION" | grep -q "$VERSION" || exit 0
-          gh pr merge "$PR" --repo "$GITHUB_REPOSITORY" --squash
+          gh pr merge "$PR" --repo "$GITHUB_REPOSITORY" --squash --auto
