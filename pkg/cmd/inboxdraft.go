@@ -284,13 +284,13 @@ var inboxesDraftsSend = cli.Command{
 			Required: true,
 		},
 		&requestflag.Flag[any]{
-			Name:     "add-label",
-			Usage:    "Labels to add to message.",
+			Name:     "add-labels",
+			Usage:    "Label or labels to add to message.",
 			BodyPath: "add_labels",
 		},
 		&requestflag.Flag[any]{
-			Name:     "remove-label",
-			Usage:    "Labels to remove from message.",
+			Name:     "remove-labels",
+			Usage:    "Label or labels to remove from message.",
 			BodyPath: "remove_labels",
 		},
 	},
