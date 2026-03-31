@@ -195,18 +195,16 @@ func TestInboxesDraftsSend(t *testing.T) {
 			"inboxes:drafts", "send",
 			"--inbox-id", "inbox_id",
 			"--draft-id", "draft_id",
-			"--add-label", "[string]",
-			"--remove-label", "[string]",
+			"--add-labels", "string",
+			"--remove-labels", "string",
 		)
 	})
 
 	t.Run("piping data", func(t *testing.T) {
 		// Test piping YAML data over stdin
 		pipeData := []byte("" +
-			"add_labels:\n" +
-			"  - string\n" +
-			"remove_labels:\n" +
-			"  - string\n")
+			"add_labels: string\n" +
+			"remove_labels: string\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",
