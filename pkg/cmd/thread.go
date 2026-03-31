@@ -51,9 +51,19 @@ var threadsList = cli.Command{
 			QueryPath: "before",
 		},
 		&requestflag.Flag[any]{
+			Name:      "include-blocked",
+			Usage:     "Include blocked in results.",
+			QueryPath: "include_blocked",
+		},
+		&requestflag.Flag[any]{
 			Name:      "include-spam",
 			Usage:     "Include spam in results.",
 			QueryPath: "include_spam",
+		},
+		&requestflag.Flag[any]{
+			Name:      "include-trash",
+			Usage:     "Include trash in results.",
+			QueryPath: "include_trash",
 		},
 		&requestflag.Flag[any]{
 			Name:      "label",

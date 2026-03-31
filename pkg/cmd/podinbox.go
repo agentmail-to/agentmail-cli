@@ -62,7 +62,7 @@ var podsInboxesRetrieve = cli.Command{
 		},
 		&requestflag.Flag[string]{
 			Name:     "inbox-id",
-			Usage:    "ID of inbox.",
+			Usage:    "The ID of the inbox.",
 			Required: true,
 		},
 	},
@@ -79,6 +79,11 @@ var podsInboxesList = cli.Command{
 			Name:     "pod-id",
 			Usage:    "ID of pod.",
 			Required: true,
+		},
+		&requestflag.Flag[any]{
+			Name:      "ascending",
+			Usage:     "Sort in ascending temporal order.",
+			QueryPath: "ascending",
 		},
 		&requestflag.Flag[any]{
 			Name:      "limit",
@@ -107,7 +112,7 @@ var podsInboxesDelete = cli.Command{
 		},
 		&requestflag.Flag[string]{
 			Name:     "inbox-id",
-			Usage:    "ID of inbox.",
+			Usage:    "The ID of the inbox.",
 			Required: true,
 		},
 	},

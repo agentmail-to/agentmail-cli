@@ -17,25 +17,38 @@ import (
 
 var metricsList = cli.Command{
 	Name:    "list",
-	Usage:   "List Metrics",
+	Usage:   "Query Metrics",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[any]{
-			Name:      "end-timestamp",
-			Usage:     "End timestamp for the metrics query range.",
-			Required:  true,
-			QueryPath: "end_timestamp",
+			Name:      "descending",
+			Usage:     "Sort in descending order.",
+			QueryPath: "descending",
 		},
 		&requestflag.Flag[any]{
-			Name:      "start-timestamp",
-			Usage:     "Start timestamp for the metrics query range.",
-			Required:  true,
-			QueryPath: "start_timestamp",
+			Name:      "end",
+			Usage:     "End timestamp for the query.",
+			QueryPath: "end",
 		},
 		&requestflag.Flag[any]{
 			Name:      "event-type",
-			Usage:     "List of metric event types to filter by.",
+			Usage:     "List of metric event types to query.",
 			QueryPath: "event_types",
+		},
+		&requestflag.Flag[any]{
+			Name:      "limit",
+			Usage:     "Limit on number of buckets to return.",
+			QueryPath: "limit",
+		},
+		&requestflag.Flag[any]{
+			Name:      "period",
+			Usage:     "Period in number of seconds for the query.",
+			QueryPath: "period",
+		},
+		&requestflag.Flag[any]{
+			Name:      "start",
+			Usage:     "Start timestamp for the query.",
+			QueryPath: "start",
 		},
 	},
 	Action:          handleMetricsList,
