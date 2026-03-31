@@ -8,6 +8,10 @@ on:
   schedule:
     - cron: '*/5 * * * *'
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   auto-merge:
     runs-on: ubuntu-latest
