@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.7.7 (2026-03-31)
+
+Full Changelog: [v0.7.6...v0.7.7](https://github.com/agentmail-to/agentmail-cli/compare/v0.7.6...v0.7.7)
+
+### Features
+
+* **api:** api update ([54154c0](https://github.com/agentmail-to/agentmail-cli/commit/54154c064b74dea0d84fc756e5e213a2d9373fc7))
+
+
+### Bug Fixes
+
+* add permissions for auto-merge workflow ([673e067](https://github.com/agentmail-to/agentmail-cli/commit/673e0673bca92ae94844c4070370d635475951eb))
+* use --admin to bypass branch protection for release merge ([7e02df7](https://github.com/agentmail-to/agentmail-cli/commit/7e02df7c62342ea3fcd6b8906b32013153d3bb63))
+* use --auto flag for release PR merge ([3034d63](https://github.com/agentmail-to/agentmail-cli/commit/3034d63a1892aad9c2704ae489183755e4f10842))
+
 ## 0.7.6 (2026-03-31)
 
 Full Changelog: [v0.7.5...v0.7.6](https://github.com/agentmail-to/agentmail-cli/compare/v0.7.5...v0.7.6)
