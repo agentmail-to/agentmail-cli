@@ -1,29 +1,20 @@
-name: Auto-merge release after Go SDK
+name: Auto-merge release
 
 on:
-  workflow_run:
-    workflows: [CI]
-    types: [completed]
-    branches: [release-please--*]
-  schedule:
-    - cron: '*/5 * * * *'
-
-permissions:
-  contents: write
-  pull-requests: write
+  repository_dispatch:
+    types: [go-sdk-released]
 
 jobs:
-  auto-merge:
+  retrigger:
     runs-on: ubuntu-latest
-    if: github.repository == 'agentmail-to/agentmail-cli'
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
-      - name: Merge if Go SDK is ready
+      - name: Enable auto-merge on release PR
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           PR=$(gh pr list --repo "$GITHUB_REPOSITORY" --head "release-please--branches--main--changes--next" --json number --jq '.[0].number')
           [ -z "$PR" ] && exit 0
-          GOMOD=$(gh api repos/$GITHUB_REPOSITORY/contents/go.mod?ref=release-please--branches--main--changes--next --jq '.content' | base64 -d)
-          VERSION=$(echo "$GOMOD" | grep 'agentmail-to/agentmail-go' | head -1 | awk '{print $2}')
-          git ls-remote --tags https://github.com/agentmail-to/agentmail-go.git "refs/tags/$VERSION" | grep -q "$VERSION" || exit 0
-          gh pr merge "$PR" --repo "$GITHUB_REPOSITORY" --squash --admin
+          gh pr merge "$PR" --repo "$GITHUB_REPOSITORY" --squash --auto
