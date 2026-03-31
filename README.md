@@ -1,6 +1,8 @@
 # AgentMail CLI
 
-The official CLI for the [AgentMail API](https://docs.agentmail.to).
+[![npm](https://img.shields.io/npm/v/agentmail-cli)](https://www.npmjs.com/package/agentmail-cli)
+
+The official CLI for [AgentMail](https://agentmail.to) — the email API for AI agents. Manage inboxes, send and receive email, and inspect threads from the terminal.
 
 ## Installation
 
@@ -50,6 +52,17 @@ Use `--help` on any command for details.
 | `--help` | Show help |
 | `--version` | Show version |
 
-## Documentation
+### Install via Homebrew
 
-[docs.agentmail.to](https://docs.agentmail.to)
+```sh
+brew install agentmail-to/tap/agentmail
+```
+
+## Links
+
+- [AgentMail](https://agentmail.to) — The email API for AI agents
+- [Documentation](https://docs.agentmail.to)
+- [Python SDK](https://github.com/agentmail-to/agentmail-python)
+- [TypeScript SDK](https://github.com/agentmail-to/agentmail-node)
+- [MCP Server](https://github.com/agentmail-to/agentmail-mcp)
+- [Discord](https://discord.gg/ZYN7f7KPjS)
