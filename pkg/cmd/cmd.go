@@ -81,6 +81,15 @@ func init() {
 		},
 		Commands: []*cli.Command{
 			{
+				Name:     "agent",
+				Category: "API RESOURCE",
+				Suggest:  true,
+				Commands: []*cli.Command{
+					&agentSignUp,
+					&agentVerify,
+				},
+			},
+			{
 				Name:     "inboxes",
 				Category: "API RESOURCE",
 				Suggest:  true,
