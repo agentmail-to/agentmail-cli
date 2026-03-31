@@ -3,7 +3,7 @@ module github.com/agentmail-to/agentmail-cli
 go 1.25
 
 require (
-	github.com/agentmail-to/agentmail-go v0.1.0
+	github.com/agentmail-to/agentmail-go v0.2.0
 	github.com/charmbracelet/bubbles v0.21.0
 	github.com/charmbracelet/bubbletea v1.3.6
 	github.com/charmbracelet/lipgloss v1.1.0
