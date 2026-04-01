@@ -7,14 +7,12 @@ on:
 jobs:
   retrigger:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
     steps:
-      - name: Enable auto-merge on release PR
+      - name: Approve and auto-merge release PR
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
         run: |
           PR=$(gh pr list --repo "$GITHUB_REPOSITORY" --head "release-please--branches--main--changes--next" --json number --jq '.[0].number')
           [ -z "$PR" ] && exit 0
+          gh pr review "$PR" --repo "$GITHUB_REPOSITORY" --approve
           gh pr merge "$PR" --repo "$GITHUB_REPOSITORY" --squash --auto
