@@ -17,7 +17,7 @@ import (
 
 var inboxesCreate = cli.Command{
 	Name:    "create",
-	Usage:   "Create Inbox",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[any]{
@@ -47,7 +47,7 @@ var inboxesCreate = cli.Command{
 
 var inboxesRetrieve = cli.Command{
 	Name:    "retrieve",
-	Usage:   "Get Inbox",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -62,7 +62,7 @@ var inboxesRetrieve = cli.Command{
 
 var inboxesUpdate = cli.Command{
 	Name:    "update",
-	Usage:   "Update Inbox",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -83,7 +83,7 @@ var inboxesUpdate = cli.Command{
 
 var inboxesList = cli.Command{
 	Name:    "list",
-	Usage:   "List Inboxes",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[any]{
@@ -108,7 +108,7 @@ var inboxesList = cli.Command{
 
 var inboxesDelete = cli.Command{
 	Name:    "delete",
-	Usage:   "Delete Inbox",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -123,7 +123,7 @@ var inboxesDelete = cli.Command{
 
 var inboxesListMetrics = cli.Command{
 	Name:    "list-metrics",
-	Usage:   "Query Metrics",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{

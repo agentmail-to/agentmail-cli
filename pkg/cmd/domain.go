@@ -17,7 +17,7 @@ import (
 
 var domainsCreate = cli.Command{
 	Name:    "create",
-	Usage:   "Create Domain",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -39,7 +39,7 @@ var domainsCreate = cli.Command{
 
 var domainsRetrieve = cli.Command{
 	Name:    "retrieve",
-	Usage:   "Get Domain",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -54,7 +54,7 @@ var domainsRetrieve = cli.Command{
 
 var domainsList = cli.Command{
 	Name:    "list",
-	Usage:   "List Domains",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[any]{
@@ -79,7 +79,7 @@ var domainsList = cli.Command{
 
 var domainsDelete = cli.Command{
 	Name:    "delete",
-	Usage:   "Delete Domain",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -94,7 +94,7 @@ var domainsDelete = cli.Command{
 
 var domainsGetZoneFile = cli.Command{
 	Name:    "get-zone-file",
-	Usage:   "Get Zone File",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -109,7 +109,7 @@ var domainsGetZoneFile = cli.Command{
 
 var domainsVerify = cli.Command{
 	Name:    "verify",
-	Usage:   "Verify Domain",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{

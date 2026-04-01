@@ -17,7 +17,7 @@ import (
 
 var podsInboxesCreate = cli.Command{
 	Name:    "create",
-	Usage:   "Create Inbox",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -52,7 +52,7 @@ var podsInboxesCreate = cli.Command{
 
 var podsInboxesRetrieve = cli.Command{
 	Name:    "retrieve",
-	Usage:   "Get Inbox",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -72,7 +72,7 @@ var podsInboxesRetrieve = cli.Command{
 
 var podsInboxesList = cli.Command{
 	Name:    "list",
-	Usage:   "List Inboxes",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -102,7 +102,7 @@ var podsInboxesList = cli.Command{
 
 var podsInboxesDelete = cli.Command{
 	Name:    "delete",
-	Usage:   "Delete Inbox",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{

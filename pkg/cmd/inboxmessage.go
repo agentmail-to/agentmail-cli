@@ -17,7 +17,7 @@ import (
 
 var inboxesMessagesRetrieve = cli.Command{
 	Name:    "retrieve",
-	Usage:   "Get Message",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -37,7 +37,7 @@ var inboxesMessagesRetrieve = cli.Command{
 
 var inboxesMessagesUpdate = cli.Command{
 	Name:    "update",
-	Usage:   "Update Message",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -67,7 +67,7 @@ var inboxesMessagesUpdate = cli.Command{
 
 var inboxesMessagesList = cli.Command{
 	Name:    "list",
-	Usage:   "List Messages",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -127,7 +127,7 @@ var inboxesMessagesList = cli.Command{
 
 var inboxesMessagesForward = requestflag.WithInnerFlags(cli.Command{
 	Name:    "forward",
-	Usage:   "Forward Message",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -226,7 +226,7 @@ var inboxesMessagesForward = requestflag.WithInnerFlags(cli.Command{
 
 var inboxesMessagesGetAttachment = cli.Command{
 	Name:    "get-attachment",
-	Usage:   "Get Attachment",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -251,7 +251,7 @@ var inboxesMessagesGetAttachment = cli.Command{
 
 var inboxesMessagesGetRaw = cli.Command{
 	Name:    "get-raw",
-	Usage:   "Get Raw Message",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -271,7 +271,7 @@ var inboxesMessagesGetRaw = cli.Command{
 
 var inboxesMessagesReply = requestflag.WithInnerFlags(cli.Command{
 	Name:    "reply",
-	Usage:   "Reply To Message",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -370,7 +370,7 @@ var inboxesMessagesReply = requestflag.WithInnerFlags(cli.Command{
 
 var inboxesMessagesReplyAll = requestflag.WithInnerFlags(cli.Command{
 	Name:    "reply-all",
-	Usage:   "Reply All Message",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -452,7 +452,7 @@ var inboxesMessagesReplyAll = requestflag.WithInnerFlags(cli.Command{
 
 var inboxesMessagesSend = requestflag.WithInnerFlags(cli.Command{
 	Name:    "send",
-	Usage:   "Send Message",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{

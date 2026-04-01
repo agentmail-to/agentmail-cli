@@ -17,7 +17,7 @@ import (
 
 var apiKeysCreate = requestflag.WithInnerFlags(cli.Command{
 	Name:    "create",
-	Usage:   "Create API Key",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -216,7 +216,7 @@ var apiKeysCreate = requestflag.WithInnerFlags(cli.Command{
 
 var apiKeysList = cli.Command{
 	Name:    "list",
-	Usage:   "List API Keys",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[any]{
