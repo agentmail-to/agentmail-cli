@@ -17,7 +17,7 @@ import (
 
 var metricsList = cli.Command{
 	Name:    "list",
-	Usage:   "Query Metrics",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[any]{

@@ -17,7 +17,7 @@ import (
 
 var podsThreadsRetrieve = cli.Command{
 	Name:    "retrieve",
-	Usage:   "Get Thread",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -37,7 +37,7 @@ var podsThreadsRetrieve = cli.Command{
 
 var podsThreadsList = cli.Command{
 	Name:    "list",
-	Usage:   "List Threads",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -97,7 +97,7 @@ var podsThreadsList = cli.Command{
 
 var podsThreadsGetAttachment = cli.Command{
 	Name:    "get-attachment",
-	Usage:   "Get Attachment",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{

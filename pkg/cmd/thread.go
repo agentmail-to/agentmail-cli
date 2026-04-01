@@ -17,7 +17,7 @@ import (
 
 var threadsRetrieve = cli.Command{
 	Name:    "retrieve",
-	Usage:   "Get Thread",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -32,7 +32,7 @@ var threadsRetrieve = cli.Command{
 
 var threadsList = cli.Command{
 	Name:    "list",
-	Usage:   "List Threads",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[any]{
@@ -87,7 +87,7 @@ var threadsList = cli.Command{
 
 var threadsRetrieveAttachment = cli.Command{
 	Name:    "retrieve-attachment",
-	Usage:   "Get Attachment",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{

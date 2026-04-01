@@ -17,7 +17,7 @@ import (
 
 var podsCreate = cli.Command{
 	Name:    "create",
-	Usage:   "Create Pod",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[any]{
@@ -37,7 +37,7 @@ var podsCreate = cli.Command{
 
 var podsRetrieve = cli.Command{
 	Name:    "retrieve",
-	Usage:   "Get Pod",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -52,7 +52,7 @@ var podsRetrieve = cli.Command{
 
 var podsList = cli.Command{
 	Name:    "list",
-	Usage:   "List Pods",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[any]{
@@ -77,7 +77,7 @@ var podsList = cli.Command{
 
 var podsDelete = cli.Command{
 	Name:    "delete",
-	Usage:   "Delete Pod",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{

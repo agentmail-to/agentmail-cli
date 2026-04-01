@@ -17,7 +17,7 @@ import (
 
 var podsDomainsCreate = cli.Command{
 	Name:    "create",
-	Usage:   "Create Domain",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -44,7 +44,7 @@ var podsDomainsCreate = cli.Command{
 
 var podsDomainsList = cli.Command{
 	Name:    "list",
-	Usage:   "List Domains",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -74,7 +74,7 @@ var podsDomainsList = cli.Command{
 
 var podsDomainsDelete = cli.Command{
 	Name:    "delete",
-	Usage:   "Delete Domain",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{

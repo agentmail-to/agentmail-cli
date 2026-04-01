@@ -17,7 +17,7 @@ import (
 
 var webhooksCreate = cli.Command{
 	Name:    "create",
-	Usage:   "Create Webhook",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[[]string]{
@@ -54,7 +54,7 @@ var webhooksCreate = cli.Command{
 
 var webhooksRetrieve = cli.Command{
 	Name:    "retrieve",
-	Usage:   "Get Webhook",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -69,7 +69,7 @@ var webhooksRetrieve = cli.Command{
 
 var webhooksUpdate = cli.Command{
 	Name:    "update",
-	Usage:   "Update Webhook",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -104,7 +104,7 @@ var webhooksUpdate = cli.Command{
 
 var webhooksList = cli.Command{
 	Name:    "list",
-	Usage:   "List Webhooks",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[any]{
@@ -129,7 +129,7 @@ var webhooksList = cli.Command{
 
 var webhooksDelete = cli.Command{
 	Name:    "delete",
-	Usage:   "Delete Webhook",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{

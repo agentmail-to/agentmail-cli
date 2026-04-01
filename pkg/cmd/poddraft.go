@@ -17,7 +17,7 @@ import (
 
 var podsDraftsRetrieve = cli.Command{
 	Name:    "retrieve",
-	Usage:   "Get Draft",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -37,7 +37,7 @@ var podsDraftsRetrieve = cli.Command{
 
 var podsDraftsList = cli.Command{
 	Name:    "list",
-	Usage:   "List Drafts",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{

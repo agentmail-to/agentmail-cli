@@ -17,7 +17,7 @@ import (
 
 var inboxesThreadsRetrieve = cli.Command{
 	Name:    "retrieve",
-	Usage:   "Get Thread",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -37,7 +37,7 @@ var inboxesThreadsRetrieve = cli.Command{
 
 var inboxesThreadsList = cli.Command{
 	Name:    "list",
-	Usage:   "List Threads",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -122,7 +122,7 @@ var inboxesThreadsDelete = cli.Command{
 
 var inboxesThreadsGetAttachment = cli.Command{
 	Name:    "get-attachment",
-	Usage:   "Get Attachment",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{

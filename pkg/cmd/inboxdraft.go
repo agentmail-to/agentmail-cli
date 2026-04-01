@@ -17,7 +17,7 @@ import (
 
 var inboxesDraftsCreate = requestflag.WithInnerFlags(cli.Command{
 	Name:    "create",
-	Usage:   "Create Draft",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -125,7 +125,7 @@ var inboxesDraftsCreate = requestflag.WithInnerFlags(cli.Command{
 
 var inboxesDraftsRetrieve = cli.Command{
 	Name:    "retrieve",
-	Usage:   "Get Draft",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -145,7 +145,7 @@ var inboxesDraftsRetrieve = cli.Command{
 
 var inboxesDraftsUpdate = cli.Command{
 	Name:    "update",
-	Usage:   "Update Draft",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -205,7 +205,7 @@ var inboxesDraftsUpdate = cli.Command{
 
 var inboxesDraftsList = cli.Command{
 	Name:    "list",
-	Usage:   "List Drafts",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -250,7 +250,7 @@ var inboxesDraftsList = cli.Command{
 
 var inboxesDraftsDelete = cli.Command{
 	Name:    "delete",
-	Usage:   "Delete Draft",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -270,7 +270,7 @@ var inboxesDraftsDelete = cli.Command{
 
 var inboxesDraftsSend = cli.Command{
 	Name:    "send",
-	Usage:   "Send Draft",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
