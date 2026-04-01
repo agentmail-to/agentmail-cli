@@ -35,6 +35,45 @@ func TestPodsDomainsCreate(t *testing.T) {
 	})
 }
 
+func TestPodsDomainsRetrieve(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"pods:domains", "retrieve",
+			"--pod-id", "pod_id",
+			"--domain-id", "domain_id",
+		)
+	})
+}
+
+func TestPodsDomainsUpdate(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"pods:domains", "update",
+			"--pod-id", "pod_id",
+			"--domain-id", "domain_id",
+			"--feedback-enabled=true",
+		)
+	})
+
+	t.Run("piping data", func(t *testing.T) {
+		// Test piping YAML data over stdin
+		pipeData := []byte("feedback_enabled: true")
+		mocktest.TestRunMockTestWithPipeAndFlags(
+			t, pipeData,
+			"--api-key", "string",
+			"pods:domains", "update",
+			"--pod-id", "pod_id",
+			"--domain-id", "domain_id",
+		)
+	})
+}
+
 func TestPodsDomainsList(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
@@ -57,6 +96,32 @@ func TestPodsDomainsDelete(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"pods:domains", "delete",
+			"--pod-id", "pod_id",
+			"--domain-id", "domain_id",
+		)
+	})
+}
+
+func TestPodsDomainsGetZoneFile(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"pods:domains", "get-zone-file",
+			"--pod-id", "pod_id",
+			"--domain-id", "domain_id",
+		)
+	})
+}
+
+func TestPodsDomainsVerify(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"pods:domains", "verify",
 			"--pod-id", "pod_id",
 			"--domain-id", "domain_id",
 		)

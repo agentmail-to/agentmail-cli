@@ -52,6 +52,32 @@ func TestPodsInboxesRetrieve(t *testing.T) {
 	})
 }
 
+func TestPodsInboxesUpdate(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"pods:inboxes", "update",
+			"--pod-id", "pod_id",
+			"--inbox-id", "inbox_id",
+			"--display-name", "display_name",
+		)
+	})
+
+	t.Run("piping data", func(t *testing.T) {
+		// Test piping YAML data over stdin
+		pipeData := []byte("display_name: display_name")
+		mocktest.TestRunMockTestWithPipeAndFlags(
+			t, pipeData,
+			"--api-key", "string",
+			"pods:inboxes", "update",
+			"--pod-id", "pod_id",
+			"--inbox-id", "inbox_id",
+		)
+	})
+}
+
 func TestPodsInboxesList(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {

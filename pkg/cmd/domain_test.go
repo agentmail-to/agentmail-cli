@@ -45,6 +45,30 @@ func TestDomainsRetrieve(t *testing.T) {
 	})
 }
 
+func TestDomainsUpdate(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"domains", "update",
+			"--domain-id", "domain_id",
+			"--feedback-enabled=true",
+		)
+	})
+
+	t.Run("piping data", func(t *testing.T) {
+		// Test piping YAML data over stdin
+		pipeData := []byte("feedback_enabled: true")
+		mocktest.TestRunMockTestWithPipeAndFlags(
+			t, pipeData,
+			"--api-key", "string",
+			"domains", "update",
+			"--domain-id", "domain_id",
+		)
+	})
+}
+
 func TestDomainsList(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {

@@ -15,11 +15,16 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-var apiKeysCreate = requestflag.WithInnerFlags(cli.Command{
+var podsAPIKeysCreate = requestflag.WithInnerFlags(cli.Command{
 	Name:    "create",
 	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:     "pod-id",
+			Usage:    "ID of pod.",
+			Required: true,
+		},
 		&requestflag.Flag[string]{
 			Name:     "name",
 			Usage:    "Name of api key.",
@@ -32,7 +37,7 @@ var apiKeysCreate = requestflag.WithInnerFlags(cli.Command{
 			BodyPath: "permissions",
 		},
 	},
-	Action:          handleAPIKeysCreate,
+	Action:          handlePodsAPIKeysCreate,
 	HideHelpCommand: true,
 }, map[string][]requestflag.HasOuterFlag{
 	"permissions": {
@@ -214,15 +219,15 @@ var apiKeysCreate = requestflag.WithInnerFlags(cli.Command{
 	},
 })
 
-var apiKeysList = cli.Command{
+var podsAPIKeysList = cli.Command{
 	Name:    "list",
 	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
-		&requestflag.Flag[any]{
-			Name:      "ascending",
-			Usage:     "Sort in ascending temporal order.",
-			QueryPath: "ascending",
+		&requestflag.Flag[string]{
+			Name:     "pod-id",
+			Usage:    "ID of pod.",
+			Required: true,
 		},
 		&requestflag.Flag[any]{
 			Name:      "limit",
@@ -235,34 +240,42 @@ var apiKeysList = cli.Command{
 			QueryPath: "page_token",
 		},
 	},
-	Action:          handleAPIKeysList,
+	Action:          handlePodsAPIKeysList,
 	HideHelpCommand: true,
 }
 
-var apiKeysDelete = cli.Command{
+var podsAPIKeysDelete = cli.Command{
 	Name:    "delete",
 	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:     "pod-id",
+			Usage:    "ID of pod.",
+			Required: true,
+		},
 		&requestflag.Flag[string]{
 			Name:     "api-key-id",
 			Usage:    "ID of api key.",
 			Required: true,
 		},
 	},
-	Action:          handleAPIKeysDelete,
+	Action:          handlePodsAPIKeysDelete,
 	HideHelpCommand: true,
 }
 
-func handleAPIKeysCreate(ctx context.Context, cmd *cli.Command) error {
+func handlePodsAPIKeysCreate(ctx context.Context, cmd *cli.Command) error {
 	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-
+	if !cmd.IsSet("pod-id") && len(unusedArgs) > 0 {
+		cmd.Set("pod-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.APIKeyNewParams{}
+	params := agentmail.PodAPIKeyNewParams{}
 
 	options, err := flagOptions(
 		cmd,
@@ -277,7 +290,12 @@ func handleAPIKeysCreate(ctx context.Context, cmd *cli.Command) error {
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.APIKeys.New(ctx, params, options...)
+	_, err = client.Pods.APIKeys.New(
+		ctx,
+		cmd.Value("pod-id").(string),
+		params,
+		options...,
+	)
 	if err != nil {
 		return err
 	}
@@ -285,18 +303,21 @@ func handleAPIKeysCreate(ctx context.Context, cmd *cli.Command) error {
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "api-keys create", obj, format, transform)
+	return ShowJSON(os.Stdout, "pods:api-keys create", obj, format, transform)
 }
 
-func handleAPIKeysList(ctx context.Context, cmd *cli.Command) error {
+func handlePodsAPIKeysList(ctx context.Context, cmd *cli.Command) error {
 	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-
+	if !cmd.IsSet("pod-id") && len(unusedArgs) > 0 {
+		cmd.Set("pod-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.APIKeyListParams{}
+	params := agentmail.PodAPIKeyListParams{}
 
 	options, err := flagOptions(
 		cmd,
@@ -311,7 +332,12 @@ func handleAPIKeysList(ctx context.Context, cmd *cli.Command) error {
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.APIKeys.List(ctx, params, options...)
+	_, err = client.Pods.APIKeys.List(
+		ctx,
+		cmd.Value("pod-id").(string),
+		params,
+		options...,
+	)
 	if err != nil {
 		return err
 	}
@@ -319,10 +345,10 @@ func handleAPIKeysList(ctx context.Context, cmd *cli.Command) error {
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "api-keys list", obj, format, transform)
+	return ShowJSON(os.Stdout, "pods:api-keys list", obj, format, transform)
 }
 
-func handleAPIKeysDelete(ctx context.Context, cmd *cli.Command) error {
+func handlePodsAPIKeysDelete(ctx context.Context, cmd *cli.Command) error {
 	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("api-key-id") && len(unusedArgs) > 0 {
@@ -331,6 +357,10 @@ func handleAPIKeysDelete(ctx context.Context, cmd *cli.Command) error {
 	}
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	params := agentmail.PodAPIKeyDeleteParams{
+		PodID: cmd.Value("pod-id").(string),
 	}
 
 	options, err := flagOptions(
@@ -344,5 +374,10 @@ func handleAPIKeysDelete(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	return client.APIKeys.Delete(ctx, cmd.Value("api-key-id").(string), options...)
+	return client.Pods.APIKeys.Delete(
+		ctx,
+		cmd.Value("api-key-id").(string),
+		params,
+		options...,
+	)
 }

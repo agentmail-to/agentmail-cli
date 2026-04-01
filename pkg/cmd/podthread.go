@@ -95,6 +95,31 @@ var podsThreadsList = cli.Command{
 	HideHelpCommand: true,
 }
 
+var podsThreadsDelete = cli.Command{
+	Name:    "delete",
+	Usage:   "Moves the thread to trash by adding a trash label to all messages. If the thread\nis already in trash, it will be permanently deleted. Use `permanent=true` to\nforce permanent deletion.",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:     "pod-id",
+			Usage:    "ID of pod.",
+			Required: true,
+		},
+		&requestflag.Flag[string]{
+			Name:     "thread-id",
+			Usage:    "ID of thread.",
+			Required: true,
+		},
+		&requestflag.Flag[any]{
+			Name:      "permanent",
+			Usage:     "If true, permanently delete the thread instead of moving to trash.",
+			QueryPath: "permanent",
+		},
+	},
+	Action:          handlePodsThreadsDelete,
+	HideHelpCommand: true,
+}
+
 var podsThreadsGetAttachment = cli.Command{
 	Name:    "get-attachment",
 	Usage:   "**CLI:**",
@@ -204,6 +229,40 @@ func handlePodsThreadsList(ctx context.Context, cmd *cli.Command) error {
 	format := cmd.Root().String("format")
 	transform := cmd.Root().String("transform")
 	return ShowJSON(os.Stdout, "pods:threads list", obj, format, transform)
+}
+
+func handlePodsThreadsDelete(ctx context.Context, cmd *cli.Command) error {
+	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("thread-id") && len(unusedArgs) > 0 {
+		cmd.Set("thread-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	params := agentmail.PodThreadDeleteParams{
+		PodID: cmd.Value("pod-id").(string),
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	return client.Pods.Threads.Delete(
+		ctx,
+		cmd.Value("thread-id").(string),
+		params,
+		options...,
+	)
 }
 
 func handlePodsThreadsGetAttachment(ctx context.Context, cmd *cli.Command) error {

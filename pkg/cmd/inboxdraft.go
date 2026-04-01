@@ -268,6 +268,31 @@ var inboxesDraftsDelete = cli.Command{
 	HideHelpCommand: true,
 }
 
+var inboxesDraftsGetAttachment = cli.Command{
+	Name:    "get-attachment",
+	Usage:   "**CLI:**",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:     "inbox-id",
+			Usage:    "The ID of the inbox.",
+			Required: true,
+		},
+		&requestflag.Flag[string]{
+			Name:     "draft-id",
+			Usage:    "ID of draft.",
+			Required: true,
+		},
+		&requestflag.Flag[string]{
+			Name:     "attachment-id",
+			Usage:    "ID of attachment.",
+			Required: true,
+		},
+	},
+	Action:          handleInboxesDraftsGetAttachment,
+	HideHelpCommand: true,
+}
+
 var inboxesDraftsSend = cli.Command{
 	Name:    "send",
 	Usage:   "**CLI:**",
@@ -502,6 +527,51 @@ func handleInboxesDraftsDelete(ctx context.Context, cmd *cli.Command) error {
 		params,
 		options...,
 	)
+}
+
+func handleInboxesDraftsGetAttachment(ctx context.Context, cmd *cli.Command) error {
+	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("attachment-id") && len(unusedArgs) > 0 {
+		cmd.Set("attachment-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	params := agentmail.InboxDraftGetAttachmentParams{
+		InboxID: cmd.Value("inbox-id").(string),
+		DraftID: cmd.Value("draft-id").(string),
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.Inboxes.Drafts.GetAttachment(
+		ctx,
+		cmd.Value("attachment-id").(string),
+		params,
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(os.Stdout, "inboxes:drafts get-attachment", obj, format, transform)
 }
 
 func handleInboxesDraftsSend(ctx context.Context, cmd *cli.Command) error {
