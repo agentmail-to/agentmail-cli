@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.7.8 (2026-04-01)
+
+Full Changelog: [v0.7.7...v0.7.8](https://github.com/agentmail-to/agentmail-cli/compare/v0.7.7...v0.7.8)
+
+### Features
+
+* **api:** api update ([8a097fc](https://github.com/agentmail-to/agentmail-cli/commit/8a097fcd316707a55cbc9a6b8afe703b957ba289))
+* **api:** manual updates ([990b138](https://github.com/agentmail-to/agentmail-cli/commit/990b138aa27685e76755b1d15dfb3848495a0559))
+
+
+### Bug Fixes
+
+* use RELEASE_PAT to approve and auto-merge release PRs ([dacdd81](https://github.com/agentmail-to/agentmail-cli/commit/dacdd81f4be1104065813f510dda657b516aa844))
+
 ## 0.7.7 (2026-03-31)
 
 Full Changelog: [v0.7.6...v0.7.7](https://github.com/agentmail-to/agentmail-cli/compare/v0.7.6...v0.7.7)
