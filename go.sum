@@ -1,5 +1,5 @@
-github.com/agentmail-to/agentmail-go v0.3.0 h1:RWCupc7H5TNj6J7lhY9obs0eHPSjDtE/WkkO/TbYz8w=
-github.com/agentmail-to/agentmail-go v0.3.0/go.mod h1:3NrKbeXLQKRgb9gj2bmCoN9WXDTy9y9yacV070xpvDU=
+github.com/agentmail-to/agentmail-go v0.4.0 h1:Kh8L8veuP4wXjR7rMq/FxklS+REv/axvopAdA69/gE8=
+github.com/agentmail-to/agentmail-go v0.4.0/go.mod h1:3NrKbeXLQKRgb9gj2bmCoN9WXDTy9y9yacV070xpvDU=
 github.com/aymanbagabas/go-osc52/v2 v2.0.1 h1:HwpRHbFMcZLEVr42D4p7XBqjyuxQH5SMiErDT4WkJ2k=
 github.com/aymanbagabas/go-osc52/v2 v2.0.1/go.mod h1:uYgXzlJ7ZpABp8OJ+exZzJJhRNQ2ASbcXHWsFqH8hp8=
 github.com/aymanbagabas/go-udiff v0.2.0 h1:TK0fH4MteXUDspT88n8CKzvK0X9O2xu9yQjWpi6yML8=
