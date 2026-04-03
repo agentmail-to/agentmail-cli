@@ -25,10 +25,9 @@ var podsAPIKeysCreate = requestflag.WithInnerFlags(cli.Command{
 			Usage:    "ID of pod.",
 			Required: true,
 		},
-		&requestflag.Flag[string]{
+		&requestflag.Flag[any]{
 			Name:     "name",
 			Usage:    "Name of api key.",
-			Required: true,
 			BodyPath: "name",
 		},
 		&requestflag.Flag[any]{
