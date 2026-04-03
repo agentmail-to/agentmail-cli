@@ -20,10 +20,9 @@ var apiKeysCreate = requestflag.WithInnerFlags(cli.Command{
 	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
-		&requestflag.Flag[string]{
+		&requestflag.Flag[any]{
 			Name:     "name",
 			Usage:    "Name of api key.",
-			Required: true,
 			BodyPath: "name",
 		},
 		&requestflag.Flag[any]{

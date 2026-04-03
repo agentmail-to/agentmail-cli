@@ -25,10 +25,9 @@ var inboxesAPIKeysCreate = requestflag.WithInnerFlags(cli.Command{
 			Usage:    "The ID of the inbox.",
 			Required: true,
 		},
-		&requestflag.Flag[string]{
+		&requestflag.Flag[any]{
 			Name:     "name",
 			Usage:    "Name of api key.",
-			Required: true,
 			BodyPath: "name",
 		},
 		&requestflag.Flag[any]{
