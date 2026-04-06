@@ -41,7 +41,7 @@ func getDefaultRequestOptions(cmd *cli.Command) []option.RequestOption {
 		opts = append(opts, option.WithAPIKey(cmd.String("api-key")))
 	}
 
-	// Override base URL if the --base-url flag is provided
+	// Override base URL if the flag or its env var source is provided.
 	if baseURL := cmd.String("base-url"); baseURL != "" {
 		opts = append(opts, option.WithBaseURL(baseURL))
 	}

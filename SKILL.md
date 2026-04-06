@@ -5,7 +5,7 @@ description: Send and receive emails programmatically using the AgentMail API vi
 
 # AgentMail CLI
 
-Use the `agentmail` CLI to send and receive emails programmatically. Requires `AGENTMAIL_API_KEY` environment variable.
+Use the `agentmail` CLI to send and receive emails programmatically. Requires `AGENTMAIL_API_KEY` and optionally supports `AGENTMAIL_BASE_URL`.
 
 ## Install
 

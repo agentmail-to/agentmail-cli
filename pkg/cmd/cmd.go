@@ -38,7 +38,8 @@ func init() {
 			&cli.StringFlag{
 				Name:        "base-url",
 				DefaultText: "url",
-				Usage:       "Override the base URL for API requests",
+				Usage:       "Override the base URL for API requests (or set AGENTMAIL_BASE_URL)",
+				Sources:     cli.EnvVars("AGENTMAIL_BASE_URL"),
 			},
 			&cli.StringFlag{
 				Name:  "format",

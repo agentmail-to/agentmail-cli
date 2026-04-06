@@ -12,6 +12,7 @@ npm install -g agentmail-cli
 
 ```sh
 export AGENTMAIL_API_KEY=am_us_xxx
+export AGENTMAIL_BASE_URL=https://api.agentmail.to
 ```
 
 ## Usage
@@ -45,6 +46,7 @@ Use `--help` on any command for details.
 | Flag | Description |
 | --- | --- |
 | `--api-key` | API key (or set `AGENTMAIL_API_KEY`) |
+| `--base-url` | Override the API base URL (or set `AGENTMAIL_BASE_URL`) |
 | `--format` | Output format: `json`, `yaml`, `pretty`, `raw`, `explore` |
 | `--debug` | Enable debug logging |
 | `--help` | Show help |

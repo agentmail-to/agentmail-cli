@@ -2,10 +2,13 @@ package cmd
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"sync/atomic"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -123,5 +126,73 @@ func TestCreateDownloadFile(t *testing.T) {
 		require.NoError(t, err)
 		defer file.Close()
 		assert.Equal(t, "passwd", filepath.Base(file.Name()))
+	})
+}
+
+func TestBaseURLOverridesFromEnvAndFlag(t *testing.T) {
+	const organizationResponse = `{"created_at":"2024-01-01T00:00:00Z","domain_count":0,"inbox_count":0,"organization_id":"org_test","updated_at":"2024-01-01T00:00:00Z"}`
+
+	runCommand := func(t *testing.T, args ...string) error {
+		t.Helper()
+
+		oldStdout := os.Stdout
+		r, w, err := os.Pipe()
+		require.NoError(t, err)
+		os.Stdout = w
+		defer func() {
+			os.Stdout = oldStdout
+		}()
+
+		CommandErrorBuffer.Reset()
+		err = Command.Run(context.Background(), append([]string{"agentmail"}, args...))
+
+		require.NoError(t, w.Close())
+		_, _ = io.Copy(io.Discard, r)
+		require.NoError(t, r.Close())
+
+		return err
+	}
+
+	t.Run("uses AGENTMAIL_BASE_URL when flag is omitted", func(t *testing.T) {
+		var requests int32
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			atomic.AddInt32(&requests, 1)
+			assert.Equal(t, "/v0/organizations", r.URL.Path)
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = io.WriteString(w, organizationResponse)
+		}))
+		defer server.Close()
+
+		t.Setenv("AGENTMAIL_BASE_URL", server.URL)
+
+		err := runCommand(t, "--api-key", "test", "--format", "raw", "organizations", "retrieve")
+		require.NoError(t, err)
+		assert.Equal(t, int32(1), atomic.LoadInt32(&requests))
+	})
+
+	t.Run("uses --base-url over AGENTMAIL_BASE_URL", func(t *testing.T) {
+		var envRequests int32
+		envServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			atomic.AddInt32(&envRequests, 1)
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = io.WriteString(w, organizationResponse)
+		}))
+		defer envServer.Close()
+
+		var flagRequests int32
+		flagServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			atomic.AddInt32(&flagRequests, 1)
+			assert.Equal(t, "/v0/organizations", r.URL.Path)
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = io.WriteString(w, organizationResponse)
+		}))
+		defer flagServer.Close()
+
+		t.Setenv("AGENTMAIL_BASE_URL", envServer.URL)
+
+		err := runCommand(t, "--api-key", "test", "--format", "raw", "--base-url", flagServer.URL, "organizations", "retrieve")
+		require.NoError(t, err)
+		assert.Equal(t, int32(0), atomic.LoadInt32(&envRequests))
+		assert.Equal(t, int32(1), atomic.LoadInt32(&flagRequests))
 	})
 }
