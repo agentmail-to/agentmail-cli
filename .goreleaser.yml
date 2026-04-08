@@ -78,23 +78,6 @@ nfpms:
     contents:
       - src: man/man1/*.1.gz
         dst: /usr/share/man/man1/
-homebrew_casks:
-  - name: agentmail
-    repository:
-      owner: agentmail-to
-      name: homebrew-tap
-      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
-    homepage: https://agentmail.to
-    description: The official CLI for AgentMail.
-    license: Apache-2.0
-    binary: "agentmail"
-    completions:
-      bash: "completions/agentmail.bash"
-      zsh: "completions/agentmail.zsh"
-      fish: "completions/agentmail.fish"
-    manpages:
-    - man/man1/agentmail.1.gz
-
 notarize:
   macos:
     - enabled: '{{ isEnvSet "MACOS_SIGN_P12" }}'

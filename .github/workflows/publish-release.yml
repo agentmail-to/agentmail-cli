@@ -29,7 +29,6 @@ jobs:
         args: release --clean
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
         MACOS_SIGN_P12: ${{ secrets.MACOS_SIGN_P12 }}
         MACOS_SIGN_PASSWORD: ${{ secrets.MACOS_SIGN_PASSWORD }}
         MACOS_NOTARY_ISSUER_ID: ${{ secrets.MACOS_NOTARY_ISSUER_ID }}
@@ -37,7 +36,6 @@ jobs:
         MACOS_NOTARY_KEY: ${{ secrets.MACOS_NOTARY_KEY }}
 
   publish-npm:
-    needs: goreleaser
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
