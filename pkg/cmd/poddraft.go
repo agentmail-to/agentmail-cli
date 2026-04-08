@@ -67,7 +67,7 @@ var podsDraftsList = cli.Command{
 		},
 		&requestflag.Flag[any]{
 			Name:      "limit",
-			Usage:     "Maximum number of items to return in a single page.",
+			Usage:     "Limit of number of items returned.",
 			QueryPath: "limit",
 		},
 		&requestflag.Flag[any]{
