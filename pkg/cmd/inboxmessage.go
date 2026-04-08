@@ -112,7 +112,7 @@ var inboxesMessagesList = cli.Command{
 		},
 		&requestflag.Flag[any]{
 			Name:      "limit",
-			Usage:     "Limit of number of items returned.",
+			Usage:     "Maximum number of items to return in a single page.",
 			QueryPath: "limit",
 		},
 		&requestflag.Flag[any]{
