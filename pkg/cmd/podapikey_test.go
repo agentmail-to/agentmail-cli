@@ -9,13 +9,14 @@ import (
 	"github.com/agentmail-to/agentmail-cli/internal/requestflag"
 )
 
-func TestAPIKeysCreate(t *testing.T) {
+func TestPodsAPIKeysCreate(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"api-keys", "create",
+			"pods:api-keys", "create",
+			"--pod-id", "pod_id",
 			"--name", "name",
 			"--permissions", "{api_key_create: true, api_key_delete: true, api_key_read: true, domain_create: true, domain_delete: true, domain_read: true, domain_update: true, draft_create: true, draft_delete: true, draft_read: true, draft_send: true, draft_update: true, inbox_create: true, inbox_delete: true, inbox_read: true, inbox_update: true, label_blocked_read: true, label_spam_read: true, label_trash_read: true, list_entry_create: true, list_entry_delete: true, list_entry_read: true, message_read: true, message_send: true, message_update: true, metrics_read: true, pod_create: true, pod_delete: true, pod_read: true, thread_delete: true, thread_read: true, webhook_create: true, webhook_delete: true, webhook_read: true, webhook_update: true}",
 		)
@@ -23,13 +24,14 @@ func TestAPIKeysCreate(t *testing.T) {
 
 	t.Run("inner flags", func(t *testing.T) {
 		// Check that inner flags have been set up correctly
-		requestflag.CheckInnerFlags(apiKeysCreate)
+		requestflag.CheckInnerFlags(podsAPIKeysCreate)
 
 		// Alternative argument passing style using inner flags
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"api-keys", "create",
+			"pods:api-keys", "create",
+			"--pod-id", "pod_id",
 			"--name", "name",
 			"--permissions.api-key-create=true",
 			"--permissions.api-key-delete=true",
@@ -112,32 +114,34 @@ func TestAPIKeysCreate(t *testing.T) {
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",
-			"api-keys", "create",
+			"pods:api-keys", "create",
+			"--pod-id", "pod_id",
 		)
 	})
 }
 
-func TestAPIKeysList(t *testing.T) {
+func TestPodsAPIKeysList(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"api-keys", "list",
-			"--ascending=true",
+			"pods:api-keys", "list",
+			"--pod-id", "pod_id",
 			"--limit", "0",
 			"--page-token", "page_token",
 		)
 	})
 }
 
-func TestAPIKeysDelete(t *testing.T) {
+func TestPodsAPIKeysDelete(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
 		mocktest.TestRunMockTestWithFlags(
 			t,
 			"--api-key", "string",
-			"api-keys", "delete",
+			"pods:api-keys", "delete",
+			"--pod-id", "pod_id",
 			"--api-key-id", "api_key_id",
 		)
 	})

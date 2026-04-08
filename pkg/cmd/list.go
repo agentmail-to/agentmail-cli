@@ -15,50 +15,75 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-var podsCreate = cli.Command{
+var listsCreate = cli.Command{
 	Name:    "create",
 	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
-		&requestflag.Flag[any]{
-			Name:     "client-id",
-			Usage:    "Client ID of pod.",
-			BodyPath: "client_id",
+		&requestflag.Flag[string]{
+			Name:     "direction",
+			Usage:    "Direction of list entry.",
+			Required: true,
+		},
+		&requestflag.Flag[string]{
+			Name:     "type",
+			Usage:    "Type of list entry.",
+			Required: true,
+		},
+		&requestflag.Flag[string]{
+			Name:     "entry",
+			Usage:    "Email address or domain to add.",
+			Required: true,
+			BodyPath: "entry",
 		},
 		&requestflag.Flag[any]{
-			Name:     "name",
-			Usage:    "Name of pod.",
-			BodyPath: "name",
+			Name:     "reason",
+			Usage:    "Reason for adding the entry.",
+			BodyPath: "reason",
 		},
 	},
-	Action:          handlePodsCreate,
+	Action:          handleListsCreate,
 	HideHelpCommand: true,
 }
 
-var podsRetrieve = cli.Command{
+var listsRetrieve = cli.Command{
 	Name:    "retrieve",
 	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "pod-id",
-			Usage:    "ID of pod.",
+			Name:     "direction",
+			Usage:    "Direction of list entry.",
+			Required: true,
+		},
+		&requestflag.Flag[string]{
+			Name:     "type",
+			Usage:    "Type of list entry.",
+			Required: true,
+		},
+		&requestflag.Flag[string]{
+			Name:     "entry",
 			Required: true,
 		},
 	},
-	Action:          handlePodsRetrieve,
+	Action:          handleListsRetrieve,
 	HideHelpCommand: true,
 }
 
-var podsList = cli.Command{
+var listsList = cli.Command{
 	Name:    "list",
 	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
-		&requestflag.Flag[any]{
-			Name:      "ascending",
-			Usage:     "Sort in ascending temporal order.",
-			QueryPath: "ascending",
+		&requestflag.Flag[string]{
+			Name:     "direction",
+			Usage:    "Direction of list entry.",
+			Required: true,
+		},
+		&requestflag.Flag[string]{
+			Name:     "type",
+			Usage:    "Type of list entry.",
+			Required: true,
 		},
 		&requestflag.Flag[any]{
 			Name:      "limit",
@@ -71,34 +96,48 @@ var podsList = cli.Command{
 			QueryPath: "page_token",
 		},
 	},
-	Action:          handlePodsList,
+	Action:          handleListsList,
 	HideHelpCommand: true,
 }
 
-var podsDelete = cli.Command{
+var listsDelete = cli.Command{
 	Name:    "delete",
 	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "pod-id",
-			Usage:    "ID of pod.",
+			Name:     "direction",
+			Usage:    "Direction of list entry.",
+			Required: true,
+		},
+		&requestflag.Flag[string]{
+			Name:     "type",
+			Usage:    "Type of list entry.",
+			Required: true,
+		},
+		&requestflag.Flag[string]{
+			Name:     "entry",
 			Required: true,
 		},
 	},
-	Action:          handlePodsDelete,
+	Action:          handleListsDelete,
 	HideHelpCommand: true,
 }
 
-func handlePodsCreate(ctx context.Context, cmd *cli.Command) error {
+func handleListsCreate(ctx context.Context, cmd *cli.Command) error {
 	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-
+	if !cmd.IsSet("type") && len(unusedArgs) > 0 {
+		cmd.Set("type", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.PodNewParams{}
+	params := agentmail.ListNewParams{
+		Direction: agentmail.ListNewParamsDirection(cmd.Value("direction").(string)),
+	}
 
 	options, err := flagOptions(
 		cmd,
@@ -113,7 +152,12 @@ func handlePodsCreate(ctx context.Context, cmd *cli.Command) error {
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Pods.New(ctx, params, options...)
+	_, err = client.Lists.New(
+		ctx,
+		agentmail.ListNewParamsType(cmd.Value("type").(string)),
+		params,
+		options...,
+	)
 	if err != nil {
 		return err
 	}
@@ -121,18 +165,23 @@ func handlePodsCreate(ctx context.Context, cmd *cli.Command) error {
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods create", obj, format, transform)
+	return ShowJSON(os.Stdout, "lists create", obj, format, transform)
 }
 
-func handlePodsRetrieve(ctx context.Context, cmd *cli.Command) error {
+func handleListsRetrieve(ctx context.Context, cmd *cli.Command) error {
 	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("pod-id") && len(unusedArgs) > 0 {
-		cmd.Set("pod-id", unusedArgs[0])
+	if !cmd.IsSet("entry") && len(unusedArgs) > 0 {
+		cmd.Set("entry", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
 	}
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	params := agentmail.ListGetParams{
+		Direction: agentmail.ListGetParamsDirection(cmd.Value("direction").(string)),
+		Type:      agentmail.ListGetParamsType(cmd.Value("type").(string)),
 	}
 
 	options, err := flagOptions(
@@ -148,7 +197,12 @@ func handlePodsRetrieve(ctx context.Context, cmd *cli.Command) error {
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Pods.Get(ctx, cmd.Value("pod-id").(string), options...)
+	_, err = client.Lists.Get(
+		ctx,
+		cmd.Value("entry").(string),
+		params,
+		options...,
+	)
 	if err != nil {
 		return err
 	}
@@ -156,18 +210,23 @@ func handlePodsRetrieve(ctx context.Context, cmd *cli.Command) error {
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods retrieve", obj, format, transform)
+	return ShowJSON(os.Stdout, "lists retrieve", obj, format, transform)
 }
 
-func handlePodsList(ctx context.Context, cmd *cli.Command) error {
+func handleListsList(ctx context.Context, cmd *cli.Command) error {
 	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-
+	if !cmd.IsSet("type") && len(unusedArgs) > 0 {
+		cmd.Set("type", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.PodListParams{}
+	params := agentmail.ListListParams{
+		Direction: agentmail.ListListParamsDirection(cmd.Value("direction").(string)),
+	}
 
 	options, err := flagOptions(
 		cmd,
@@ -182,7 +241,12 @@ func handlePodsList(ctx context.Context, cmd *cli.Command) error {
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Pods.List(ctx, params, options...)
+	_, err = client.Lists.List(
+		ctx,
+		agentmail.ListListParamsType(cmd.Value("type").(string)),
+		params,
+		options...,
+	)
 	if err != nil {
 		return err
 	}
@@ -190,18 +254,23 @@ func handlePodsList(ctx context.Context, cmd *cli.Command) error {
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods list", obj, format, transform)
+	return ShowJSON(os.Stdout, "lists list", obj, format, transform)
 }
 
-func handlePodsDelete(ctx context.Context, cmd *cli.Command) error {
+func handleListsDelete(ctx context.Context, cmd *cli.Command) error {
 	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("pod-id") && len(unusedArgs) > 0 {
-		cmd.Set("pod-id", unusedArgs[0])
+	if !cmd.IsSet("entry") && len(unusedArgs) > 0 {
+		cmd.Set("entry", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
 	}
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	params := agentmail.ListDeleteParams{
+		Direction: agentmail.ListDeleteParamsDirection(cmd.Value("direction").(string)),
+		Type:      agentmail.ListDeleteParamsType(cmd.Value("type").(string)),
 	}
 
 	options, err := flagOptions(
@@ -215,5 +284,10 @@ func handlePodsDelete(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	return client.Pods.Delete(ctx, cmd.Value("pod-id").(string), options...)
+	return client.Lists.Delete(
+		ctx,
+		cmd.Value("entry").(string),
+		params,
+		options...,
+	)
 }

@@ -38,3 +38,17 @@ func TestPodsDraftsList(t *testing.T) {
 		)
 	})
 }
+
+func TestPodsDraftsGetAttachment(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"pods:drafts", "get-attachment",
+			"--pod-id", "pod_id",
+			"--draft-id", "draft_id",
+			"--attachment-id", "attachment_id",
+		)
+	})
+}

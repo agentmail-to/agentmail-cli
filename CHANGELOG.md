@@ -1,5 +1,41 @@
 # Changelog
 
+## 0.7.8 (2026-04-08)
+
+Full Changelog: [v0.7.7...v0.7.8](https://github.com/agentmail-to/agentmail-cli/compare/v0.7.7...v0.7.8)
+
+### Features
+
+* allow `-` as value representing stdin to binary-only file parameters in CLIs ([4fb771a](https://github.com/agentmail-to/agentmail-cli/commit/4fb771aa678ef1ecb7d343dae770dbb71e055508))
+* **api:** api update ([89f41fe](https://github.com/agentmail-to/agentmail-cli/commit/89f41fe796ce15b93ec8ef05e2a5cf7e3a5a3033))
+* **api:** api update ([606036f](https://github.com/agentmail-to/agentmail-cli/commit/606036f0823d4f7866e6f14ed8c1f42e233d8755))
+* **api:** api update ([5620db5](https://github.com/agentmail-to/agentmail-cli/commit/5620db56682523df5cc935944c6ebfc59bb79b22))
+* **api:** api update ([7d1c53a](https://github.com/agentmail-to/agentmail-cli/commit/7d1c53a967e324aedabd621a2c015d10c7bbd2dc))
+* **api:** api update ([8a097fc](https://github.com/agentmail-to/agentmail-cli/commit/8a097fcd316707a55cbc9a6b8afe703b957ba289))
+* **api:** manual updates ([e70a1d2](https://github.com/agentmail-to/agentmail-cli/commit/e70a1d2adcc22ed240705c31a29204ccb19c12f9))
+* **api:** manual updates ([35c4f7d](https://github.com/agentmail-to/agentmail-cli/commit/35c4f7d6e95015444332830e0c771bd84c5d3099))
+* **api:** manual updates ([990b138](https://github.com/agentmail-to/agentmail-cli/commit/990b138aa27685e76755b1d15dfb3848495a0559))
+* better error message if scheme forgotten in CLI `*_BASE_URL`/`--base-url` ([57e1a52](https://github.com/agentmail-to/agentmail-cli/commit/57e1a52c1113691d1cbca572aad8596a8f5e41b2))
+* binary-only parameters become CLI flags that take filenames only ([1b23d84](https://github.com/agentmail-to/agentmail-cli/commit/1b23d84fd4b71798b92f1911789d7fcaa1c54967))
+
+
+### Bug Fixes
+
+* fall back to main branch if linking fails in CI ([eb15535](https://github.com/agentmail-to/agentmail-cli/commit/eb15535b59629251822755e30056002d531fe641))
+* fix quoting typo ([6d8d3f4](https://github.com/agentmail-to/agentmail-cli/commit/6d8d3f4a18baa6837e93ae0c2972ac917588e2b7))
+* handle empty data set using `--format explore` ([2852394](https://github.com/agentmail-to/agentmail-cli/commit/2852394d9c496a915983a2dbc1869cbc9207df88))
+* use `RawJSON` when iterating items with `--format explore` in the CLI ([13259ac](https://github.com/agentmail-to/agentmail-cli/commit/13259ac6cd741976f91701e2eb688dc745fa6ea5))
+* use RELEASE_PAT to approve and auto-merge release PRs ([dacdd81](https://github.com/agentmail-to/agentmail-cli/commit/dacdd81f4be1104065813f510dda657b516aa844))
+
+
+### Chores
+
+* **internal:** codegen related update ([792c2ce](https://github.com/agentmail-to/agentmail-cli/commit/792c2ceb7524362f45055e5edbfee07aa3605ef6))
+* mark all CLI-related tests in Go with `t.Parallel()` ([132e0f5](https://github.com/agentmail-to/agentmail-cli/commit/132e0f5ff3e6c50c0cad628b2b258f708a3ee2cb))
+* modify CLI tests to inject stdout so mutating `os.Stdout` isn't necessary ([f488623](https://github.com/agentmail-to/agentmail-cli/commit/f488623c7a1568221a18d345a3991e130d928720))
+* switch some CLI Go tests from `os.Chdir` to `t.Chdir` ([6f4709d](https://github.com/agentmail-to/agentmail-cli/commit/6f4709d39b216adc01607cc55e9c9bfa6f1c0c95))
+* update SDK settings ([628d088](https://github.com/agentmail-to/agentmail-cli/commit/628d088add60a690cc24e460ad02fa375b82e651))
+
 ## 0.7.7 (2026-03-31)
 
 Full Changelog: [v0.7.6...v0.7.7](https://github.com/agentmail-to/agentmail-cli/compare/v0.7.6...v0.7.7)

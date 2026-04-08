@@ -39,6 +39,9 @@ func init() {
 				Name:        "base-url",
 				DefaultText: "url",
 				Usage:       "Override the base URL for API requests",
+				Validator: func(baseURL string) error {
+					return ValidateBaseURL(baseURL, "--base-url")
+				},
 			},
 			&cli.StringFlag{
 				Name:  "format",
@@ -112,6 +115,7 @@ func init() {
 					&inboxesDraftsUpdate,
 					&inboxesDraftsList,
 					&inboxesDraftsDelete,
+					&inboxesDraftsGetAttachment,
 					&inboxesDraftsSend,
 				},
 			},
@@ -143,6 +147,27 @@ func init() {
 				},
 			},
 			{
+				Name:     "inboxes:lists",
+				Category: "API RESOURCE",
+				Suggest:  true,
+				Commands: []*cli.Command{
+					&inboxesListsCreate,
+					&inboxesListsRetrieve,
+					&inboxesListsList,
+					&inboxesListsDelete,
+				},
+			},
+			{
+				Name:     "inboxes:api-keys",
+				Category: "API RESOURCE",
+				Suggest:  true,
+				Commands: []*cli.Command{
+					&inboxesAPIKeysCreate,
+					&inboxesAPIKeysList,
+					&inboxesAPIKeysDelete,
+				},
+			},
+			{
 				Name:     "pods",
 				Category: "API RESOURCE",
 				Suggest:  true,
@@ -159,8 +184,12 @@ func init() {
 				Suggest:  true,
 				Commands: []*cli.Command{
 					&podsDomainsCreate,
+					&podsDomainsRetrieve,
+					&podsDomainsUpdate,
 					&podsDomainsList,
 					&podsDomainsDelete,
+					&podsDomainsGetZoneFile,
+					&podsDomainsVerify,
 				},
 			},
 			{
@@ -170,6 +199,7 @@ func init() {
 				Commands: []*cli.Command{
 					&podsDraftsRetrieve,
 					&podsDraftsList,
+					&podsDraftsGetAttachment,
 				},
 			},
 			{
@@ -179,6 +209,7 @@ func init() {
 				Commands: []*cli.Command{
 					&podsInboxesCreate,
 					&podsInboxesRetrieve,
+					&podsInboxesUpdate,
 					&podsInboxesList,
 					&podsInboxesDelete,
 				},
@@ -190,7 +221,37 @@ func init() {
 				Commands: []*cli.Command{
 					&podsThreadsRetrieve,
 					&podsThreadsList,
+					&podsThreadsDelete,
 					&podsThreadsGetAttachment,
+				},
+			},
+			{
+				Name:     "pods:lists",
+				Category: "API RESOURCE",
+				Suggest:  true,
+				Commands: []*cli.Command{
+					&podsListsCreate,
+					&podsListsRetrieve,
+					&podsListsList,
+					&podsListsDelete,
+				},
+			},
+			{
+				Name:     "pods:api-keys",
+				Category: "API RESOURCE",
+				Suggest:  true,
+				Commands: []*cli.Command{
+					&podsAPIKeysCreate,
+					&podsAPIKeysList,
+					&podsAPIKeysDelete,
+				},
+			},
+			{
+				Name:     "pods:metrics",
+				Category: "API RESOURCE",
+				Suggest:  true,
+				Commands: []*cli.Command{
+					&podsMetricsQuery,
 				},
 			},
 			{
@@ -212,6 +273,7 @@ func init() {
 				Commands: []*cli.Command{
 					&apiKeysCreate,
 					&apiKeysList,
+					&apiKeysDelete,
 				},
 			},
 			{
@@ -221,6 +283,7 @@ func init() {
 				Commands: []*cli.Command{
 					&domainsCreate,
 					&domainsRetrieve,
+					&domainsUpdate,
 					&domainsList,
 					&domainsDelete,
 					&domainsGetZoneFile,
@@ -234,6 +297,18 @@ func init() {
 				Commands: []*cli.Command{
 					&draftsRetrieve,
 					&draftsList,
+					&draftsGetAttachment,
+				},
+			},
+			{
+				Name:     "lists",
+				Category: "API RESOURCE",
+				Suggest:  true,
+				Commands: []*cli.Command{
+					&listsCreate,
+					&listsRetrieve,
+					&listsList,
+					&listsDelete,
 				},
 			},
 			{
@@ -259,6 +334,7 @@ func init() {
 				Commands: []*cli.Command{
 					&threadsRetrieve,
 					&threadsList,
+					&threadsDelete,
 					&threadsRetrieveAttachment,
 				},
 			},

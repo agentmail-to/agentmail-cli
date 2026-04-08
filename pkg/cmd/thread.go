@@ -17,7 +17,7 @@ import (
 
 var threadsRetrieve = cli.Command{
 	Name:    "retrieve",
-	Usage:   "Get Thread",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -32,7 +32,7 @@ var threadsRetrieve = cli.Command{
 
 var threadsList = cli.Command{
 	Name:    "list",
-	Usage:   "List Threads",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[any]{
@@ -85,9 +85,29 @@ var threadsList = cli.Command{
 	HideHelpCommand: true,
 }
 
+var threadsDelete = cli.Command{
+	Name:    "delete",
+	Usage:   "Moves the thread to trash by adding a trash label to all messages. If the thread\nis already in trash, it will be permanently deleted. Use `permanent=true` to\nforce permanent deletion.",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:     "thread-id",
+			Usage:    "ID of thread.",
+			Required: true,
+		},
+		&requestflag.Flag[any]{
+			Name:      "permanent",
+			Usage:     "If true, permanently delete the thread instead of moving to trash.",
+			QueryPath: "permanent",
+		},
+	},
+	Action:          handleThreadsDelete,
+	HideHelpCommand: true,
+}
+
 var threadsRetrieveAttachment = cli.Command{
 	Name:    "retrieve-attachment",
-	Usage:   "Get Attachment",
+	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -172,6 +192,38 @@ func handleThreadsList(ctx context.Context, cmd *cli.Command) error {
 	format := cmd.Root().String("format")
 	transform := cmd.Root().String("transform")
 	return ShowJSON(os.Stdout, "threads list", obj, format, transform)
+}
+
+func handleThreadsDelete(ctx context.Context, cmd *cli.Command) error {
+	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("thread-id") && len(unusedArgs) > 0 {
+		cmd.Set("thread-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	params := agentmail.ThreadDeleteParams{}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	return client.Threads.Delete(
+		ctx,
+		cmd.Value("thread-id").(string),
+		params,
+		options...,
+	)
 }
 
 func handleThreadsRetrieveAttachment(ctx context.Context, cmd *cli.Command) error {

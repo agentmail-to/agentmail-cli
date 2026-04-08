@@ -17,7 +17,7 @@ import (
 
 var agentSignUp = cli.Command{
 	Name:    "sign-up",
-	Usage:   "Create a new agent organization with an inbox and API key. A 6-digit OTP is sent\nto the human's email for verification.",
+	Usage:   "Create a new agent organization with an inbox and API key. This endpoint is for\nsigning up for the first time. If you've already signed up, you're all set —\njust use your existing API key.",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{

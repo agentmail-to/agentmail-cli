@@ -40,6 +40,19 @@ func TestThreadsList(t *testing.T) {
 	})
 }
 
+func TestThreadsDelete(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"threads", "delete",
+			"--thread-id", "thread_id",
+			"--permanent=true",
+		)
+	})
+}
+
 func TestThreadsRetrieveAttachment(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {

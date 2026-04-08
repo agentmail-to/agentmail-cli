@@ -29,6 +29,15 @@ import (
 
 var OutputFormats = []string{"auto", "explore", "json", "jsonl", "pretty", "raw", "yaml"}
 
+// ValidateBaseURL checks that a base URL is correctly prefixed with a protocol scheme and produces a better
+// error message than the person would see otherwise if it doesn't.
+func ValidateBaseURL(value, source string) error {
+	if value != "" && !strings.HasPrefix(value, "http://") && !strings.HasPrefix(value, "https://") {
+		return fmt.Errorf("%s %q is missing a scheme (expected http:// or https://)", source, value)
+	}
+	return nil
+}
+
 func getDefaultRequestOptions(cmd *cli.Command) []option.RequestOption {
 	opts := []option.RequestOption{
 		option.WithHeader("User-Agent", fmt.Sprintf("Agentmail/CLI %s", Version)),
@@ -196,7 +205,10 @@ func streamToStdout(generateOutput func(w *os.File) error) error {
 	return err
 }
 
-func writeBinaryResponse(response *http.Response, outfile string) (string, error) {
+// writeBinaryResponse writes a binary response to stdout or a file.
+//
+// Takes in a stdout reference so we can test this function without overriding os.Stdout in tests.
+func writeBinaryResponse(response *http.Response, stdout io.Writer, outfile string) (string, error) {
 	defer response.Body.Close()
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -204,13 +216,13 @@ func writeBinaryResponse(response *http.Response, outfile string) (string, error
 	}
 	switch outfile {
 	case "-", "/dev/stdout":
-		_, err := os.Stdout.Write(body)
+		_, err := stdout.Write(body)
 		return "", err
 	case "":
 		// If output file is unspecified, then print to stdout for plain text or
 		// if stdout is not a terminal:
 		if !isTerminal(os.Stdout) || isUTF8TextFile(body) {
-			_, err := os.Stdout.Write(body)
+			_, err := stdout.Write(body)
 			return "", err
 		}
 
@@ -384,7 +396,7 @@ func countTerminalLines(data []byte, terminalWidth int) int {
 	return bytes.Count([]byte(wrap.String(string(data), terminalWidth)), []byte("\n"))
 }
 
-type HasRawJSON interface {
+type hasRawJSON interface {
 	RawJSON() string
 }
 
@@ -410,7 +422,7 @@ func ShowJSONIterator[T any](stdout *os.File, title string, iter jsonview.Iterat
 	for itemsToDisplay != 0 && iter.Next() {
 		item := iter.Current()
 		var obj gjson.Result
-		if hasRaw, ok := any(item).(HasRawJSON); ok {
+		if hasRaw, ok := any(item).(hasRawJSON); ok {
 			obj = gjson.Parse(hasRaw.RawJSON())
 		} else {
 			jsonData, err := json.Marshal(item)
@@ -457,7 +469,7 @@ func ShowJSONIterator[T any](stdout *os.File, title string, iter jsonview.Iterat
 			}
 			item := iter.Current()
 			var obj gjson.Result
-			if hasRaw, ok := any(item).(HasRawJSON); ok {
+			if hasRaw, ok := any(item).(hasRawJSON); ok {
 				obj = gjson.Parse(hasRaw.RawJSON())
 			} else {
 				jsonData, err := json.Marshal(item)

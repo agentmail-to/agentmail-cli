@@ -15,7 +15,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-var podsInboxesCreate = cli.Command{
+var podsListsCreate = cli.Command{
 	Name:    "create",
 	Usage:   "**CLI:**",
 	Suggest: true,
@@ -25,32 +25,33 @@ var podsInboxesCreate = cli.Command{
 			Usage:    "ID of pod.",
 			Required: true,
 		},
-		&requestflag.Flag[any]{
-			Name:     "client-id",
-			Usage:    "Client ID of inbox.",
-			BodyPath: "client_id",
+		&requestflag.Flag[string]{
+			Name:     "direction",
+			Usage:    "Direction of list entry.",
+			Required: true,
+		},
+		&requestflag.Flag[string]{
+			Name:     "type",
+			Usage:    "Type of list entry.",
+			Required: true,
+		},
+		&requestflag.Flag[string]{
+			Name:     "entry",
+			Usage:    "Email address or domain to add.",
+			Required: true,
+			BodyPath: "entry",
 		},
 		&requestflag.Flag[any]{
-			Name:     "display-name",
-			Usage:    "Display name: `Display Name <username@domain.com>`.",
-			BodyPath: "display_name",
-		},
-		&requestflag.Flag[any]{
-			Name:     "domain",
-			Usage:    "Domain of address. Must be verified domain. Defaults to `agentmail.to`.",
-			BodyPath: "domain",
-		},
-		&requestflag.Flag[any]{
-			Name:     "username",
-			Usage:    "Username of address. Randomly generated if not specified.",
-			BodyPath: "username",
+			Name:     "reason",
+			Usage:    "Reason for adding the entry.",
+			BodyPath: "reason",
 		},
 	},
-	Action:          handlePodsInboxesCreate,
+	Action:          handlePodsListsCreate,
 	HideHelpCommand: true,
 }
 
-var podsInboxesRetrieve = cli.Command{
+var podsListsRetrieve = cli.Command{
 	Name:    "retrieve",
 	Usage:   "**CLI:**",
 	Suggest: true,
@@ -61,42 +62,25 @@ var podsInboxesRetrieve = cli.Command{
 			Required: true,
 		},
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
+			Name:     "direction",
+			Usage:    "Direction of list entry.",
+			Required: true,
+		},
+		&requestflag.Flag[string]{
+			Name:     "type",
+			Usage:    "Type of list entry.",
+			Required: true,
+		},
+		&requestflag.Flag[string]{
+			Name:     "entry",
 			Required: true,
 		},
 	},
-	Action:          handlePodsInboxesRetrieve,
+	Action:          handlePodsListsRetrieve,
 	HideHelpCommand: true,
 }
 
-var podsInboxesUpdate = cli.Command{
-	Name:    "update",
-	Usage:   "**CLI:**",
-	Suggest: true,
-	Flags: []cli.Flag{
-		&requestflag.Flag[string]{
-			Name:     "pod-id",
-			Usage:    "ID of pod.",
-			Required: true,
-		},
-		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
-		},
-		&requestflag.Flag[string]{
-			Name:     "display-name",
-			Usage:    "Display name: `Display Name <username@domain.com>`.",
-			Required: true,
-			BodyPath: "display_name",
-		},
-	},
-	Action:          handlePodsInboxesUpdate,
-	HideHelpCommand: true,
-}
-
-var podsInboxesList = cli.Command{
+var podsListsList = cli.Command{
 	Name:    "list",
 	Usage:   "**CLI:**",
 	Suggest: true,
@@ -106,10 +90,15 @@ var podsInboxesList = cli.Command{
 			Usage:    "ID of pod.",
 			Required: true,
 		},
-		&requestflag.Flag[any]{
-			Name:      "ascending",
-			Usage:     "Sort in ascending temporal order.",
-			QueryPath: "ascending",
+		&requestflag.Flag[string]{
+			Name:     "direction",
+			Usage:    "Direction of list entry.",
+			Required: true,
+		},
+		&requestflag.Flag[string]{
+			Name:     "type",
+			Usage:    "Type of list entry.",
+			Required: true,
 		},
 		&requestflag.Flag[any]{
 			Name:      "limit",
@@ -122,11 +111,11 @@ var podsInboxesList = cli.Command{
 			QueryPath: "page_token",
 		},
 	},
-	Action:          handlePodsInboxesList,
+	Action:          handlePodsListsList,
 	HideHelpCommand: true,
 }
 
-var podsInboxesDelete = cli.Command{
+var podsListsDelete = cli.Command{
 	Name:    "delete",
 	Usage:   "**CLI:**",
 	Suggest: true,
@@ -137,114 +126,38 @@ var podsInboxesDelete = cli.Command{
 			Required: true,
 		},
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
+			Name:     "direction",
+			Usage:    "Direction of list entry.",
+			Required: true,
+		},
+		&requestflag.Flag[string]{
+			Name:     "type",
+			Usage:    "Type of list entry.",
+			Required: true,
+		},
+		&requestflag.Flag[string]{
+			Name:     "entry",
 			Required: true,
 		},
 	},
-	Action:          handlePodsInboxesDelete,
+	Action:          handlePodsListsDelete,
 	HideHelpCommand: true,
 }
 
-func handlePodsInboxesCreate(ctx context.Context, cmd *cli.Command) error {
+func handlePodsListsCreate(ctx context.Context, cmd *cli.Command) error {
 	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("pod-id") && len(unusedArgs) > 0 {
-		cmd.Set("pod-id", unusedArgs[0])
+	if !cmd.IsSet("type") && len(unusedArgs) > 0 {
+		cmd.Set("type", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
 	}
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.PodInboxNewParams{}
-
-	options, err := flagOptions(
-		cmd,
-		apiquery.NestedQueryFormatBrackets,
-		apiquery.ArrayQueryFormatComma,
-		ApplicationJSON,
-		false,
-	)
-	if err != nil {
-		return err
-	}
-
-	var res []byte
-	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Pods.Inboxes.New(
-		ctx,
-		cmd.Value("pod-id").(string),
-		params,
-		options...,
-	)
-	if err != nil {
-		return err
-	}
-
-	obj := gjson.ParseBytes(res)
-	format := cmd.Root().String("format")
-	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods:inboxes create", obj, format, transform)
-}
-
-func handlePodsInboxesRetrieve(ctx context.Context, cmd *cli.Command) error {
-	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
-	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("inbox-id") && len(unusedArgs) > 0 {
-		cmd.Set("inbox-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
-	if len(unusedArgs) > 0 {
-		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
-	}
-
-	params := agentmail.PodInboxGetParams{
-		PodID: cmd.Value("pod-id").(string),
-	}
-
-	options, err := flagOptions(
-		cmd,
-		apiquery.NestedQueryFormatBrackets,
-		apiquery.ArrayQueryFormatComma,
-		EmptyBody,
-		false,
-	)
-	if err != nil {
-		return err
-	}
-
-	var res []byte
-	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Pods.Inboxes.Get(
-		ctx,
-		cmd.Value("inbox-id").(string),
-		params,
-		options...,
-	)
-	if err != nil {
-		return err
-	}
-
-	obj := gjson.ParseBytes(res)
-	format := cmd.Root().String("format")
-	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods:inboxes retrieve", obj, format, transform)
-}
-
-func handlePodsInboxesUpdate(ctx context.Context, cmd *cli.Command) error {
-	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
-	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("inbox-id") && len(unusedArgs) > 0 {
-		cmd.Set("inbox-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
-	if len(unusedArgs) > 0 {
-		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
-	}
-
-	params := agentmail.PodInboxUpdateParams{
-		PodID: cmd.Value("pod-id").(string),
+	params := agentmail.PodListNewParams{
+		PodID:     cmd.Value("pod-id").(string),
+		Direction: agentmail.PodListNewParamsDirection(cmd.Value("direction").(string)),
 	}
 
 	options, err := flagOptions(
@@ -260,9 +173,9 @@ func handlePodsInboxesUpdate(ctx context.Context, cmd *cli.Command) error {
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Pods.Inboxes.Update(
+	_, err = client.Pods.Lists.New(
 		ctx,
-		cmd.Value("inbox-id").(string),
+		agentmail.PodListNewParamsType(cmd.Value("type").(string)),
 		params,
 		options...,
 	)
@@ -273,21 +186,25 @@ func handlePodsInboxesUpdate(ctx context.Context, cmd *cli.Command) error {
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods:inboxes update", obj, format, transform)
+	return ShowJSON(os.Stdout, "pods:lists create", obj, format, transform)
 }
 
-func handlePodsInboxesList(ctx context.Context, cmd *cli.Command) error {
+func handlePodsListsRetrieve(ctx context.Context, cmd *cli.Command) error {
 	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("pod-id") && len(unusedArgs) > 0 {
-		cmd.Set("pod-id", unusedArgs[0])
+	if !cmd.IsSet("entry") && len(unusedArgs) > 0 {
+		cmd.Set("entry", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
 	}
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.PodInboxListParams{}
+	params := agentmail.PodListGetParams{
+		PodID:     cmd.Value("pod-id").(string),
+		Direction: agentmail.PodListGetParamsDirection(cmd.Value("direction").(string)),
+		Type:      agentmail.PodListGetParamsType(cmd.Value("type").(string)),
+	}
 
 	options, err := flagOptions(
 		cmd,
@@ -302,9 +219,9 @@ func handlePodsInboxesList(ctx context.Context, cmd *cli.Command) error {
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Pods.Inboxes.List(
+	_, err = client.Pods.Lists.Get(
 		ctx,
-		cmd.Value("pod-id").(string),
+		cmd.Value("entry").(string),
 		params,
 		options...,
 	)
@@ -315,22 +232,23 @@ func handlePodsInboxesList(ctx context.Context, cmd *cli.Command) error {
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods:inboxes list", obj, format, transform)
+	return ShowJSON(os.Stdout, "pods:lists retrieve", obj, format, transform)
 }
 
-func handlePodsInboxesDelete(ctx context.Context, cmd *cli.Command) error {
+func handlePodsListsList(ctx context.Context, cmd *cli.Command) error {
 	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("inbox-id") && len(unusedArgs) > 0 {
-		cmd.Set("inbox-id", unusedArgs[0])
+	if !cmd.IsSet("type") && len(unusedArgs) > 0 {
+		cmd.Set("type", unusedArgs[0])
 		unusedArgs = unusedArgs[1:]
 	}
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.PodInboxDeleteParams{
-		PodID: cmd.Value("pod-id").(string),
+	params := agentmail.PodListListParams{
+		PodID:     cmd.Value("pod-id").(string),
+		Direction: agentmail.PodListListParamsDirection(cmd.Value("direction").(string)),
 	}
 
 	options, err := flagOptions(
@@ -344,9 +262,55 @@ func handlePodsInboxesDelete(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	return client.Pods.Inboxes.Delete(
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.Pods.Lists.List(
 		ctx,
-		cmd.Value("inbox-id").(string),
+		agentmail.PodListListParamsType(cmd.Value("type").(string)),
+		params,
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(os.Stdout, "pods:lists list", obj, format, transform)
+}
+
+func handlePodsListsDelete(ctx context.Context, cmd *cli.Command) error {
+	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("entry") && len(unusedArgs) > 0 {
+		cmd.Set("entry", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	params := agentmail.PodListDeleteParams{
+		PodID:     cmd.Value("pod-id").(string),
+		Direction: agentmail.PodListDeleteParamsDirection(cmd.Value("direction").(string)),
+		Type:      agentmail.PodListDeleteParamsType(cmd.Value("type").(string)),
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	return client.Pods.Lists.Delete(
+		ctx,
+		cmd.Value("entry").(string),
 		params,
 		options...,
 	)

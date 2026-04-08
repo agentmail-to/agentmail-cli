@@ -15,11 +15,16 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-var apiKeysCreate = requestflag.WithInnerFlags(cli.Command{
+var inboxesAPIKeysCreate = requestflag.WithInnerFlags(cli.Command{
 	Name:    "create",
 	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:     "inbox-id",
+			Usage:    "The ID of the inbox.",
+			Required: true,
+		},
 		&requestflag.Flag[any]{
 			Name:     "name",
 			Usage:    "Name of api key.",
@@ -31,7 +36,7 @@ var apiKeysCreate = requestflag.WithInnerFlags(cli.Command{
 			BodyPath: "permissions",
 		},
 	},
-	Action:          handleAPIKeysCreate,
+	Action:          handleInboxesAPIKeysCreate,
 	HideHelpCommand: true,
 }, map[string][]requestflag.HasOuterFlag{
 	"permissions": {
@@ -213,15 +218,15 @@ var apiKeysCreate = requestflag.WithInnerFlags(cli.Command{
 	},
 })
 
-var apiKeysList = cli.Command{
+var inboxesAPIKeysList = cli.Command{
 	Name:    "list",
 	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
-		&requestflag.Flag[any]{
-			Name:      "ascending",
-			Usage:     "Sort in ascending temporal order.",
-			QueryPath: "ascending",
+		&requestflag.Flag[string]{
+			Name:     "inbox-id",
+			Usage:    "The ID of the inbox.",
+			Required: true,
 		},
 		&requestflag.Flag[any]{
 			Name:      "limit",
@@ -234,34 +239,42 @@ var apiKeysList = cli.Command{
 			QueryPath: "page_token",
 		},
 	},
-	Action:          handleAPIKeysList,
+	Action:          handleInboxesAPIKeysList,
 	HideHelpCommand: true,
 }
 
-var apiKeysDelete = cli.Command{
+var inboxesAPIKeysDelete = cli.Command{
 	Name:    "delete",
 	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:     "inbox-id",
+			Usage:    "The ID of the inbox.",
+			Required: true,
+		},
 		&requestflag.Flag[string]{
 			Name:     "api-key-id",
 			Usage:    "ID of api key.",
 			Required: true,
 		},
 	},
-	Action:          handleAPIKeysDelete,
+	Action:          handleInboxesAPIKeysDelete,
 	HideHelpCommand: true,
 }
 
-func handleAPIKeysCreate(ctx context.Context, cmd *cli.Command) error {
+func handleInboxesAPIKeysCreate(ctx context.Context, cmd *cli.Command) error {
 	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-
+	if !cmd.IsSet("inbox-id") && len(unusedArgs) > 0 {
+		cmd.Set("inbox-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.APIKeyNewParams{}
+	params := agentmail.InboxAPIKeyNewParams{}
 
 	options, err := flagOptions(
 		cmd,
@@ -276,7 +289,12 @@ func handleAPIKeysCreate(ctx context.Context, cmd *cli.Command) error {
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.APIKeys.New(ctx, params, options...)
+	_, err = client.Inboxes.APIKeys.New(
+		ctx,
+		cmd.Value("inbox-id").(string),
+		params,
+		options...,
+	)
 	if err != nil {
 		return err
 	}
@@ -284,18 +302,21 @@ func handleAPIKeysCreate(ctx context.Context, cmd *cli.Command) error {
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "api-keys create", obj, format, transform)
+	return ShowJSON(os.Stdout, "inboxes:api-keys create", obj, format, transform)
 }
 
-func handleAPIKeysList(ctx context.Context, cmd *cli.Command) error {
+func handleInboxesAPIKeysList(ctx context.Context, cmd *cli.Command) error {
 	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-
+	if !cmd.IsSet("inbox-id") && len(unusedArgs) > 0 {
+		cmd.Set("inbox-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.APIKeyListParams{}
+	params := agentmail.InboxAPIKeyListParams{}
 
 	options, err := flagOptions(
 		cmd,
@@ -310,7 +331,12 @@ func handleAPIKeysList(ctx context.Context, cmd *cli.Command) error {
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.APIKeys.List(ctx, params, options...)
+	_, err = client.Inboxes.APIKeys.List(
+		ctx,
+		cmd.Value("inbox-id").(string),
+		params,
+		options...,
+	)
 	if err != nil {
 		return err
 	}
@@ -318,10 +344,10 @@ func handleAPIKeysList(ctx context.Context, cmd *cli.Command) error {
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "api-keys list", obj, format, transform)
+	return ShowJSON(os.Stdout, "inboxes:api-keys list", obj, format, transform)
 }
 
-func handleAPIKeysDelete(ctx context.Context, cmd *cli.Command) error {
+func handleInboxesAPIKeysDelete(ctx context.Context, cmd *cli.Command) error {
 	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("api-key-id") && len(unusedArgs) > 0 {
@@ -330,6 +356,10 @@ func handleAPIKeysDelete(ctx context.Context, cmd *cli.Command) error {
 	}
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	params := agentmail.InboxAPIKeyDeleteParams{
+		InboxID: cmd.Value("inbox-id").(string),
 	}
 
 	options, err := flagOptions(
@@ -343,5 +373,10 @@ func handleAPIKeysDelete(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	return client.APIKeys.Delete(ctx, cmd.Value("api-key-id").(string), options...)
+	return client.Inboxes.APIKeys.Delete(
+		ctx,
+		cmd.Value("api-key-id").(string),
+		params,
+		options...,
+	)
 }

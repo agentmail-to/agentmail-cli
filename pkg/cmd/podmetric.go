@@ -15,11 +15,16 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-var metricsList = cli.Command{
-	Name:    "list",
+var podsMetricsQuery = cli.Command{
+	Name:    "query",
 	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:     "pod-id",
+			Usage:    "ID of pod.",
+			Required: true,
+		},
 		&requestflag.Flag[any]{
 			Name:      "descending",
 			Usage:     "Sort in descending order.",
@@ -51,19 +56,22 @@ var metricsList = cli.Command{
 			QueryPath: "start",
 		},
 	},
-	Action:          handleMetricsList,
+	Action:          handlePodsMetricsQuery,
 	HideHelpCommand: true,
 }
 
-func handleMetricsList(ctx context.Context, cmd *cli.Command) error {
+func handlePodsMetricsQuery(ctx context.Context, cmd *cli.Command) error {
 	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
-
+	if !cmd.IsSet("pod-id") && len(unusedArgs) > 0 {
+		cmd.Set("pod-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.MetricListParams{}
+	params := agentmail.PodMetricQueryParams{}
 
 	options, err := flagOptions(
 		cmd,
@@ -78,7 +86,12 @@ func handleMetricsList(ctx context.Context, cmd *cli.Command) error {
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Metrics.List(ctx, params, options...)
+	_, err = client.Pods.Metrics.Query(
+		ctx,
+		cmd.Value("pod-id").(string),
+		params,
+		options...,
+	)
 	if err != nil {
 		return err
 	}
@@ -86,5 +99,5 @@ func handleMetricsList(ctx context.Context, cmd *cli.Command) error {
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "metrics list", obj, format, transform)
+	return ShowJSON(os.Stdout, "pods:metrics query", obj, format, transform)
 }
