@@ -77,10 +77,6 @@ func init() {
 				Name:    "api-key",
 				Sources: cli.EnvVars("AGENTMAIL_API_KEY"),
 			},
-			&requestflag.Flag[string]{
-				Name:    "base-url",
-				Sources: cli.EnvVars("AGENTMAIL_BASE_URL"),
-			},
 			&cli.StringFlag{
 				Name:  "environment",
 				Usage: "Set the environment for API requests",

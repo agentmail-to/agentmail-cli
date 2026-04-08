@@ -42,15 +42,13 @@ Use `--help` on any command for details.
 
 ## Environment variables
 
-| Environment variable | Required | Default value |
-| -------------------- | -------- | ------------- |
-| `AGENTMAIL_API_KEY`  | yes      |               |
-| `AGENTMAIL_BASE_URL` | no       | `null`        |
+| Environment variable | Required |
+| -------------------- | -------- |
+| `AGENTMAIL_API_KEY`  | yes      |
 
 ## Global flags
 
 - `--api-key` (can also be set with `AGENTMAIL_API_KEY` env var)
-- `--base-url` (can also be set with `AGENTMAIL_BASE_URL` env var)
 - `--help` - Show command line usage
 - `--debug` - Enable debug logging (includes HTTP request/response details)
 - `--version`, `-v` - Show the CLI version
