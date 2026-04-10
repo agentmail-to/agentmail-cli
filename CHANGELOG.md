@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.7.9 (2026-04-10)
+
+Full Changelog: [v0.7.8...v0.7.9](https://github.com/agentmail-to/agentmail-cli/compare/v0.7.8...v0.7.9)
+
+### Bug Fixes
+
+* **cli:** fix incompatible Go types for flag generated as array of maps ([18a9ddb](https://github.com/agentmail-to/agentmail-cli/commit/18a9ddb0f6a51f90aea0d205e26bd55a479d79ec))
+* decouple npm publish from goreleaser so homebrew failures don't block npm ([3373dbc](https://github.com/agentmail-to/agentmail-cli/commit/3373dbc5b00b491ae265908e2e9d3b9fbe17d0a8))
+* fix for failing to drop invalid module replace in link script ([d1c7780](https://github.com/agentmail-to/agentmail-cli/commit/d1c7780f5f80b69200626a96cb832bcd3a2c455a))
+
+
+### Chores
+
+* **cli:** additional test cases for `ShowJSONIterator` ([e96692a](https://github.com/agentmail-to/agentmail-cli/commit/e96692a5a3d9051faea76bfaf25889243f70ab0d))
+* **cli:** let `--format raw` be used in conjunction with `--transform` ([cfdc42c](https://github.com/agentmail-to/agentmail-cli/commit/cfdc42cafa845ee617f35166aeeae6ad6a381c2a))
+
 ## 0.7.8 (2026-04-08)
 
 Full Changelog: [v0.7.7...v0.7.8](https://github.com/agentmail-to/agentmail-cli/compare/v0.7.7...v0.7.8)
