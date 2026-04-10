@@ -25,7 +25,7 @@ var apiKeysCreate = requestflag.WithInnerFlags(cli.Command{
 			Usage:    "Name of api key.",
 			BodyPath: "name",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[map[string]any]{
 			Name:     "permissions",
 			Usage:    "Granular permissions for the API key. When ommitted all permissions are granted. Otherwise, only permissions set to true are granted.",
 			BodyPath: "permissions",

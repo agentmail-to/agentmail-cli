@@ -153,7 +153,7 @@ var inboxesMessagesForward = requestflag.WithInnerFlags(cli.Command{
 			Name:     "cc",
 			BodyPath: "cc",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[map[string]any]{
 			Name:     "headers",
 			Usage:    "Headers to include in message.",
 			BodyPath: "headers",
@@ -297,7 +297,7 @@ var inboxesMessagesReply = requestflag.WithInnerFlags(cli.Command{
 			Name:     "cc",
 			BodyPath: "cc",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[map[string]any]{
 			Name:     "headers",
 			Usage:    "Headers to include in message.",
 			BodyPath: "headers",
@@ -388,7 +388,7 @@ var inboxesMessagesReplyAll = requestflag.WithInnerFlags(cli.Command{
 			Usage:    "Attachments to include in message.",
 			BodyPath: "attachments",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[map[string]any]{
 			Name:     "headers",
 			Usage:    "Headers to include in message.",
 			BodyPath: "headers",
@@ -473,7 +473,7 @@ var inboxesMessagesSend = requestflag.WithInnerFlags(cli.Command{
 			Name:     "cc",
 			BodyPath: "cc",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[map[string]any]{
 			Name:     "headers",
 			Usage:    "Headers to include in message.",
 			BodyPath: "headers",
