@@ -97,19 +97,6 @@ func TestInboxesDraftsCreate(t *testing.T) {
 	})
 }
 
-func TestInboxesDraftsRetrieve(t *testing.T) {
-	t.Skip("Mock server tests are disabled")
-	t.Run("regular flags", func(t *testing.T) {
-		mocktest.TestRunMockTestWithFlags(
-			t,
-			"--api-key", "string",
-			"inboxes:drafts", "retrieve",
-			"--inbox-id", "inbox_id",
-			"--draft-id", "draft_id",
-		)
-	})
-}
-
 func TestInboxesDraftsUpdate(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
@@ -180,6 +167,19 @@ func TestInboxesDraftsDelete(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"inboxes:drafts", "delete",
+			"--inbox-id", "inbox_id",
+			"--draft-id", "draft_id",
+		)
+	})
+}
+
+func TestInboxesDraftsGet(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"inboxes:drafts", "get",
 			"--inbox-id", "inbox_id",
 			"--draft-id", "draft_id",
 		)

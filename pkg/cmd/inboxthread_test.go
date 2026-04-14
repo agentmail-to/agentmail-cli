@@ -8,19 +8,6 @@ import (
 	"github.com/agentmail-to/agentmail-cli/internal/mocktest"
 )
 
-func TestInboxesThreadsRetrieve(t *testing.T) {
-	t.Skip("Mock server tests are disabled")
-	t.Run("regular flags", func(t *testing.T) {
-		mocktest.TestRunMockTestWithFlags(
-			t,
-			"--api-key", "string",
-			"inboxes:threads", "retrieve",
-			"--inbox-id", "inbox_id",
-			"--thread-id", "thread_id",
-		)
-	})
-}
-
 func TestInboxesThreadsList(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
@@ -52,6 +39,19 @@ func TestInboxesThreadsDelete(t *testing.T) {
 			"--inbox-id", "inbox_id",
 			"--thread-id", "thread_id",
 			"--permanent=true",
+		)
+	})
+}
+
+func TestInboxesThreadsGet(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"inboxes:threads", "get",
+			"--inbox-id", "inbox_id",
+			"--thread-id", "thread_id",
 		)
 	})
 }

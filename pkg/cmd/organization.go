@@ -14,16 +14,16 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-var organizationsRetrieve = cli.Command{
-	Name:            "retrieve",
+var organizationsGet = cli.Command{
+	Name:            "get",
 	Usage:           "Get the current organization.",
 	Suggest:         true,
 	Flags:           []cli.Flag{},
-	Action:          handleOrganizationsRetrieve,
+	Action:          handleOrganizationsGet,
 	HideHelpCommand: true,
 }
 
-func handleOrganizationsRetrieve(ctx context.Context, cmd *cli.Command) error {
+func handleOrganizationsGet(ctx context.Context, cmd *cli.Command) error {
 	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 
@@ -52,5 +52,5 @@ func handleOrganizationsRetrieve(ctx context.Context, cmd *cli.Command) error {
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "organizations retrieve", obj, format, transform)
+	return ShowJSON(os.Stdout, "organizations get", obj, format, transform)
 }

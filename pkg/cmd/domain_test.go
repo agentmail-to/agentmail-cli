@@ -33,18 +33,6 @@ func TestDomainsCreate(t *testing.T) {
 	})
 }
 
-func TestDomainsRetrieve(t *testing.T) {
-	t.Skip("Mock server tests are disabled")
-	t.Run("regular flags", func(t *testing.T) {
-		mocktest.TestRunMockTestWithFlags(
-			t,
-			"--api-key", "string",
-			"domains", "retrieve",
-			"--domain-id", "domain_id",
-		)
-	})
-}
-
 func TestDomainsUpdate(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
@@ -90,6 +78,18 @@ func TestDomainsDelete(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"domains", "delete",
+			"--domain-id", "domain_id",
+		)
+	})
+}
+
+func TestDomainsGet(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"domains", "get",
 			"--domain-id", "domain_id",
 		)
 	})
