@@ -8,19 +8,6 @@ import (
 	"github.com/agentmail-to/agentmail-cli/internal/mocktest"
 )
 
-func TestPodsDraftsRetrieve(t *testing.T) {
-	t.Skip("Mock server tests are disabled")
-	t.Run("regular flags", func(t *testing.T) {
-		mocktest.TestRunMockTestWithFlags(
-			t,
-			"--api-key", "string",
-			"pods:drafts", "retrieve",
-			"--pod-id", "pod_id",
-			"--draft-id", "draft_id",
-		)
-	})
-}
-
 func TestPodsDraftsList(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
@@ -35,6 +22,19 @@ func TestPodsDraftsList(t *testing.T) {
 			"--label", "[string]",
 			"--limit", "0",
 			"--page-token", "page_token",
+		)
+	})
+}
+
+func TestPodsDraftsGet(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"pods:drafts", "get",
+			"--pod-id", "pod_id",
+			"--draft-id", "draft_id",
 		)
 	})
 }

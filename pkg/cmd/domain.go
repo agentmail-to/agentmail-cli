@@ -37,21 +37,6 @@ var domainsCreate = cli.Command{
 	HideHelpCommand: true,
 }
 
-var domainsRetrieve = cli.Command{
-	Name:    "retrieve",
-	Usage:   "**CLI:**",
-	Suggest: true,
-	Flags: []cli.Flag{
-		&requestflag.Flag[string]{
-			Name:     "domain-id",
-			Usage:    "The ID of the domain.",
-			Required: true,
-		},
-	},
-	Action:          handleDomainsRetrieve,
-	HideHelpCommand: true,
-}
-
 var domainsUpdate = cli.Command{
 	Name:    "update",
 	Usage:   "**CLI:**",
@@ -109,6 +94,21 @@ var domainsDelete = cli.Command{
 		},
 	},
 	Action:          handleDomainsDelete,
+	HideHelpCommand: true,
+}
+
+var domainsGet = cli.Command{
+	Name:    "get",
+	Usage:   "**CLI:**",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:     "domain-id",
+			Usage:    "The ID of the domain.",
+			Required: true,
+		},
+	},
+	Action:          handleDomainsGet,
 	HideHelpCommand: true,
 }
 
@@ -174,41 +174,6 @@ func handleDomainsCreate(ctx context.Context, cmd *cli.Command) error {
 	format := cmd.Root().String("format")
 	transform := cmd.Root().String("transform")
 	return ShowJSON(os.Stdout, "domains create", obj, format, transform)
-}
-
-func handleDomainsRetrieve(ctx context.Context, cmd *cli.Command) error {
-	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
-	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("domain-id") && len(unusedArgs) > 0 {
-		cmd.Set("domain-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
-	if len(unusedArgs) > 0 {
-		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
-	}
-
-	options, err := flagOptions(
-		cmd,
-		apiquery.NestedQueryFormatBrackets,
-		apiquery.ArrayQueryFormatComma,
-		EmptyBody,
-		false,
-	)
-	if err != nil {
-		return err
-	}
-
-	var res []byte
-	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Domains.Get(ctx, cmd.Value("domain-id").(string), options...)
-	if err != nil {
-		return err
-	}
-
-	obj := gjson.ParseBytes(res)
-	format := cmd.Root().String("format")
-	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "domains retrieve", obj, format, transform)
 }
 
 func handleDomainsUpdate(ctx context.Context, cmd *cli.Command) error {
@@ -310,6 +275,41 @@ func handleDomainsDelete(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	return client.Domains.Delete(ctx, cmd.Value("domain-id").(string), options...)
+}
+
+func handleDomainsGet(ctx context.Context, cmd *cli.Command) error {
+	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("domain-id") && len(unusedArgs) > 0 {
+		cmd.Set("domain-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.Domains.Get(ctx, cmd.Value("domain-id").(string), options...)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(os.Stdout, "domains get", obj, format, transform)
 }
 
 func handleDomainsGetZoneFile(ctx context.Context, cmd *cli.Command) error {

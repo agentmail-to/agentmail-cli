@@ -39,19 +39,6 @@ func TestPodsInboxesCreate(t *testing.T) {
 	})
 }
 
-func TestPodsInboxesRetrieve(t *testing.T) {
-	t.Skip("Mock server tests are disabled")
-	t.Run("regular flags", func(t *testing.T) {
-		mocktest.TestRunMockTestWithFlags(
-			t,
-			"--api-key", "string",
-			"pods:inboxes", "retrieve",
-			"--pod-id", "pod_id",
-			"--inbox-id", "inbox_id",
-		)
-	})
-}
-
 func TestPodsInboxesUpdate(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
@@ -100,6 +87,19 @@ func TestPodsInboxesDelete(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"pods:inboxes", "delete",
+			"--pod-id", "pod_id",
+			"--inbox-id", "inbox_id",
+		)
+	})
+}
+
+func TestPodsInboxesGet(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"pods:inboxes", "get",
 			"--pod-id", "pod_id",
 			"--inbox-id", "inbox_id",
 		)

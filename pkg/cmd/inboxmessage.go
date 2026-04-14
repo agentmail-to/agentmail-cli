@@ -15,26 +15,6 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-var inboxesMessagesRetrieve = cli.Command{
-	Name:    "retrieve",
-	Usage:   "**CLI:**",
-	Suggest: true,
-	Flags: []cli.Flag{
-		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
-		},
-		&requestflag.Flag[string]{
-			Name:     "message-id",
-			Usage:    "ID of message.",
-			Required: true,
-		},
-	},
-	Action:          handleInboxesMessagesRetrieve,
-	HideHelpCommand: true,
-}
-
 var inboxesMessagesUpdate = cli.Command{
 	Name:    "update",
 	Usage:   "**CLI:**",
@@ -223,6 +203,26 @@ var inboxesMessagesForward = requestflag.WithInnerFlags(cli.Command{
 		},
 	},
 })
+
+var inboxesMessagesGet = cli.Command{
+	Name:    "get",
+	Usage:   "**CLI:**",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:     "inbox-id",
+			Usage:    "The ID of the inbox.",
+			Required: true,
+		},
+		&requestflag.Flag[string]{
+			Name:     "message-id",
+			Usage:    "ID of message.",
+			Required: true,
+		},
+	},
+	Action:          handleInboxesMessagesGet,
+	HideHelpCommand: true,
+}
 
 var inboxesMessagesGetAttachment = cli.Command{
 	Name:    "get-attachment",
@@ -544,50 +544,6 @@ var inboxesMessagesSend = requestflag.WithInnerFlags(cli.Command{
 	},
 })
 
-func handleInboxesMessagesRetrieve(ctx context.Context, cmd *cli.Command) error {
-	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
-	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("message-id") && len(unusedArgs) > 0 {
-		cmd.Set("message-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
-	if len(unusedArgs) > 0 {
-		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
-	}
-
-	params := agentmail.InboxMessageGetParams{
-		InboxID: cmd.Value("inbox-id").(string),
-	}
-
-	options, err := flagOptions(
-		cmd,
-		apiquery.NestedQueryFormatBrackets,
-		apiquery.ArrayQueryFormatComma,
-		EmptyBody,
-		false,
-	)
-	if err != nil {
-		return err
-	}
-
-	var res []byte
-	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Inboxes.Messages.Get(
-		ctx,
-		cmd.Value("message-id").(string),
-		params,
-		options...,
-	)
-	if err != nil {
-		return err
-	}
-
-	obj := gjson.ParseBytes(res)
-	format := cmd.Root().String("format")
-	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes:messages retrieve", obj, format, transform)
-}
-
 func handleInboxesMessagesUpdate(ctx context.Context, cmd *cli.Command) error {
 	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
@@ -716,6 +672,50 @@ func handleInboxesMessagesForward(ctx context.Context, cmd *cli.Command) error {
 	format := cmd.Root().String("format")
 	transform := cmd.Root().String("transform")
 	return ShowJSON(os.Stdout, "inboxes:messages forward", obj, format, transform)
+}
+
+func handleInboxesMessagesGet(ctx context.Context, cmd *cli.Command) error {
+	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("message-id") && len(unusedArgs) > 0 {
+		cmd.Set("message-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	params := agentmail.InboxMessageGetParams{
+		InboxID: cmd.Value("inbox-id").(string),
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.Inboxes.Messages.Get(
+		ctx,
+		cmd.Value("message-id").(string),
+		params,
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(os.Stdout, "inboxes:messages get", obj, format, transform)
 }
 
 func handleInboxesMessagesGetAttachment(ctx context.Context, cmd *cli.Command) error {

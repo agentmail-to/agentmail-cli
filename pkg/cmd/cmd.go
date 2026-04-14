@@ -98,10 +98,10 @@ func init() {
 				Suggest:  true,
 				Commands: []*cli.Command{
 					&inboxesCreate,
-					&inboxesRetrieve,
 					&inboxesUpdate,
 					&inboxesList,
 					&inboxesDelete,
+					&inboxesGet,
 					&inboxesListMetrics,
 				},
 			},
@@ -111,10 +111,10 @@ func init() {
 				Suggest:  true,
 				Commands: []*cli.Command{
 					&inboxesDraftsCreate,
-					&inboxesDraftsRetrieve,
 					&inboxesDraftsUpdate,
 					&inboxesDraftsList,
 					&inboxesDraftsDelete,
+					&inboxesDraftsGet,
 					&inboxesDraftsGetAttachment,
 					&inboxesDraftsSend,
 				},
@@ -124,10 +124,10 @@ func init() {
 				Category: "API RESOURCE",
 				Suggest:  true,
 				Commands: []*cli.Command{
-					&inboxesMessagesRetrieve,
 					&inboxesMessagesUpdate,
 					&inboxesMessagesList,
 					&inboxesMessagesForward,
+					&inboxesMessagesGet,
 					&inboxesMessagesGetAttachment,
 					&inboxesMessagesGetRaw,
 					&inboxesMessagesReply,
@@ -140,9 +140,9 @@ func init() {
 				Category: "API RESOURCE",
 				Suggest:  true,
 				Commands: []*cli.Command{
-					&inboxesThreadsRetrieve,
 					&inboxesThreadsList,
 					&inboxesThreadsDelete,
+					&inboxesThreadsGet,
 					&inboxesThreadsGetAttachment,
 				},
 			},
@@ -152,9 +152,9 @@ func init() {
 				Suggest:  true,
 				Commands: []*cli.Command{
 					&inboxesListsCreate,
-					&inboxesListsRetrieve,
 					&inboxesListsList,
 					&inboxesListsDelete,
+					&inboxesListsGet,
 				},
 			},
 			{
@@ -173,9 +173,9 @@ func init() {
 				Suggest:  true,
 				Commands: []*cli.Command{
 					&podsCreate,
-					&podsRetrieve,
 					&podsList,
 					&podsDelete,
+					&podsGet,
 				},
 			},
 			{
@@ -184,10 +184,10 @@ func init() {
 				Suggest:  true,
 				Commands: []*cli.Command{
 					&podsDomainsCreate,
-					&podsDomainsRetrieve,
 					&podsDomainsUpdate,
 					&podsDomainsList,
 					&podsDomainsDelete,
+					&podsDomainsGet,
 					&podsDomainsGetZoneFile,
 					&podsDomainsVerify,
 				},
@@ -197,8 +197,8 @@ func init() {
 				Category: "API RESOURCE",
 				Suggest:  true,
 				Commands: []*cli.Command{
-					&podsDraftsRetrieve,
 					&podsDraftsList,
+					&podsDraftsGet,
 					&podsDraftsGetAttachment,
 				},
 			},
@@ -208,10 +208,10 @@ func init() {
 				Suggest:  true,
 				Commands: []*cli.Command{
 					&podsInboxesCreate,
-					&podsInboxesRetrieve,
 					&podsInboxesUpdate,
 					&podsInboxesList,
 					&podsInboxesDelete,
+					&podsInboxesGet,
 				},
 			},
 			{
@@ -219,9 +219,9 @@ func init() {
 				Category: "API RESOURCE",
 				Suggest:  true,
 				Commands: []*cli.Command{
-					&podsThreadsRetrieve,
 					&podsThreadsList,
 					&podsThreadsDelete,
+					&podsThreadsGet,
 					&podsThreadsGetAttachment,
 				},
 			},
@@ -231,9 +231,9 @@ func init() {
 				Suggest:  true,
 				Commands: []*cli.Command{
 					&podsListsCreate,
-					&podsListsRetrieve,
 					&podsListsList,
 					&podsListsDelete,
+					&podsListsGet,
 				},
 			},
 			{
@@ -260,10 +260,10 @@ func init() {
 				Suggest:  true,
 				Commands: []*cli.Command{
 					&webhooksCreate,
-					&webhooksRetrieve,
 					&webhooksUpdate,
 					&webhooksList,
 					&webhooksDelete,
+					&webhooksGet,
 				},
 			},
 			{
@@ -282,10 +282,10 @@ func init() {
 				Suggest:  true,
 				Commands: []*cli.Command{
 					&domainsCreate,
-					&domainsRetrieve,
 					&domainsUpdate,
 					&domainsList,
 					&domainsDelete,
+					&domainsGet,
 					&domainsGetZoneFile,
 					&domainsVerify,
 				},
@@ -295,8 +295,8 @@ func init() {
 				Category: "API RESOURCE",
 				Suggest:  true,
 				Commands: []*cli.Command{
-					&draftsRetrieve,
 					&draftsList,
+					&draftsGet,
 					&draftsGetAttachment,
 				},
 			},
@@ -306,9 +306,9 @@ func init() {
 				Suggest:  true,
 				Commands: []*cli.Command{
 					&listsCreate,
-					&listsRetrieve,
 					&listsList,
 					&listsDelete,
+					&listsGet,
 				},
 			},
 			{
@@ -324,7 +324,7 @@ func init() {
 				Category: "API RESOURCE",
 				Suggest:  true,
 				Commands: []*cli.Command{
-					&organizationsRetrieve,
+					&organizationsGet,
 				},
 			},
 			{
@@ -332,10 +332,10 @@ func init() {
 				Category: "API RESOURCE",
 				Suggest:  true,
 				Commands: []*cli.Command{
-					&threadsRetrieve,
 					&threadsList,
 					&threadsDelete,
-					&threadsRetrieveAttachment,
+					&threadsGet,
+					&threadsGetAttachment,
 				},
 			},
 			{

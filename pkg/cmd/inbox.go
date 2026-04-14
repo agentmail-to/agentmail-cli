@@ -45,21 +45,6 @@ var inboxesCreate = cli.Command{
 	HideHelpCommand: true,
 }
 
-var inboxesRetrieve = cli.Command{
-	Name:    "retrieve",
-	Usage:   "**CLI:**",
-	Suggest: true,
-	Flags: []cli.Flag{
-		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
-		},
-	},
-	Action:          handleInboxesRetrieve,
-	HideHelpCommand: true,
-}
-
 var inboxesUpdate = cli.Command{
 	Name:    "update",
 	Usage:   "**CLI:**",
@@ -118,6 +103,21 @@ var inboxesDelete = cli.Command{
 		},
 	},
 	Action:          handleInboxesDelete,
+	HideHelpCommand: true,
+}
+
+var inboxesGet = cli.Command{
+	Name:    "get",
+	Usage:   "**CLI:**",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:     "inbox-id",
+			Usage:    "The ID of the inbox.",
+			Required: true,
+		},
+	},
+	Action:          handleInboxesGet,
 	HideHelpCommand: true,
 }
 
@@ -198,41 +198,6 @@ func handleInboxesCreate(ctx context.Context, cmd *cli.Command) error {
 	format := cmd.Root().String("format")
 	transform := cmd.Root().String("transform")
 	return ShowJSON(os.Stdout, "inboxes create", obj, format, transform)
-}
-
-func handleInboxesRetrieve(ctx context.Context, cmd *cli.Command) error {
-	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
-	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("inbox-id") && len(unusedArgs) > 0 {
-		cmd.Set("inbox-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
-	if len(unusedArgs) > 0 {
-		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
-	}
-
-	options, err := flagOptions(
-		cmd,
-		apiquery.NestedQueryFormatBrackets,
-		apiquery.ArrayQueryFormatComma,
-		EmptyBody,
-		false,
-	)
-	if err != nil {
-		return err
-	}
-
-	var res []byte
-	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Inboxes.Get(ctx, cmd.Value("inbox-id").(string), options...)
-	if err != nil {
-		return err
-	}
-
-	obj := gjson.ParseBytes(res)
-	format := cmd.Root().String("format")
-	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes retrieve", obj, format, transform)
 }
 
 func handleInboxesUpdate(ctx context.Context, cmd *cli.Command) error {
@@ -334,6 +299,41 @@ func handleInboxesDelete(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	return client.Inboxes.Delete(ctx, cmd.Value("inbox-id").(string), options...)
+}
+
+func handleInboxesGet(ctx context.Context, cmd *cli.Command) error {
+	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("inbox-id") && len(unusedArgs) > 0 {
+		cmd.Set("inbox-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.Inboxes.Get(ctx, cmd.Value("inbox-id").(string), options...)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(os.Stdout, "inboxes get", obj, format, transform)
 }
 
 func handleInboxesListMetrics(ctx context.Context, cmd *cli.Command) error {

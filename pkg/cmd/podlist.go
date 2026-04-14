@@ -51,35 +51,6 @@ var podsListsCreate = cli.Command{
 	HideHelpCommand: true,
 }
 
-var podsListsRetrieve = cli.Command{
-	Name:    "retrieve",
-	Usage:   "**CLI:**",
-	Suggest: true,
-	Flags: []cli.Flag{
-		&requestflag.Flag[string]{
-			Name:     "pod-id",
-			Usage:    "ID of pod.",
-			Required: true,
-		},
-		&requestflag.Flag[string]{
-			Name:     "direction",
-			Usage:    "Direction of list entry.",
-			Required: true,
-		},
-		&requestflag.Flag[string]{
-			Name:     "type",
-			Usage:    "Type of list entry.",
-			Required: true,
-		},
-		&requestflag.Flag[string]{
-			Name:     "entry",
-			Required: true,
-		},
-	},
-	Action:          handlePodsListsRetrieve,
-	HideHelpCommand: true,
-}
-
 var podsListsList = cli.Command{
 	Name:    "list",
 	Usage:   "**CLI:**",
@@ -144,6 +115,35 @@ var podsListsDelete = cli.Command{
 	HideHelpCommand: true,
 }
 
+var podsListsGet = cli.Command{
+	Name:    "get",
+	Usage:   "**CLI:**",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:     "pod-id",
+			Usage:    "ID of pod.",
+			Required: true,
+		},
+		&requestflag.Flag[string]{
+			Name:     "direction",
+			Usage:    "Direction of list entry.",
+			Required: true,
+		},
+		&requestflag.Flag[string]{
+			Name:     "type",
+			Usage:    "Type of list entry.",
+			Required: true,
+		},
+		&requestflag.Flag[string]{
+			Name:     "entry",
+			Required: true,
+		},
+	},
+	Action:          handlePodsListsGet,
+	HideHelpCommand: true,
+}
+
 func handlePodsListsCreate(ctx context.Context, cmd *cli.Command) error {
 	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
@@ -187,52 +187,6 @@ func handlePodsListsCreate(ctx context.Context, cmd *cli.Command) error {
 	format := cmd.Root().String("format")
 	transform := cmd.Root().String("transform")
 	return ShowJSON(os.Stdout, "pods:lists create", obj, format, transform)
-}
-
-func handlePodsListsRetrieve(ctx context.Context, cmd *cli.Command) error {
-	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
-	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("entry") && len(unusedArgs) > 0 {
-		cmd.Set("entry", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
-	if len(unusedArgs) > 0 {
-		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
-	}
-
-	params := agentmail.PodListGetParams{
-		PodID:     cmd.Value("pod-id").(string),
-		Direction: agentmail.PodListGetParamsDirection(cmd.Value("direction").(string)),
-		Type:      agentmail.PodListGetParamsType(cmd.Value("type").(string)),
-	}
-
-	options, err := flagOptions(
-		cmd,
-		apiquery.NestedQueryFormatBrackets,
-		apiquery.ArrayQueryFormatComma,
-		EmptyBody,
-		false,
-	)
-	if err != nil {
-		return err
-	}
-
-	var res []byte
-	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Pods.Lists.Get(
-		ctx,
-		cmd.Value("entry").(string),
-		params,
-		options...,
-	)
-	if err != nil {
-		return err
-	}
-
-	obj := gjson.ParseBytes(res)
-	format := cmd.Root().String("format")
-	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods:lists retrieve", obj, format, transform)
 }
 
 func handlePodsListsList(ctx context.Context, cmd *cli.Command) error {
@@ -314,4 +268,50 @@ func handlePodsListsDelete(ctx context.Context, cmd *cli.Command) error {
 		params,
 		options...,
 	)
+}
+
+func handlePodsListsGet(ctx context.Context, cmd *cli.Command) error {
+	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("entry") && len(unusedArgs) > 0 {
+		cmd.Set("entry", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	params := agentmail.PodListGetParams{
+		PodID:     cmd.Value("pod-id").(string),
+		Direction: agentmail.PodListGetParamsDirection(cmd.Value("direction").(string)),
+		Type:      agentmail.PodListGetParamsType(cmd.Value("type").(string)),
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.Pods.Lists.Get(
+		ctx,
+		cmd.Value("entry").(string),
+		params,
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(os.Stdout, "pods:lists get", obj, format, transform)
 }

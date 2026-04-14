@@ -15,21 +15,6 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-var draftsRetrieve = cli.Command{
-	Name:    "retrieve",
-	Usage:   "**CLI:**",
-	Suggest: true,
-	Flags: []cli.Flag{
-		&requestflag.Flag[string]{
-			Name:     "draft-id",
-			Usage:    "ID of draft.",
-			Required: true,
-		},
-	},
-	Action:          handleDraftsRetrieve,
-	HideHelpCommand: true,
-}
-
 var draftsList = cli.Command{
 	Name:    "list",
 	Usage:   "**CLI:**",
@@ -70,6 +55,21 @@ var draftsList = cli.Command{
 	HideHelpCommand: true,
 }
 
+var draftsGet = cli.Command{
+	Name:    "get",
+	Usage:   "**CLI:**",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:     "draft-id",
+			Usage:    "ID of draft.",
+			Required: true,
+		},
+	},
+	Action:          handleDraftsGet,
+	HideHelpCommand: true,
+}
+
 var draftsGetAttachment = cli.Command{
 	Name:    "get-attachment",
 	Usage:   "**CLI:**",
@@ -88,41 +88,6 @@ var draftsGetAttachment = cli.Command{
 	},
 	Action:          handleDraftsGetAttachment,
 	HideHelpCommand: true,
-}
-
-func handleDraftsRetrieve(ctx context.Context, cmd *cli.Command) error {
-	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
-	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("draft-id") && len(unusedArgs) > 0 {
-		cmd.Set("draft-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
-	if len(unusedArgs) > 0 {
-		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
-	}
-
-	options, err := flagOptions(
-		cmd,
-		apiquery.NestedQueryFormatBrackets,
-		apiquery.ArrayQueryFormatComma,
-		EmptyBody,
-		false,
-	)
-	if err != nil {
-		return err
-	}
-
-	var res []byte
-	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Drafts.Get(ctx, cmd.Value("draft-id").(string), options...)
-	if err != nil {
-		return err
-	}
-
-	obj := gjson.ParseBytes(res)
-	format := cmd.Root().String("format")
-	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "drafts retrieve", obj, format, transform)
 }
 
 func handleDraftsList(ctx context.Context, cmd *cli.Command) error {
@@ -157,6 +122,41 @@ func handleDraftsList(ctx context.Context, cmd *cli.Command) error {
 	format := cmd.Root().String("format")
 	transform := cmd.Root().String("transform")
 	return ShowJSON(os.Stdout, "drafts list", obj, format, transform)
+}
+
+func handleDraftsGet(ctx context.Context, cmd *cli.Command) error {
+	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("draft-id") && len(unusedArgs) > 0 {
+		cmd.Set("draft-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.Drafts.Get(ctx, cmd.Value("draft-id").(string), options...)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(os.Stdout, "drafts get", obj, format, transform)
 }
 
 func handleDraftsGetAttachment(ctx context.Context, cmd *cli.Command) error {

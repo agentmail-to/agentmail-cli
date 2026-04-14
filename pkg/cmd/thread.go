@@ -15,21 +15,6 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-var threadsRetrieve = cli.Command{
-	Name:    "retrieve",
-	Usage:   "**CLI:**",
-	Suggest: true,
-	Flags: []cli.Flag{
-		&requestflag.Flag[string]{
-			Name:     "thread-id",
-			Usage:    "ID of thread.",
-			Required: true,
-		},
-	},
-	Action:          handleThreadsRetrieve,
-	HideHelpCommand: true,
-}
-
 var threadsList = cli.Command{
 	Name:    "list",
 	Usage:   "**CLI:**",
@@ -105,8 +90,23 @@ var threadsDelete = cli.Command{
 	HideHelpCommand: true,
 }
 
-var threadsRetrieveAttachment = cli.Command{
-	Name:    "retrieve-attachment",
+var threadsGet = cli.Command{
+	Name:    "get",
+	Usage:   "**CLI:**",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:     "thread-id",
+			Usage:    "ID of thread.",
+			Required: true,
+		},
+	},
+	Action:          handleThreadsGet,
+	HideHelpCommand: true,
+}
+
+var threadsGetAttachment = cli.Command{
+	Name:    "get-attachment",
 	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
@@ -121,43 +121,8 @@ var threadsRetrieveAttachment = cli.Command{
 			Required: true,
 		},
 	},
-	Action:          handleThreadsRetrieveAttachment,
+	Action:          handleThreadsGetAttachment,
 	HideHelpCommand: true,
-}
-
-func handleThreadsRetrieve(ctx context.Context, cmd *cli.Command) error {
-	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
-	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("thread-id") && len(unusedArgs) > 0 {
-		cmd.Set("thread-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
-	if len(unusedArgs) > 0 {
-		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
-	}
-
-	options, err := flagOptions(
-		cmd,
-		apiquery.NestedQueryFormatBrackets,
-		apiquery.ArrayQueryFormatComma,
-		EmptyBody,
-		false,
-	)
-	if err != nil {
-		return err
-	}
-
-	var res []byte
-	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Threads.Get(ctx, cmd.Value("thread-id").(string), options...)
-	if err != nil {
-		return err
-	}
-
-	obj := gjson.ParseBytes(res)
-	format := cmd.Root().String("format")
-	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "threads retrieve", obj, format, transform)
 }
 
 func handleThreadsList(ctx context.Context, cmd *cli.Command) error {
@@ -226,7 +191,42 @@ func handleThreadsDelete(ctx context.Context, cmd *cli.Command) error {
 	)
 }
 
-func handleThreadsRetrieveAttachment(ctx context.Context, cmd *cli.Command) error {
+func handleThreadsGet(ctx context.Context, cmd *cli.Command) error {
+	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("thread-id") && len(unusedArgs) > 0 {
+		cmd.Set("thread-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.Threads.Get(ctx, cmd.Value("thread-id").(string), options...)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(os.Stdout, "threads get", obj, format, transform)
+}
+
+func handleThreadsGetAttachment(ctx context.Context, cmd *cli.Command) error {
 	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
 	if !cmd.IsSet("attachment-id") && len(unusedArgs) > 0 {
@@ -267,5 +267,5 @@ func handleThreadsRetrieveAttachment(ctx context.Context, cmd *cli.Command) erro
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "threads retrieve-attachment", obj, format, transform)
+	return ShowJSON(os.Stdout, "threads get-attachment", obj, format, transform)
 }
