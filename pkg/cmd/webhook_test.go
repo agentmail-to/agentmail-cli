@@ -42,18 +42,6 @@ func TestWebhooksCreate(t *testing.T) {
 	})
 }
 
-func TestWebhooksRetrieve(t *testing.T) {
-	t.Skip("Mock server tests are disabled")
-	t.Run("regular flags", func(t *testing.T) {
-		mocktest.TestRunMockTestWithFlags(
-			t,
-			"--api-key", "string",
-			"webhooks", "retrieve",
-			"--webhook-id", "webhook_id",
-		)
-	})
-}
-
 func TestWebhooksUpdate(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
@@ -110,6 +98,18 @@ func TestWebhooksDelete(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"webhooks", "delete",
+			"--webhook-id", "webhook_id",
+		)
+	})
+}
+
+func TestWebhooksGet(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"webhooks", "get",
 			"--webhook-id", "webhook_id",
 		)
 	})

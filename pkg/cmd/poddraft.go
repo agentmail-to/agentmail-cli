@@ -15,26 +15,6 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-var podsDraftsRetrieve = cli.Command{
-	Name:    "retrieve",
-	Usage:   "**CLI:**",
-	Suggest: true,
-	Flags: []cli.Flag{
-		&requestflag.Flag[string]{
-			Name:     "pod-id",
-			Usage:    "ID of pod.",
-			Required: true,
-		},
-		&requestflag.Flag[string]{
-			Name:     "draft-id",
-			Usage:    "ID of draft.",
-			Required: true,
-		},
-	},
-	Action:          handlePodsDraftsRetrieve,
-	HideHelpCommand: true,
-}
-
 var podsDraftsList = cli.Command{
 	Name:    "list",
 	Usage:   "**CLI:**",
@@ -80,6 +60,26 @@ var podsDraftsList = cli.Command{
 	HideHelpCommand: true,
 }
 
+var podsDraftsGet = cli.Command{
+	Name:    "get",
+	Usage:   "**CLI:**",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:     "pod-id",
+			Usage:    "ID of pod.",
+			Required: true,
+		},
+		&requestflag.Flag[string]{
+			Name:     "draft-id",
+			Usage:    "ID of draft.",
+			Required: true,
+		},
+	},
+	Action:          handlePodsDraftsGet,
+	HideHelpCommand: true,
+}
+
 var podsDraftsGetAttachment = cli.Command{
 	Name:    "get-attachment",
 	Usage:   "**CLI:**",
@@ -103,50 +103,6 @@ var podsDraftsGetAttachment = cli.Command{
 	},
 	Action:          handlePodsDraftsGetAttachment,
 	HideHelpCommand: true,
-}
-
-func handlePodsDraftsRetrieve(ctx context.Context, cmd *cli.Command) error {
-	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
-	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("draft-id") && len(unusedArgs) > 0 {
-		cmd.Set("draft-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
-	if len(unusedArgs) > 0 {
-		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
-	}
-
-	params := agentmail.PodDraftGetParams{
-		PodID: cmd.Value("pod-id").(string),
-	}
-
-	options, err := flagOptions(
-		cmd,
-		apiquery.NestedQueryFormatBrackets,
-		apiquery.ArrayQueryFormatComma,
-		EmptyBody,
-		false,
-	)
-	if err != nil {
-		return err
-	}
-
-	var res []byte
-	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Pods.Drafts.Get(
-		ctx,
-		cmd.Value("draft-id").(string),
-		params,
-		options...,
-	)
-	if err != nil {
-		return err
-	}
-
-	obj := gjson.ParseBytes(res)
-	format := cmd.Root().String("format")
-	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods:drafts retrieve", obj, format, transform)
 }
 
 func handlePodsDraftsList(ctx context.Context, cmd *cli.Command) error {
@@ -189,6 +145,50 @@ func handlePodsDraftsList(ctx context.Context, cmd *cli.Command) error {
 	format := cmd.Root().String("format")
 	transform := cmd.Root().String("transform")
 	return ShowJSON(os.Stdout, "pods:drafts list", obj, format, transform)
+}
+
+func handlePodsDraftsGet(ctx context.Context, cmd *cli.Command) error {
+	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("draft-id") && len(unusedArgs) > 0 {
+		cmd.Set("draft-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	params := agentmail.PodDraftGetParams{
+		PodID: cmd.Value("pod-id").(string),
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.Pods.Drafts.Get(
+		ctx,
+		cmd.Value("draft-id").(string),
+		params,
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(os.Stdout, "pods:drafts get", obj, format, transform)
 }
 
 func handlePodsDraftsGetAttachment(ctx context.Context, cmd *cli.Command) error {

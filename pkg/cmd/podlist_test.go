@@ -39,21 +39,6 @@ func TestPodsListsCreate(t *testing.T) {
 	})
 }
 
-func TestPodsListsRetrieve(t *testing.T) {
-	t.Skip("Mock server tests are disabled")
-	t.Run("regular flags", func(t *testing.T) {
-		mocktest.TestRunMockTestWithFlags(
-			t,
-			"--api-key", "string",
-			"pods:lists", "retrieve",
-			"--pod-id", "pod_id",
-			"--direction", "send",
-			"--type", "allow",
-			"--entry", "entry",
-		)
-	})
-}
-
 func TestPodsListsList(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
@@ -77,6 +62,21 @@ func TestPodsListsDelete(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"pods:lists", "delete",
+			"--pod-id", "pod_id",
+			"--direction", "send",
+			"--type", "allow",
+			"--entry", "entry",
+		)
+	})
+}
+
+func TestPodsListsGet(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"pods:lists", "get",
 			"--pod-id", "pod_id",
 			"--direction", "send",
 			"--type", "allow",

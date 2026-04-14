@@ -37,20 +37,6 @@ func TestListsCreate(t *testing.T) {
 	})
 }
 
-func TestListsRetrieve(t *testing.T) {
-	t.Skip("Mock server tests are disabled")
-	t.Run("regular flags", func(t *testing.T) {
-		mocktest.TestRunMockTestWithFlags(
-			t,
-			"--api-key", "string",
-			"lists", "retrieve",
-			"--direction", "send",
-			"--type", "allow",
-			"--entry", "entry",
-		)
-	})
-}
-
 func TestListsList(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
@@ -73,6 +59,20 @@ func TestListsDelete(t *testing.T) {
 			t,
 			"--api-key", "string",
 			"lists", "delete",
+			"--direction", "send",
+			"--type", "allow",
+			"--entry", "entry",
+		)
+	})
+}
+
+func TestListsGet(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"lists", "get",
 			"--direction", "send",
 			"--type", "allow",
 			"--entry", "entry",

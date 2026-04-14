@@ -123,26 +123,6 @@ var inboxesDraftsCreate = requestflag.WithInnerFlags(cli.Command{
 	},
 })
 
-var inboxesDraftsRetrieve = cli.Command{
-	Name:    "retrieve",
-	Usage:   "**CLI:**",
-	Suggest: true,
-	Flags: []cli.Flag{
-		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
-		},
-		&requestflag.Flag[string]{
-			Name:     "draft-id",
-			Usage:    "ID of draft.",
-			Required: true,
-		},
-	},
-	Action:          handleInboxesDraftsRetrieve,
-	HideHelpCommand: true,
-}
-
 var inboxesDraftsUpdate = cli.Command{
 	Name:    "update",
 	Usage:   "**CLI:**",
@@ -268,6 +248,26 @@ var inboxesDraftsDelete = cli.Command{
 	HideHelpCommand: true,
 }
 
+var inboxesDraftsGet = cli.Command{
+	Name:    "get",
+	Usage:   "**CLI:**",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:     "inbox-id",
+			Usage:    "The ID of the inbox.",
+			Required: true,
+		},
+		&requestflag.Flag[string]{
+			Name:     "draft-id",
+			Usage:    "ID of draft.",
+			Required: true,
+		},
+	},
+	Action:          handleInboxesDraftsGet,
+	HideHelpCommand: true,
+}
+
 var inboxesDraftsGetAttachment = cli.Command{
 	Name:    "get-attachment",
 	Usage:   "**CLI:**",
@@ -363,50 +363,6 @@ func handleInboxesDraftsCreate(ctx context.Context, cmd *cli.Command) error {
 	format := cmd.Root().String("format")
 	transform := cmd.Root().String("transform")
 	return ShowJSON(os.Stdout, "inboxes:drafts create", obj, format, transform)
-}
-
-func handleInboxesDraftsRetrieve(ctx context.Context, cmd *cli.Command) error {
-	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
-	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("draft-id") && len(unusedArgs) > 0 {
-		cmd.Set("draft-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
-	if len(unusedArgs) > 0 {
-		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
-	}
-
-	params := agentmail.InboxDraftGetParams{
-		InboxID: cmd.Value("inbox-id").(string),
-	}
-
-	options, err := flagOptions(
-		cmd,
-		apiquery.NestedQueryFormatBrackets,
-		apiquery.ArrayQueryFormatComma,
-		EmptyBody,
-		false,
-	)
-	if err != nil {
-		return err
-	}
-
-	var res []byte
-	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Inboxes.Drafts.Get(
-		ctx,
-		cmd.Value("draft-id").(string),
-		params,
-		options...,
-	)
-	if err != nil {
-		return err
-	}
-
-	obj := gjson.ParseBytes(res)
-	format := cmd.Root().String("format")
-	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes:drafts retrieve", obj, format, transform)
 }
 
 func handleInboxesDraftsUpdate(ctx context.Context, cmd *cli.Command) error {
@@ -527,6 +483,50 @@ func handleInboxesDraftsDelete(ctx context.Context, cmd *cli.Command) error {
 		params,
 		options...,
 	)
+}
+
+func handleInboxesDraftsGet(ctx context.Context, cmd *cli.Command) error {
+	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("draft-id") && len(unusedArgs) > 0 {
+		cmd.Set("draft-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	params := agentmail.InboxDraftGetParams{
+		InboxID: cmd.Value("inbox-id").(string),
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.Inboxes.Drafts.Get(
+		ctx,
+		cmd.Value("draft-id").(string),
+		params,
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(os.Stdout, "inboxes:drafts get", obj, format, transform)
 }
 
 func handleInboxesDraftsGetAttachment(ctx context.Context, cmd *cli.Command) error {

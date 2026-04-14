@@ -52,21 +52,6 @@ var webhooksCreate = cli.Command{
 	HideHelpCommand: true,
 }
 
-var webhooksRetrieve = cli.Command{
-	Name:    "retrieve",
-	Usage:   "**CLI:**",
-	Suggest: true,
-	Flags: []cli.Flag{
-		&requestflag.Flag[string]{
-			Name:     "webhook-id",
-			Usage:    "ID of webhook.",
-			Required: true,
-		},
-	},
-	Action:          handleWebhooksRetrieve,
-	HideHelpCommand: true,
-}
-
 var webhooksUpdate = cli.Command{
 	Name:    "update",
 	Usage:   "**CLI:**",
@@ -142,6 +127,21 @@ var webhooksDelete = cli.Command{
 	HideHelpCommand: true,
 }
 
+var webhooksGet = cli.Command{
+	Name:    "get",
+	Usage:   "**CLI:**",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:     "webhook-id",
+			Usage:    "ID of webhook.",
+			Required: true,
+		},
+	},
+	Action:          handleWebhooksGet,
+	HideHelpCommand: true,
+}
+
 func handleWebhooksCreate(ctx context.Context, cmd *cli.Command) error {
 	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
@@ -174,41 +174,6 @@ func handleWebhooksCreate(ctx context.Context, cmd *cli.Command) error {
 	format := cmd.Root().String("format")
 	transform := cmd.Root().String("transform")
 	return ShowJSON(os.Stdout, "webhooks create", obj, format, transform)
-}
-
-func handleWebhooksRetrieve(ctx context.Context, cmd *cli.Command) error {
-	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
-	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("webhook-id") && len(unusedArgs) > 0 {
-		cmd.Set("webhook-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
-	if len(unusedArgs) > 0 {
-		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
-	}
-
-	options, err := flagOptions(
-		cmd,
-		apiquery.NestedQueryFormatBrackets,
-		apiquery.ArrayQueryFormatComma,
-		EmptyBody,
-		false,
-	)
-	if err != nil {
-		return err
-	}
-
-	var res []byte
-	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Webhooks.Get(ctx, cmd.Value("webhook-id").(string), options...)
-	if err != nil {
-		return err
-	}
-
-	obj := gjson.ParseBytes(res)
-	format := cmd.Root().String("format")
-	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "webhooks retrieve", obj, format, transform)
 }
 
 func handleWebhooksUpdate(ctx context.Context, cmd *cli.Command) error {
@@ -310,4 +275,39 @@ func handleWebhooksDelete(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	return client.Webhooks.Delete(ctx, cmd.Value("webhook-id").(string), options...)
+}
+
+func handleWebhooksGet(ctx context.Context, cmd *cli.Command) error {
+	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("webhook-id") && len(unusedArgs) > 0 {
+		cmd.Set("webhook-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.Webhooks.Get(ctx, cmd.Value("webhook-id").(string), options...)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(os.Stdout, "webhooks get", obj, format, transform)
 }

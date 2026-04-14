@@ -46,30 +46,6 @@ var listsCreate = cli.Command{
 	HideHelpCommand: true,
 }
 
-var listsRetrieve = cli.Command{
-	Name:    "retrieve",
-	Usage:   "**CLI:**",
-	Suggest: true,
-	Flags: []cli.Flag{
-		&requestflag.Flag[string]{
-			Name:     "direction",
-			Usage:    "Direction of list entry.",
-			Required: true,
-		},
-		&requestflag.Flag[string]{
-			Name:     "type",
-			Usage:    "Type of list entry.",
-			Required: true,
-		},
-		&requestflag.Flag[string]{
-			Name:     "entry",
-			Required: true,
-		},
-	},
-	Action:          handleListsRetrieve,
-	HideHelpCommand: true,
-}
-
 var listsList = cli.Command{
 	Name:    "list",
 	Usage:   "**CLI:**",
@@ -124,6 +100,30 @@ var listsDelete = cli.Command{
 	HideHelpCommand: true,
 }
 
+var listsGet = cli.Command{
+	Name:    "get",
+	Usage:   "**CLI:**",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:     "direction",
+			Usage:    "Direction of list entry.",
+			Required: true,
+		},
+		&requestflag.Flag[string]{
+			Name:     "type",
+			Usage:    "Type of list entry.",
+			Required: true,
+		},
+		&requestflag.Flag[string]{
+			Name:     "entry",
+			Required: true,
+		},
+	},
+	Action:          handleListsGet,
+	HideHelpCommand: true,
+}
+
 func handleListsCreate(ctx context.Context, cmd *cli.Command) error {
 	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
@@ -166,51 +166,6 @@ func handleListsCreate(ctx context.Context, cmd *cli.Command) error {
 	format := cmd.Root().String("format")
 	transform := cmd.Root().String("transform")
 	return ShowJSON(os.Stdout, "lists create", obj, format, transform)
-}
-
-func handleListsRetrieve(ctx context.Context, cmd *cli.Command) error {
-	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
-	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("entry") && len(unusedArgs) > 0 {
-		cmd.Set("entry", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
-	if len(unusedArgs) > 0 {
-		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
-	}
-
-	params := agentmail.ListGetParams{
-		Direction: agentmail.ListGetParamsDirection(cmd.Value("direction").(string)),
-		Type:      agentmail.ListGetParamsType(cmd.Value("type").(string)),
-	}
-
-	options, err := flagOptions(
-		cmd,
-		apiquery.NestedQueryFormatBrackets,
-		apiquery.ArrayQueryFormatComma,
-		EmptyBody,
-		false,
-	)
-	if err != nil {
-		return err
-	}
-
-	var res []byte
-	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Lists.Get(
-		ctx,
-		cmd.Value("entry").(string),
-		params,
-		options...,
-	)
-	if err != nil {
-		return err
-	}
-
-	obj := gjson.ParseBytes(res)
-	format := cmd.Root().String("format")
-	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "lists retrieve", obj, format, transform)
 }
 
 func handleListsList(ctx context.Context, cmd *cli.Command) error {
@@ -290,4 +245,49 @@ func handleListsDelete(ctx context.Context, cmd *cli.Command) error {
 		params,
 		options...,
 	)
+}
+
+func handleListsGet(ctx context.Context, cmd *cli.Command) error {
+	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("entry") && len(unusedArgs) > 0 {
+		cmd.Set("entry", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	params := agentmail.ListGetParams{
+		Direction: agentmail.ListGetParamsDirection(cmd.Value("direction").(string)),
+		Type:      agentmail.ListGetParamsType(cmd.Value("type").(string)),
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.Lists.Get(
+		ctx,
+		cmd.Value("entry").(string),
+		params,
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(os.Stdout, "lists get", obj, format, transform)
 }

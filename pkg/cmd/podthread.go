@@ -15,26 +15,6 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-var podsThreadsRetrieve = cli.Command{
-	Name:    "retrieve",
-	Usage:   "**CLI:**",
-	Suggest: true,
-	Flags: []cli.Flag{
-		&requestflag.Flag[string]{
-			Name:     "pod-id",
-			Usage:    "ID of pod.",
-			Required: true,
-		},
-		&requestflag.Flag[string]{
-			Name:     "thread-id",
-			Usage:    "ID of thread.",
-			Required: true,
-		},
-	},
-	Action:          handlePodsThreadsRetrieve,
-	HideHelpCommand: true,
-}
-
 var podsThreadsList = cli.Command{
 	Name:    "list",
 	Usage:   "**CLI:**",
@@ -120,6 +100,26 @@ var podsThreadsDelete = cli.Command{
 	HideHelpCommand: true,
 }
 
+var podsThreadsGet = cli.Command{
+	Name:    "get",
+	Usage:   "**CLI:**",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:     "pod-id",
+			Usage:    "ID of pod.",
+			Required: true,
+		},
+		&requestflag.Flag[string]{
+			Name:     "thread-id",
+			Usage:    "ID of thread.",
+			Required: true,
+		},
+	},
+	Action:          handlePodsThreadsGet,
+	HideHelpCommand: true,
+}
+
 var podsThreadsGetAttachment = cli.Command{
 	Name:    "get-attachment",
 	Usage:   "**CLI:**",
@@ -143,50 +143,6 @@ var podsThreadsGetAttachment = cli.Command{
 	},
 	Action:          handlePodsThreadsGetAttachment,
 	HideHelpCommand: true,
-}
-
-func handlePodsThreadsRetrieve(ctx context.Context, cmd *cli.Command) error {
-	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
-	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("thread-id") && len(unusedArgs) > 0 {
-		cmd.Set("thread-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
-	if len(unusedArgs) > 0 {
-		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
-	}
-
-	params := agentmail.PodThreadGetParams{
-		PodID: cmd.Value("pod-id").(string),
-	}
-
-	options, err := flagOptions(
-		cmd,
-		apiquery.NestedQueryFormatBrackets,
-		apiquery.ArrayQueryFormatComma,
-		EmptyBody,
-		false,
-	)
-	if err != nil {
-		return err
-	}
-
-	var res []byte
-	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Pods.Threads.Get(
-		ctx,
-		cmd.Value("thread-id").(string),
-		params,
-		options...,
-	)
-	if err != nil {
-		return err
-	}
-
-	obj := gjson.ParseBytes(res)
-	format := cmd.Root().String("format")
-	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods:threads retrieve", obj, format, transform)
 }
 
 func handlePodsThreadsList(ctx context.Context, cmd *cli.Command) error {
@@ -263,6 +219,50 @@ func handlePodsThreadsDelete(ctx context.Context, cmd *cli.Command) error {
 		params,
 		options...,
 	)
+}
+
+func handlePodsThreadsGet(ctx context.Context, cmd *cli.Command) error {
+	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("thread-id") && len(unusedArgs) > 0 {
+		cmd.Set("thread-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	params := agentmail.PodThreadGetParams{
+		PodID: cmd.Value("pod-id").(string),
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.Pods.Threads.Get(
+		ctx,
+		cmd.Value("thread-id").(string),
+		params,
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(os.Stdout, "pods:threads get", obj, format, transform)
 }
 
 func handlePodsThreadsGetAttachment(ctx context.Context, cmd *cli.Command) error {

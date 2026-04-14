@@ -9,19 +9,6 @@ import (
 	"github.com/agentmail-to/agentmail-cli/internal/requestflag"
 )
 
-func TestInboxesMessagesRetrieve(t *testing.T) {
-	t.Skip("Mock server tests are disabled")
-	t.Run("regular flags", func(t *testing.T) {
-		mocktest.TestRunMockTestWithFlags(
-			t,
-			"--api-key", "string",
-			"inboxes:messages", "retrieve",
-			"--inbox-id", "inbox_id",
-			"--message-id", "message_id",
-		)
-	})
-}
-
 func TestInboxesMessagesUpdate(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	t.Run("regular flags", func(t *testing.T) {
@@ -148,6 +135,19 @@ func TestInboxesMessagesForward(t *testing.T) {
 			t, pipeData,
 			"--api-key", "string",
 			"inboxes:messages", "forward",
+			"--inbox-id", "inbox_id",
+			"--message-id", "message_id",
+		)
+	})
+}
+
+func TestInboxesMessagesGet(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"inboxes:messages", "get",
 			"--inbox-id", "inbox_id",
 			"--message-id", "message_id",
 		)
