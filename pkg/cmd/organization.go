@@ -16,7 +16,7 @@ import (
 
 var organizationsGet = cli.Command{
 	Name:            "get",
-	Usage:           "Get the current organization.",
+	Usage:           "Returns the organization for the authenticated API key (usage limits, counts,\nand billing metadata).",
 	Suggest:         true,
 	Flags:           []cli.Flag{},
 	Action:          handleOrganizationsGet,
