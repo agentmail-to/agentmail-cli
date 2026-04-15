@@ -183,8 +183,9 @@ func handleInboxesThreadsList(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes:threads list", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "inboxes:threads list", obj, format, explicitFormat, transform)
 }
 
 func handleInboxesThreadsDelete(ctx context.Context, cmd *cli.Command) error {
@@ -261,8 +262,9 @@ func handleInboxesThreadsGet(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes:threads get", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "inboxes:threads get", obj, format, explicitFormat, transform)
 }
 
 func handleInboxesThreadsGetAttachment(ctx context.Context, cmd *cli.Command) error {
@@ -306,6 +308,7 @@ func handleInboxesThreadsGetAttachment(ctx context.Context, cmd *cli.Command) er
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes:threads get-attachment", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "inboxes:threads get-attachment", obj, format, explicitFormat, transform)
 }

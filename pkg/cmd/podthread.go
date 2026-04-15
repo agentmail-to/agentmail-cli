@@ -183,8 +183,9 @@ func handlePodsThreadsList(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods:threads list", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "pods:threads list", obj, format, explicitFormat, transform)
 }
 
 func handlePodsThreadsDelete(ctx context.Context, cmd *cli.Command) error {
@@ -261,8 +262,9 @@ func handlePodsThreadsGet(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods:threads get", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "pods:threads get", obj, format, explicitFormat, transform)
 }
 
 func handlePodsThreadsGetAttachment(ctx context.Context, cmd *cli.Command) error {
@@ -306,6 +308,7 @@ func handlePodsThreadsGetAttachment(ctx context.Context, cmd *cli.Command) error
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods:threads get-attachment", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "pods:threads get-attachment", obj, format, explicitFormat, transform)
 }

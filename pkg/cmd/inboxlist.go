@@ -185,8 +185,9 @@ func handleInboxesListsCreate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes:lists create", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "inboxes:lists create", obj, format, explicitFormat, transform)
 }
 
 func handleInboxesListsList(ctx context.Context, cmd *cli.Command) error {
@@ -230,8 +231,9 @@ func handleInboxesListsList(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes:lists list", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "inboxes:lists list", obj, format, explicitFormat, transform)
 }
 
 func handleInboxesListsDelete(ctx context.Context, cmd *cli.Command) error {
@@ -312,6 +314,7 @@ func handleInboxesListsGet(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes:lists get", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "inboxes:lists get", obj, format, explicitFormat, transform)
 }

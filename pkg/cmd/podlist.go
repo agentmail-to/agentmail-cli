@@ -185,8 +185,9 @@ func handlePodsListsCreate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods:lists create", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "pods:lists create", obj, format, explicitFormat, transform)
 }
 
 func handlePodsListsList(ctx context.Context, cmd *cli.Command) error {
@@ -230,8 +231,9 @@ func handlePodsListsList(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods:lists list", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "pods:lists list", obj, format, explicitFormat, transform)
 }
 
 func handlePodsListsDelete(ctx context.Context, cmd *cli.Command) error {
@@ -312,6 +314,7 @@ func handlePodsListsGet(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods:lists get", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "pods:lists get", obj, format, explicitFormat, transform)
 }

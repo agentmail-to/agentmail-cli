@@ -98,6 +98,7 @@ func handlePodsMetricsQuery(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods:metrics query", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "pods:metrics query", obj, format, explicitFormat, transform)
 }

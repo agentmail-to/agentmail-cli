@@ -361,8 +361,9 @@ func handleInboxesDraftsCreate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes:drafts create", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "inboxes:drafts create", obj, format, explicitFormat, transform)
 }
 
 func handleInboxesDraftsUpdate(ctx context.Context, cmd *cli.Command) error {
@@ -405,8 +406,9 @@ func handleInboxesDraftsUpdate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes:drafts update", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "inboxes:drafts update", obj, format, explicitFormat, transform)
 }
 
 func handleInboxesDraftsList(ctx context.Context, cmd *cli.Command) error {
@@ -447,8 +449,9 @@ func handleInboxesDraftsList(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes:drafts list", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "inboxes:drafts list", obj, format, explicitFormat, transform)
 }
 
 func handleInboxesDraftsDelete(ctx context.Context, cmd *cli.Command) error {
@@ -525,8 +528,9 @@ func handleInboxesDraftsGet(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes:drafts get", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "inboxes:drafts get", obj, format, explicitFormat, transform)
 }
 
 func handleInboxesDraftsGetAttachment(ctx context.Context, cmd *cli.Command) error {
@@ -570,8 +574,9 @@ func handleInboxesDraftsGetAttachment(ctx context.Context, cmd *cli.Command) err
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes:drafts get-attachment", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "inboxes:drafts get-attachment", obj, format, explicitFormat, transform)
 }
 
 func handleInboxesDraftsSend(ctx context.Context, cmd *cli.Command) error {
@@ -614,6 +619,7 @@ func handleInboxesDraftsSend(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes:drafts send", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "inboxes:drafts send", obj, format, explicitFormat, transform)
 }

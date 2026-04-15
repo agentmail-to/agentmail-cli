@@ -120,8 +120,9 @@ func handleDraftsList(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "drafts list", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "drafts list", obj, format, explicitFormat, transform)
 }
 
 func handleDraftsGet(ctx context.Context, cmd *cli.Command) error {
@@ -155,8 +156,9 @@ func handleDraftsGet(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "drafts get", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "drafts get", obj, format, explicitFormat, transform)
 }
 
 func handleDraftsGetAttachment(ctx context.Context, cmd *cli.Command) error {
@@ -199,6 +201,7 @@ func handleDraftsGetAttachment(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "drafts get-attachment", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "drafts get-attachment", obj, format, explicitFormat, transform)
 }

@@ -184,8 +184,9 @@ func handlePodsInboxesCreate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods:inboxes create", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "pods:inboxes create", obj, format, explicitFormat, transform)
 }
 
 func handlePodsInboxesUpdate(ctx context.Context, cmd *cli.Command) error {
@@ -228,8 +229,9 @@ func handlePodsInboxesUpdate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods:inboxes update", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "pods:inboxes update", obj, format, explicitFormat, transform)
 }
 
 func handlePodsInboxesList(ctx context.Context, cmd *cli.Command) error {
@@ -270,8 +272,9 @@ func handlePodsInboxesList(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods:inboxes list", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "pods:inboxes list", obj, format, explicitFormat, transform)
 }
 
 func handlePodsInboxesDelete(ctx context.Context, cmd *cli.Command) error {
@@ -348,6 +351,7 @@ func handlePodsInboxesGet(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods:inboxes get", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "pods:inboxes get", obj, format, explicitFormat, transform)
 }

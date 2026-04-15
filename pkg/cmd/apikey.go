@@ -283,8 +283,9 @@ func handleAPIKeysCreate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "api-keys create", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "api-keys create", obj, format, explicitFormat, transform)
 }
 
 func handleAPIKeysList(ctx context.Context, cmd *cli.Command) error {
@@ -317,8 +318,9 @@ func handleAPIKeysList(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "api-keys list", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "api-keys list", obj, format, explicitFormat, transform)
 }
 
 func handleAPIKeysDelete(ctx context.Context, cmd *cli.Command) error {

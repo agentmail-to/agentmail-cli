@@ -301,8 +301,9 @@ func handlePodsAPIKeysCreate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods:api-keys create", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "pods:api-keys create", obj, format, explicitFormat, transform)
 }
 
 func handlePodsAPIKeysList(ctx context.Context, cmd *cli.Command) error {
@@ -343,8 +344,9 @@ func handlePodsAPIKeysList(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods:api-keys list", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "pods:api-keys list", obj, format, explicitFormat, transform)
 }
 
 func handlePodsAPIKeysDelete(ctx context.Context, cmd *cli.Command) error {
