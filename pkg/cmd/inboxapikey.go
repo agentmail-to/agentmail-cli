@@ -301,8 +301,9 @@ func handleInboxesAPIKeysCreate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes:api-keys create", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "inboxes:api-keys create", obj, format, explicitFormat, transform)
 }
 
 func handleInboxesAPIKeysList(ctx context.Context, cmd *cli.Command) error {
@@ -343,8 +344,9 @@ func handleInboxesAPIKeysList(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes:api-keys list", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "inboxes:api-keys list", obj, format, explicitFormat, transform)
 }
 
 func handleInboxesAPIKeysDelete(ctx context.Context, cmd *cli.Command) error {

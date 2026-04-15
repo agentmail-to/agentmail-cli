@@ -196,8 +196,9 @@ func handleInboxesCreate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes create", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "inboxes create", obj, format, explicitFormat, transform)
 }
 
 func handleInboxesUpdate(ctx context.Context, cmd *cli.Command) error {
@@ -238,8 +239,9 @@ func handleInboxesUpdate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes update", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "inboxes update", obj, format, explicitFormat, transform)
 }
 
 func handleInboxesList(ctx context.Context, cmd *cli.Command) error {
@@ -272,8 +274,9 @@ func handleInboxesList(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes list", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "inboxes list", obj, format, explicitFormat, transform)
 }
 
 func handleInboxesDelete(ctx context.Context, cmd *cli.Command) error {
@@ -332,8 +335,9 @@ func handleInboxesGet(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes get", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "inboxes get", obj, format, explicitFormat, transform)
 }
 
 func handleInboxesListMetrics(ctx context.Context, cmd *cli.Command) error {
@@ -374,6 +378,7 @@ func handleInboxesListMetrics(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes list-metrics", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "inboxes list-metrics", obj, format, explicitFormat, transform)
 }

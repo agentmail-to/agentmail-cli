@@ -83,8 +83,9 @@ func handleAgentSignUp(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "agent sign-up", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "agent sign-up", obj, format, explicitFormat, transform)
 }
 
 func handleAgentVerify(ctx context.Context, cmd *cli.Command) error {
@@ -117,6 +118,7 @@ func handleAgentVerify(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "agent verify", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "agent verify", obj, format, explicitFormat, transform)
 }

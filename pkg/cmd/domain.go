@@ -172,8 +172,9 @@ func handleDomainsCreate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "domains create", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "domains create", obj, format, explicitFormat, transform)
 }
 
 func handleDomainsUpdate(ctx context.Context, cmd *cli.Command) error {
@@ -214,8 +215,9 @@ func handleDomainsUpdate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "domains update", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "domains update", obj, format, explicitFormat, transform)
 }
 
 func handleDomainsList(ctx context.Context, cmd *cli.Command) error {
@@ -248,8 +250,9 @@ func handleDomainsList(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "domains list", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "domains list", obj, format, explicitFormat, transform)
 }
 
 func handleDomainsDelete(ctx context.Context, cmd *cli.Command) error {
@@ -308,8 +311,9 @@ func handleDomainsGet(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "domains get", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "domains get", obj, format, explicitFormat, transform)
 }
 
 func handleDomainsGetZoneFile(ctx context.Context, cmd *cli.Command) error {

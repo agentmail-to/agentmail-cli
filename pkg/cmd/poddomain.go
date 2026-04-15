@@ -215,8 +215,9 @@ func handlePodsDomainsCreate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods:domains create", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "pods:domains create", obj, format, explicitFormat, transform)
 }
 
 func handlePodsDomainsUpdate(ctx context.Context, cmd *cli.Command) error {
@@ -259,8 +260,9 @@ func handlePodsDomainsUpdate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods:domains update", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "pods:domains update", obj, format, explicitFormat, transform)
 }
 
 func handlePodsDomainsList(ctx context.Context, cmd *cli.Command) error {
@@ -301,8 +303,9 @@ func handlePodsDomainsList(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods:domains list", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "pods:domains list", obj, format, explicitFormat, transform)
 }
 
 func handlePodsDomainsDelete(ctx context.Context, cmd *cli.Command) error {
@@ -379,8 +382,9 @@ func handlePodsDomainsGet(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods:domains get", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "pods:domains get", obj, format, explicitFormat, transform)
 }
 
 func handlePodsDomainsGetZoneFile(ctx context.Context, cmd *cli.Command) error {

@@ -164,8 +164,9 @@ func handleListsCreate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "lists create", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "lists create", obj, format, explicitFormat, transform)
 }
 
 func handleListsList(ctx context.Context, cmd *cli.Command) error {
@@ -208,8 +209,9 @@ func handleListsList(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "lists list", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "lists list", obj, format, explicitFormat, transform)
 }
 
 func handleListsDelete(ctx context.Context, cmd *cli.Command) error {
@@ -288,6 +290,7 @@ func handleListsGet(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "lists get", obj, format, transform)
+	return ShowJSON(os.Stdout, os.Stderr, "lists get", obj, format, explicitFormat, transform)
 }
