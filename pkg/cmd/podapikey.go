@@ -5,7 +5,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/agentmail-to/agentmail-cli/internal/apiquery"
 	"github.com/agentmail-to/agentmail-cli/internal/requestflag"
@@ -303,7 +302,12 @@ func handlePodsAPIKeysCreate(ctx context.Context, cmd *cli.Command) error {
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, os.Stderr, "pods:api-keys create", obj, format, explicitFormat, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		Title:          "pods:api-keys create",
+		Transform:      transform,
+	})
 }
 
 func handlePodsAPIKeysList(ctx context.Context, cmd *cli.Command) error {
@@ -346,7 +350,12 @@ func handlePodsAPIKeysList(ctx context.Context, cmd *cli.Command) error {
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, os.Stderr, "pods:api-keys list", obj, format, explicitFormat, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		Title:          "pods:api-keys list",
+		Transform:      transform,
+	})
 }
 
 func handlePodsAPIKeysDelete(ctx context.Context, cmd *cli.Command) error {

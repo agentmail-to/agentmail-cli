@@ -5,7 +5,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/agentmail-to/agentmail-cli/internal/apiquery"
 	"github.com/agentmail-to/agentmail-cli/internal/requestflag"
@@ -217,7 +216,12 @@ func handlePodsDomainsCreate(ctx context.Context, cmd *cli.Command) error {
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, os.Stderr, "pods:domains create", obj, format, explicitFormat, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		Title:          "pods:domains create",
+		Transform:      transform,
+	})
 }
 
 func handlePodsDomainsUpdate(ctx context.Context, cmd *cli.Command) error {
@@ -262,7 +266,12 @@ func handlePodsDomainsUpdate(ctx context.Context, cmd *cli.Command) error {
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, os.Stderr, "pods:domains update", obj, format, explicitFormat, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		Title:          "pods:domains update",
+		Transform:      transform,
+	})
 }
 
 func handlePodsDomainsList(ctx context.Context, cmd *cli.Command) error {
@@ -305,7 +314,12 @@ func handlePodsDomainsList(ctx context.Context, cmd *cli.Command) error {
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, os.Stderr, "pods:domains list", obj, format, explicitFormat, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		Title:          "pods:domains list",
+		Transform:      transform,
+	})
 }
 
 func handlePodsDomainsDelete(ctx context.Context, cmd *cli.Command) error {
@@ -384,7 +398,12 @@ func handlePodsDomainsGet(ctx context.Context, cmd *cli.Command) error {
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, os.Stderr, "pods:domains get", obj, format, explicitFormat, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		Title:          "pods:domains get",
+		Transform:      transform,
+	})
 }
 
 func handlePodsDomainsGetZoneFile(ctx context.Context, cmd *cli.Command) error {

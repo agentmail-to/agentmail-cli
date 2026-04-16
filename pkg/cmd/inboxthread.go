@@ -5,7 +5,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/agentmail-to/agentmail-cli/internal/apiquery"
 	"github.com/agentmail-to/agentmail-cli/internal/requestflag"
@@ -185,7 +184,12 @@ func handleInboxesThreadsList(ctx context.Context, cmd *cli.Command) error {
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, os.Stderr, "inboxes:threads list", obj, format, explicitFormat, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		Title:          "inboxes:threads list",
+		Transform:      transform,
+	})
 }
 
 func handleInboxesThreadsDelete(ctx context.Context, cmd *cli.Command) error {
@@ -264,7 +268,12 @@ func handleInboxesThreadsGet(ctx context.Context, cmd *cli.Command) error {
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, os.Stderr, "inboxes:threads get", obj, format, explicitFormat, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		Title:          "inboxes:threads get",
+		Transform:      transform,
+	})
 }
 
 func handleInboxesThreadsGetAttachment(ctx context.Context, cmd *cli.Command) error {
@@ -310,5 +319,10 @@ func handleInboxesThreadsGetAttachment(ctx context.Context, cmd *cli.Command) er
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, os.Stderr, "inboxes:threads get-attachment", obj, format, explicitFormat, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		Title:          "inboxes:threads get-attachment",
+		Transform:      transform,
+	})
 }

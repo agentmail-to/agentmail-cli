@@ -5,7 +5,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/agentmail-to/agentmail-cli/internal/apiquery"
 	"github.com/agentmail-to/agentmail-cli/internal/requestflag"
@@ -586,7 +585,12 @@ func handleInboxesMessagesUpdate(ctx context.Context, cmd *cli.Command) error {
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, os.Stderr, "inboxes:messages update", obj, format, explicitFormat, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		Title:          "inboxes:messages update",
+		Transform:      transform,
+	})
 }
 
 func handleInboxesMessagesList(ctx context.Context, cmd *cli.Command) error {
@@ -629,7 +633,12 @@ func handleInboxesMessagesList(ctx context.Context, cmd *cli.Command) error {
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, os.Stderr, "inboxes:messages list", obj, format, explicitFormat, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		Title:          "inboxes:messages list",
+		Transform:      transform,
+	})
 }
 
 func handleInboxesMessagesForward(ctx context.Context, cmd *cli.Command) error {
@@ -674,7 +683,12 @@ func handleInboxesMessagesForward(ctx context.Context, cmd *cli.Command) error {
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, os.Stderr, "inboxes:messages forward", obj, format, explicitFormat, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		Title:          "inboxes:messages forward",
+		Transform:      transform,
+	})
 }
 
 func handleInboxesMessagesGet(ctx context.Context, cmd *cli.Command) error {
@@ -719,7 +733,12 @@ func handleInboxesMessagesGet(ctx context.Context, cmd *cli.Command) error {
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, os.Stderr, "inboxes:messages get", obj, format, explicitFormat, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		Title:          "inboxes:messages get",
+		Transform:      transform,
+	})
 }
 
 func handleInboxesMessagesGetAttachment(ctx context.Context, cmd *cli.Command) error {
@@ -765,7 +784,12 @@ func handleInboxesMessagesGetAttachment(ctx context.Context, cmd *cli.Command) e
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, os.Stderr, "inboxes:messages get-attachment", obj, format, explicitFormat, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		Title:          "inboxes:messages get-attachment",
+		Transform:      transform,
+	})
 }
 
 func handleInboxesMessagesGetRaw(ctx context.Context, cmd *cli.Command) error {
@@ -810,7 +834,12 @@ func handleInboxesMessagesGetRaw(ctx context.Context, cmd *cli.Command) error {
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, os.Stderr, "inboxes:messages get-raw", obj, format, explicitFormat, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		Title:          "inboxes:messages get-raw",
+		Transform:      transform,
+	})
 }
 
 func handleInboxesMessagesReply(ctx context.Context, cmd *cli.Command) error {
@@ -855,7 +884,12 @@ func handleInboxesMessagesReply(ctx context.Context, cmd *cli.Command) error {
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, os.Stderr, "inboxes:messages reply", obj, format, explicitFormat, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		Title:          "inboxes:messages reply",
+		Transform:      transform,
+	})
 }
 
 func handleInboxesMessagesReplyAll(ctx context.Context, cmd *cli.Command) error {
@@ -900,7 +934,12 @@ func handleInboxesMessagesReplyAll(ctx context.Context, cmd *cli.Command) error 
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, os.Stderr, "inboxes:messages reply-all", obj, format, explicitFormat, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		Title:          "inboxes:messages reply-all",
+		Transform:      transform,
+	})
 }
 
 func handleInboxesMessagesSend(ctx context.Context, cmd *cli.Command) error {
@@ -943,5 +982,10 @@ func handleInboxesMessagesSend(ctx context.Context, cmd *cli.Command) error {
 	format := cmd.Root().String("format")
 	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, os.Stderr, "inboxes:messages send", obj, format, explicitFormat, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		Title:          "inboxes:messages send",
+		Transform:      transform,
+	})
 }
