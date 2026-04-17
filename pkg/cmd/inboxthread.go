@@ -187,6 +187,7 @@ func handleInboxesThreadsList(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "inboxes:threads list",
 		Transform:      transform,
 	})
@@ -271,6 +272,7 @@ func handleInboxesThreadsGet(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "inboxes:threads get",
 		Transform:      transform,
 	})
@@ -322,6 +324,7 @@ func handleInboxesThreadsGetAttachment(ctx context.Context, cmd *cli.Command) er
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "inboxes:threads get-attachment",
 		Transform:      transform,
 	})

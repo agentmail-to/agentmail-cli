@@ -188,6 +188,7 @@ func handlePodsInboxesCreate(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "pods:inboxes create",
 		Transform:      transform,
 	})
@@ -238,6 +239,7 @@ func handlePodsInboxesUpdate(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "pods:inboxes update",
 		Transform:      transform,
 	})
@@ -286,6 +288,7 @@ func handlePodsInboxesList(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "pods:inboxes list",
 		Transform:      transform,
 	})
@@ -370,6 +373,7 @@ func handlePodsInboxesGet(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "pods:inboxes get",
 		Transform:      transform,
 	})

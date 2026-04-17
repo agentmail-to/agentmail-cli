@@ -124,6 +124,7 @@ func handleDraftsList(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "drafts list",
 		Transform:      transform,
 	})
@@ -165,6 +166,7 @@ func handleDraftsGet(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "drafts get",
 		Transform:      transform,
 	})
@@ -215,6 +217,7 @@ func handleDraftsGetAttachment(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "drafts get-attachment",
 		Transform:      transform,
 	})

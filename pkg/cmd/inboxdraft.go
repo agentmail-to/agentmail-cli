@@ -365,6 +365,7 @@ func handleInboxesDraftsCreate(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "inboxes:drafts create",
 		Transform:      transform,
 	})
@@ -415,6 +416,7 @@ func handleInboxesDraftsUpdate(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "inboxes:drafts update",
 		Transform:      transform,
 	})
@@ -463,6 +465,7 @@ func handleInboxesDraftsList(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "inboxes:drafts list",
 		Transform:      transform,
 	})
@@ -547,6 +550,7 @@ func handleInboxesDraftsGet(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "inboxes:drafts get",
 		Transform:      transform,
 	})
@@ -598,6 +602,7 @@ func handleInboxesDraftsGetAttachment(ctx context.Context, cmd *cli.Command) err
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "inboxes:drafts get-attachment",
 		Transform:      transform,
 	})
@@ -648,6 +653,7 @@ func handleInboxesDraftsSend(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "inboxes:drafts send",
 		Transform:      transform,
 	})

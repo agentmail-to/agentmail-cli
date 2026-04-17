@@ -219,6 +219,7 @@ func handlePodsDomainsCreate(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "pods:domains create",
 		Transform:      transform,
 	})
@@ -269,6 +270,7 @@ func handlePodsDomainsUpdate(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "pods:domains update",
 		Transform:      transform,
 	})
@@ -317,6 +319,7 @@ func handlePodsDomainsList(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "pods:domains list",
 		Transform:      transform,
 	})
@@ -401,6 +404,7 @@ func handlePodsDomainsGet(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "pods:domains get",
 		Transform:      transform,
 	})
