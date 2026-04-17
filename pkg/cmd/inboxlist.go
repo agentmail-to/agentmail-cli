@@ -189,6 +189,7 @@ func handleInboxesListsCreate(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "inboxes:lists create",
 		Transform:      transform,
 	})
@@ -240,6 +241,7 @@ func handleInboxesListsList(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "inboxes:lists list",
 		Transform:      transform,
 	})
@@ -328,6 +330,7 @@ func handleInboxesListsGet(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "inboxes:lists get",
 		Transform:      transform,
 	})

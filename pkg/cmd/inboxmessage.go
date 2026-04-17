@@ -588,6 +588,7 @@ func handleInboxesMessagesUpdate(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "inboxes:messages update",
 		Transform:      transform,
 	})
@@ -636,6 +637,7 @@ func handleInboxesMessagesList(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "inboxes:messages list",
 		Transform:      transform,
 	})
@@ -686,6 +688,7 @@ func handleInboxesMessagesForward(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "inboxes:messages forward",
 		Transform:      transform,
 	})
@@ -736,6 +739,7 @@ func handleInboxesMessagesGet(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "inboxes:messages get",
 		Transform:      transform,
 	})
@@ -787,6 +791,7 @@ func handleInboxesMessagesGetAttachment(ctx context.Context, cmd *cli.Command) e
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "inboxes:messages get-attachment",
 		Transform:      transform,
 	})
@@ -837,6 +842,7 @@ func handleInboxesMessagesGetRaw(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "inboxes:messages get-raw",
 		Transform:      transform,
 	})
@@ -887,6 +893,7 @@ func handleInboxesMessagesReply(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "inboxes:messages reply",
 		Transform:      transform,
 	})
@@ -937,6 +944,7 @@ func handleInboxesMessagesReplyAll(ctx context.Context, cmd *cli.Command) error 
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "inboxes:messages reply-all",
 		Transform:      transform,
 	})
@@ -985,6 +993,7 @@ func handleInboxesMessagesSend(ctx context.Context, cmd *cli.Command) error {
 	return ShowJSON(obj, ShowJSONOpts{
 		ExplicitFormat: explicitFormat,
 		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "inboxes:messages send",
 		Transform:      transform,
 	})
