@@ -59,7 +59,7 @@ var inboxesMessagesList = cli.Command{
 			Usage:     "Timestamp after which to filter by.",
 			QueryPath: "after",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "ascending",
 			Usage:     "Sort in ascending temporal order.",
 			QueryPath: "ascending",
@@ -69,17 +69,17 @@ var inboxesMessagesList = cli.Command{
 			Usage:     "Timestamp before which to filter by.",
 			QueryPath: "before",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "include-blocked",
 			Usage:     "Include blocked in results.",
 			QueryPath: "include_blocked",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "include-spam",
 			Usage:     "Include spam in results.",
 			QueryPath: "include_spam",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "include-trash",
 			Usage:     "Include trash in results.",
 			QueryPath: "include_trash",
@@ -89,12 +89,12 @@ var inboxesMessagesList = cli.Command{
 			Usage:     "Labels to filter by.",
 			QueryPath: "labels",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*int64]{
 			Name:      "limit",
 			Usage:     "Limit of number of items returned.",
 			QueryPath: "limit",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:      "page-token",
 			Usage:     "Page token for pagination.",
 			QueryPath: "page_token",
@@ -137,7 +137,7 @@ var inboxesMessagesForward = requestflag.WithInnerFlags(cli.Command{
 			Usage:    "Headers to include in message.",
 			BodyPath: "headers",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "html",
 			Usage:    "HTML body of message.",
 			BodyPath: "html",
@@ -151,12 +151,12 @@ var inboxesMessagesForward = requestflag.WithInnerFlags(cli.Command{
 			Name:     "reply-to",
 			BodyPath: "reply_to",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "subject",
 			Usage:    "Subject of message.",
 			BodyPath: "subject",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "text",
 			Usage:    "Plain text body of message.",
 			BodyPath: "text",
@@ -170,35 +170,41 @@ var inboxesMessagesForward = requestflag.WithInnerFlags(cli.Command{
 	HideHelpCommand: true,
 }, map[string][]requestflag.HasOuterFlag{
 	"attachment": {
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.content",
-			Usage:      "Base64 encoded content of attachment.",
-			InnerField: "content",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content",
+			Usage:                 "Base64 encoded content of attachment.",
+			InnerField:            "content",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[string]{
-			Name:       "attachment.content-disposition",
-			Usage:      "Content disposition of attachment.",
-			InnerField: "content_disposition",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content-disposition",
+			Usage:                 "Content disposition of attachment.",
+			InnerField:            "content_disposition",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.content-id",
-			Usage:      "Content ID of attachment.",
-			InnerField: "content_id",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content-id",
+			Usage:                 "Content ID of attachment.",
+			InnerField:            "content_id",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.content-type",
-			Usage:      "Content type of attachment.",
-			InnerField: "content_type",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content-type",
+			Usage:                 "Content type of attachment.",
+			InnerField:            "content_type",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.filename",
-			Usage:      "Filename of attachment.",
-			InnerField: "filename",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.filename",
+			Usage:                 "Filename of attachment.",
+			InnerField:            "filename",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.url",
-			Usage:      "URL to the attachment.",
-			InnerField: "url",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.url",
+			Usage:                 "URL to the attachment.",
+			InnerField:            "url",
+			OuterIsArrayOfObjects: true,
 		},
 	},
 })
@@ -301,7 +307,7 @@ var inboxesMessagesReply = requestflag.WithInnerFlags(cli.Command{
 			Usage:    "Headers to include in message.",
 			BodyPath: "headers",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "html",
 			Usage:    "HTML body of message.",
 			BodyPath: "html",
@@ -311,7 +317,7 @@ var inboxesMessagesReply = requestflag.WithInnerFlags(cli.Command{
 			Usage:    "Labels of message.",
 			BodyPath: "labels",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:     "reply-all",
 			Usage:    "Reply to all recipients of the original message.",
 			BodyPath: "reply_all",
@@ -320,7 +326,7 @@ var inboxesMessagesReply = requestflag.WithInnerFlags(cli.Command{
 			Name:     "reply-to",
 			BodyPath: "reply_to",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "text",
 			Usage:    "Plain text body of message.",
 			BodyPath: "text",
@@ -334,35 +340,41 @@ var inboxesMessagesReply = requestflag.WithInnerFlags(cli.Command{
 	HideHelpCommand: true,
 }, map[string][]requestflag.HasOuterFlag{
 	"attachment": {
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.content",
-			Usage:      "Base64 encoded content of attachment.",
-			InnerField: "content",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content",
+			Usage:                 "Base64 encoded content of attachment.",
+			InnerField:            "content",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[string]{
-			Name:       "attachment.content-disposition",
-			Usage:      "Content disposition of attachment.",
-			InnerField: "content_disposition",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content-disposition",
+			Usage:                 "Content disposition of attachment.",
+			InnerField:            "content_disposition",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.content-id",
-			Usage:      "Content ID of attachment.",
-			InnerField: "content_id",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content-id",
+			Usage:                 "Content ID of attachment.",
+			InnerField:            "content_id",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.content-type",
-			Usage:      "Content type of attachment.",
-			InnerField: "content_type",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content-type",
+			Usage:                 "Content type of attachment.",
+			InnerField:            "content_type",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.filename",
-			Usage:      "Filename of attachment.",
-			InnerField: "filename",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.filename",
+			Usage:                 "Filename of attachment.",
+			InnerField:            "filename",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.url",
-			Usage:      "URL to the attachment.",
-			InnerField: "url",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.url",
+			Usage:                 "URL to the attachment.",
+			InnerField:            "url",
+			OuterIsArrayOfObjects: true,
 		},
 	},
 })
@@ -392,7 +404,7 @@ var inboxesMessagesReplyAll = requestflag.WithInnerFlags(cli.Command{
 			Usage:    "Headers to include in message.",
 			BodyPath: "headers",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "html",
 			Usage:    "HTML body of message.",
 			BodyPath: "html",
@@ -406,7 +418,7 @@ var inboxesMessagesReplyAll = requestflag.WithInnerFlags(cli.Command{
 			Name:     "reply-to",
 			BodyPath: "reply_to",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "text",
 			Usage:    "Plain text body of message.",
 			BodyPath: "text",
@@ -416,35 +428,41 @@ var inboxesMessagesReplyAll = requestflag.WithInnerFlags(cli.Command{
 	HideHelpCommand: true,
 }, map[string][]requestflag.HasOuterFlag{
 	"attachment": {
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.content",
-			Usage:      "Base64 encoded content of attachment.",
-			InnerField: "content",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content",
+			Usage:                 "Base64 encoded content of attachment.",
+			InnerField:            "content",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[string]{
-			Name:       "attachment.content-disposition",
-			Usage:      "Content disposition of attachment.",
-			InnerField: "content_disposition",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content-disposition",
+			Usage:                 "Content disposition of attachment.",
+			InnerField:            "content_disposition",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.content-id",
-			Usage:      "Content ID of attachment.",
-			InnerField: "content_id",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content-id",
+			Usage:                 "Content ID of attachment.",
+			InnerField:            "content_id",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.content-type",
-			Usage:      "Content type of attachment.",
-			InnerField: "content_type",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content-type",
+			Usage:                 "Content type of attachment.",
+			InnerField:            "content_type",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.filename",
-			Usage:      "Filename of attachment.",
-			InnerField: "filename",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.filename",
+			Usage:                 "Filename of attachment.",
+			InnerField:            "filename",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.url",
-			Usage:      "URL to the attachment.",
-			InnerField: "url",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.url",
+			Usage:                 "URL to the attachment.",
+			InnerField:            "url",
+			OuterIsArrayOfObjects: true,
 		},
 	},
 })
@@ -477,7 +495,7 @@ var inboxesMessagesSend = requestflag.WithInnerFlags(cli.Command{
 			Usage:    "Headers to include in message.",
 			BodyPath: "headers",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "html",
 			Usage:    "HTML body of message.",
 			BodyPath: "html",
@@ -491,12 +509,12 @@ var inboxesMessagesSend = requestflag.WithInnerFlags(cli.Command{
 			Name:     "reply-to",
 			BodyPath: "reply_to",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "subject",
 			Usage:    "Subject of message.",
 			BodyPath: "subject",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "text",
 			Usage:    "Plain text body of message.",
 			BodyPath: "text",
@@ -510,35 +528,41 @@ var inboxesMessagesSend = requestflag.WithInnerFlags(cli.Command{
 	HideHelpCommand: true,
 }, map[string][]requestflag.HasOuterFlag{
 	"attachment": {
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.content",
-			Usage:      "Base64 encoded content of attachment.",
-			InnerField: "content",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content",
+			Usage:                 "Base64 encoded content of attachment.",
+			InnerField:            "content",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[string]{
-			Name:       "attachment.content-disposition",
-			Usage:      "Content disposition of attachment.",
-			InnerField: "content_disposition",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content-disposition",
+			Usage:                 "Content disposition of attachment.",
+			InnerField:            "content_disposition",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.content-id",
-			Usage:      "Content ID of attachment.",
-			InnerField: "content_id",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content-id",
+			Usage:                 "Content ID of attachment.",
+			InnerField:            "content_id",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.content-type",
-			Usage:      "Content type of attachment.",
-			InnerField: "content_type",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content-type",
+			Usage:                 "Content type of attachment.",
+			InnerField:            "content_type",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.filename",
-			Usage:      "Filename of attachment.",
-			InnerField: "filename",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.filename",
+			Usage:                 "Filename of attachment.",
+			InnerField:            "filename",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.url",
-			Usage:      "URL to the attachment.",
-			InnerField: "url",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.url",
+			Usage:                 "URL to the attachment.",
+			InnerField:            "url",
+			OuterIsArrayOfObjects: true,
 		},
 	},
 })

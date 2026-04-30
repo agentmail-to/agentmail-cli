@@ -19,7 +19,7 @@ var metricsList = cli.Command{
 	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "descending",
 			Usage:     "Sort in descending order.",
 			QueryPath: "descending",
@@ -34,12 +34,12 @@ var metricsList = cli.Command{
 			Usage:     "List of metric event types to query.",
 			QueryPath: "event_types",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*int64]{
 			Name:      "limit",
 			Usage:     "Limit on number of buckets to return.",
 			QueryPath: "limit",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:      "period",
 			Usage:     "Period in number of seconds for the query.",
 			QueryPath: "period",

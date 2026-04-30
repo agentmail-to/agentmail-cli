@@ -29,7 +29,7 @@ var podsThreadsList = cli.Command{
 			Usage:     "Timestamp after which to filter by.",
 			QueryPath: "after",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "ascending",
 			Usage:     "Sort in ascending temporal order.",
 			QueryPath: "ascending",
@@ -39,17 +39,17 @@ var podsThreadsList = cli.Command{
 			Usage:     "Timestamp before which to filter by.",
 			QueryPath: "before",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "include-blocked",
 			Usage:     "Include blocked in results.",
 			QueryPath: "include_blocked",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "include-spam",
 			Usage:     "Include spam in results.",
 			QueryPath: "include_spam",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "include-trash",
 			Usage:     "Include trash in results.",
 			QueryPath: "include_trash",
@@ -59,12 +59,12 @@ var podsThreadsList = cli.Command{
 			Usage:     "Labels to filter by.",
 			QueryPath: "labels",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*int64]{
 			Name:      "limit",
 			Usage:     "Limit of number of items returned.",
 			QueryPath: "limit",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:      "page-token",
 			Usage:     "Page token for pagination.",
 			QueryPath: "page_token",
@@ -89,7 +89,7 @@ var podsThreadsDelete = cli.Command{
 			Usage:    "ID of thread.",
 			Required: true,
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "permanent",
 			Usage:     "If true, permanently delete the thread instead of moving to trash.",
 			QueryPath: "permanent",

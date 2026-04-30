@@ -46,7 +46,7 @@ var domainsUpdate = cli.Command{
 			Usage:    "The ID of the domain.",
 			Required: true,
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:     "feedback-enabled",
 			Usage:    "Bounce and complaint notifications are sent to your inboxes.",
 			BodyPath: "feedback_enabled",
@@ -61,17 +61,17 @@ var domainsList = cli.Command{
 	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "ascending",
 			Usage:     "Sort in ascending temporal order.",
 			QueryPath: "ascending",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*int64]{
 			Name:      "limit",
 			Usage:     "Limit of number of items returned.",
 			QueryPath: "limit",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:      "page-token",
 			Usage:     "Page token for pagination.",
 			QueryPath: "page_token",

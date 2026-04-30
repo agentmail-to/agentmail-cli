@@ -24,22 +24,22 @@ var podsInboxesCreate = cli.Command{
 			Usage:    "ID of pod.",
 			Required: true,
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "client-id",
 			Usage:    "Client ID of inbox.",
 			BodyPath: "client_id",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "display-name",
 			Usage:    "Display name: `Display Name <username@domain.com>`.",
 			BodyPath: "display_name",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "domain",
 			Usage:    "Domain of address. Must be verified domain. Defaults to `agentmail.to`.",
 			BodyPath: "domain",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "username",
 			Usage:    "Username of address. Randomly generated if not specified.",
 			BodyPath: "username",
@@ -85,17 +85,17 @@ var podsInboxesList = cli.Command{
 			Usage:    "ID of pod.",
 			Required: true,
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "ascending",
 			Usage:     "Sort in ascending temporal order.",
 			QueryPath: "ascending",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*int64]{
 			Name:      "limit",
 			Usage:     "Limit of number of items returned.",
 			QueryPath: "limit",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:      "page-token",
 			Usage:     "Page token for pagination.",
 			QueryPath: "page_token",
