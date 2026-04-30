@@ -35,7 +35,7 @@ var listsCreate = cli.Command{
 			Required: true,
 			BodyPath: "entry",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "reason",
 			Usage:    "Reason for adding the entry.",
 			BodyPath: "reason",
@@ -60,12 +60,12 @@ var listsList = cli.Command{
 			Usage:    "Type of list entry.",
 			Required: true,
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*int64]{
 			Name:      "limit",
 			Usage:     "Limit of number of items returned.",
 			QueryPath: "limit",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:      "page-token",
 			Usage:     "Page token for pagination.",
 			QueryPath: "page_token",

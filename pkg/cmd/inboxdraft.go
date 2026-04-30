@@ -39,17 +39,17 @@ var inboxesDraftsCreate = requestflag.WithInnerFlags(cli.Command{
 			Usage:    "Addresses of CC recipients. In format `username@domain.com` or `Display Name <username@domain.com>`.",
 			BodyPath: "cc",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "client-id",
 			Usage:    "Client ID of draft.",
 			BodyPath: "client_id",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "html",
 			Usage:    "HTML body of draft.",
 			BodyPath: "html",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "in-reply-to",
 			Usage:    "ID of message being replied to.",
 			BodyPath: "in_reply_to",
@@ -69,12 +69,12 @@ var inboxesDraftsCreate = requestflag.WithInnerFlags(cli.Command{
 			Usage:    "Time at which to schedule send draft.",
 			BodyPath: "send_at",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "subject",
 			Usage:    "Subject of draft.",
 			BodyPath: "subject",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "text",
 			Usage:    "Plain text body of draft.",
 			BodyPath: "text",
@@ -89,35 +89,41 @@ var inboxesDraftsCreate = requestflag.WithInnerFlags(cli.Command{
 	HideHelpCommand: true,
 }, map[string][]requestflag.HasOuterFlag{
 	"attachment": {
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.content",
-			Usage:      "Base64 encoded content of attachment.",
-			InnerField: "content",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content",
+			Usage:                 "Base64 encoded content of attachment.",
+			InnerField:            "content",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[string]{
-			Name:       "attachment.content-disposition",
-			Usage:      "Content disposition of attachment.",
-			InnerField: "content_disposition",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content-disposition",
+			Usage:                 "Content disposition of attachment.",
+			InnerField:            "content_disposition",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.content-id",
-			Usage:      "Content ID of attachment.",
-			InnerField: "content_id",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content-id",
+			Usage:                 "Content ID of attachment.",
+			InnerField:            "content_id",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.content-type",
-			Usage:      "Content type of attachment.",
-			InnerField: "content_type",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content-type",
+			Usage:                 "Content type of attachment.",
+			InnerField:            "content_type",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.filename",
-			Usage:      "Filename of attachment.",
-			InnerField: "filename",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.filename",
+			Usage:                 "Filename of attachment.",
+			InnerField:            "filename",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.url",
-			Usage:      "URL to the attachment.",
-			InnerField: "url",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.url",
+			Usage:                 "URL to the attachment.",
+			InnerField:            "url",
+			OuterIsArrayOfObjects: true,
 		},
 	},
 })
@@ -147,7 +153,7 @@ var inboxesDraftsUpdate = cli.Command{
 			Usage:    "Addresses of CC recipients. In format `username@domain.com` or `Display Name <username@domain.com>`.",
 			BodyPath: "cc",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "html",
 			Usage:    "HTML body of draft.",
 			BodyPath: "html",
@@ -162,12 +168,12 @@ var inboxesDraftsUpdate = cli.Command{
 			Usage:    "Time at which to schedule send draft.",
 			BodyPath: "send_at",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "subject",
 			Usage:    "Subject of draft.",
 			BodyPath: "subject",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "text",
 			Usage:    "Plain text body of draft.",
 			BodyPath: "text",
@@ -197,7 +203,7 @@ var inboxesDraftsList = cli.Command{
 			Usage:     "Timestamp after which to filter by.",
 			QueryPath: "after",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "ascending",
 			Usage:     "Sort in ascending temporal order.",
 			QueryPath: "ascending",
@@ -212,12 +218,12 @@ var inboxesDraftsList = cli.Command{
 			Usage:     "Labels to filter by.",
 			QueryPath: "labels",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*int64]{
 			Name:      "limit",
 			Usage:     "Limit of number of items returned.",
 			QueryPath: "limit",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:      "page-token",
 			Usage:     "Page token for pagination.",
 			QueryPath: "page_token",
