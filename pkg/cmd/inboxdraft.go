@@ -20,9 +20,10 @@ var inboxesDraftsCreate = requestflag.WithInnerFlags(cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[any]{
 			Name:     "attachment",
@@ -134,14 +135,16 @@ var inboxesDraftsUpdate = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "draft-id",
-			Usage:    "ID of draft.",
-			Required: true,
+			Name:      "draft-id",
+			Usage:     "ID of draft.",
+			Required:  true,
+			PathParam: "draft_id",
 		},
 		&requestflag.Flag[any]{
 			Name:     "bcc",
@@ -194,9 +197,10 @@ var inboxesDraftsList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[any]{
 			Name:      "after",
@@ -239,14 +243,16 @@ var inboxesDraftsDelete = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "draft-id",
-			Usage:    "ID of draft.",
-			Required: true,
+			Name:      "draft-id",
+			Usage:     "ID of draft.",
+			Required:  true,
+			PathParam: "draft_id",
 		},
 	},
 	Action:          handleInboxesDraftsDelete,
@@ -259,14 +265,16 @@ var inboxesDraftsGet = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "draft-id",
-			Usage:    "ID of draft.",
-			Required: true,
+			Name:      "draft-id",
+			Usage:     "ID of draft.",
+			Required:  true,
+			PathParam: "draft_id",
 		},
 	},
 	Action:          handleInboxesDraftsGet,
@@ -279,19 +287,22 @@ var inboxesDraftsGetAttachment = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "draft-id",
-			Usage:    "ID of draft.",
-			Required: true,
+			Name:      "draft-id",
+			Usage:     "ID of draft.",
+			Required:  true,
+			PathParam: "draft_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "attachment-id",
-			Usage:    "ID of attachment.",
-			Required: true,
+			Name:      "attachment-id",
+			Usage:     "ID of attachment.",
+			Required:  true,
+			PathParam: "attachment_id",
 		},
 	},
 	Action:          handleInboxesDraftsGetAttachment,
@@ -304,14 +315,16 @@ var inboxesDraftsSend = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "draft-id",
-			Usage:    "ID of draft.",
-			Required: true,
+			Name:      "draft-id",
+			Usage:     "ID of draft.",
+			Required:  true,
+			PathParam: "draft_id",
 		},
 		&requestflag.Flag[any]{
 			Name:     "add-labels",
@@ -339,8 +352,6 @@ func handleInboxesDraftsCreate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxDraftNewParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -351,6 +362,8 @@ func handleInboxesDraftsCreate(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := agentmail.InboxDraftNewParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -388,10 +401,6 @@ func handleInboxesDraftsUpdate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxDraftUpdateParams{
-		InboxID: cmd.Value("inbox-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -401,6 +410,10 @@ func handleInboxesDraftsUpdate(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.InboxDraftUpdateParams{
+		InboxID: cmd.Value("inbox-id").(string),
 	}
 
 	var res []byte
@@ -439,8 +452,6 @@ func handleInboxesDraftsList(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxDraftListParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -451,6 +462,8 @@ func handleInboxesDraftsList(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := agentmail.InboxDraftListParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -488,10 +501,6 @@ func handleInboxesDraftsDelete(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxDraftDeleteParams{
-		InboxID: cmd.Value("inbox-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -501,6 +510,10 @@ func handleInboxesDraftsDelete(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.InboxDraftDeleteParams{
+		InboxID: cmd.Value("inbox-id").(string),
 	}
 
 	return client.Inboxes.Drafts.Delete(
@@ -522,10 +535,6 @@ func handleInboxesDraftsGet(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxDraftGetParams{
-		InboxID: cmd.Value("inbox-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -535,6 +544,10 @@ func handleInboxesDraftsGet(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.InboxDraftGetParams{
+		InboxID: cmd.Value("inbox-id").(string),
 	}
 
 	var res []byte
@@ -573,11 +586,6 @@ func handleInboxesDraftsGetAttachment(ctx context.Context, cmd *cli.Command) err
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxDraftGetAttachmentParams{
-		InboxID: cmd.Value("inbox-id").(string),
-		DraftID: cmd.Value("draft-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -587,6 +595,11 @@ func handleInboxesDraftsGetAttachment(ctx context.Context, cmd *cli.Command) err
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.InboxDraftGetAttachmentParams{
+		InboxID: cmd.Value("inbox-id").(string),
+		DraftID: cmd.Value("draft-id").(string),
 	}
 
 	var res []byte
@@ -625,10 +638,6 @@ func handleInboxesDraftsSend(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxDraftSendParams{
-		InboxID: cmd.Value("inbox-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -638,6 +647,10 @@ func handleInboxesDraftsSend(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.InboxDraftSendParams{
+		InboxID: cmd.Value("inbox-id").(string),
 	}
 
 	var res []byte

@@ -60,8 +60,6 @@ func handleAgentSignUp(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.AgentSignUpParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -72,6 +70,8 @@ func handleAgentSignUp(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := agentmail.AgentSignUpParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -101,8 +101,6 @@ func handleAgentVerify(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.AgentVerifyParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -113,6 +111,8 @@ func handleAgentVerify(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := agentmail.AgentVerifyParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
