@@ -65,9 +65,10 @@ var podsDelete = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "pod-id",
-			Usage:    "ID of pod.",
-			Required: true,
+			Name:      "pod-id",
+			Usage:     "ID of pod.",
+			Required:  true,
+			PathParam: "pod_id",
 		},
 	},
 	Action:          handlePodsDelete,
@@ -80,9 +81,10 @@ var podsGet = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "pod-id",
-			Usage:    "ID of pod.",
-			Required: true,
+			Name:      "pod-id",
+			Usage:     "ID of pod.",
+			Required:  true,
+			PathParam: "pod_id",
 		},
 	},
 	Action:          handlePodsGet,
@@ -97,8 +99,6 @@ func handlePodsCreate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.PodNewParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -109,6 +109,8 @@ func handlePodsCreate(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := agentmail.PodNewParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -138,8 +140,6 @@ func handlePodsList(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.PodListParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -150,6 +150,8 @@ func handlePodsList(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := agentmail.PodListParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))

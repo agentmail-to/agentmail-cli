@@ -75,9 +75,10 @@ var threadsDelete = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "thread-id",
-			Usage:    "ID of thread.",
-			Required: true,
+			Name:      "thread-id",
+			Usage:     "ID of thread.",
+			Required:  true,
+			PathParam: "thread_id",
 		},
 		&requestflag.Flag[*bool]{
 			Name:      "permanent",
@@ -95,9 +96,10 @@ var threadsGet = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "thread-id",
-			Usage:    "ID of thread.",
-			Required: true,
+			Name:      "thread-id",
+			Usage:     "ID of thread.",
+			Required:  true,
+			PathParam: "thread_id",
 		},
 	},
 	Action:          handleThreadsGet,
@@ -110,14 +112,16 @@ var threadsGetAttachment = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "thread-id",
-			Usage:    "ID of thread.",
-			Required: true,
+			Name:      "thread-id",
+			Usage:     "ID of thread.",
+			Required:  true,
+			PathParam: "thread_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "attachment-id",
-			Usage:    "ID of attachment.",
-			Required: true,
+			Name:      "attachment-id",
+			Usage:     "ID of attachment.",
+			Required:  true,
+			PathParam: "attachment_id",
 		},
 	},
 	Action:          handleThreadsGetAttachment,
@@ -132,8 +136,6 @@ func handleThreadsList(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.ThreadListParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -144,6 +146,8 @@ func handleThreadsList(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := agentmail.ThreadListParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -176,8 +180,6 @@ func handleThreadsDelete(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.ThreadDeleteParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -188,6 +190,8 @@ func handleThreadsDelete(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := agentmail.ThreadDeleteParams{}
 
 	return client.Threads.Delete(
 		ctx,
@@ -250,10 +254,6 @@ func handleThreadsGetAttachment(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.ThreadGetAttachmentParams{
-		ThreadID: cmd.Value("thread-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -263,6 +263,10 @@ func handleThreadsGetAttachment(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.ThreadGetAttachmentParams{
+		ThreadID: cmd.Value("thread-id").(string),
 	}
 
 	var res []byte

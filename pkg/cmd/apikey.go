@@ -243,9 +243,10 @@ var apiKeysDelete = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "api-key-id",
-			Usage:    "ID of api key.",
-			Required: true,
+			Name:      "api-key-id",
+			Usage:     "ID of api key.",
+			Required:  true,
+			PathParam: "api_key_id",
 		},
 	},
 	Action:          handleAPIKeysDelete,
@@ -260,8 +261,6 @@ func handleAPIKeysCreate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.APIKeyNewParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -272,6 +271,8 @@ func handleAPIKeysCreate(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := agentmail.APIKeyNewParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -301,8 +302,6 @@ func handleAPIKeysList(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.APIKeyListParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -313,6 +312,8 @@ func handleAPIKeysList(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := agentmail.APIKeyListParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))

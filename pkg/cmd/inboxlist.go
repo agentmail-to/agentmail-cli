@@ -20,19 +20,22 @@ var inboxesListsCreate = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "direction",
-			Usage:    "Direction of list entry.",
-			Required: true,
+			Name:      "direction",
+			Usage:     "Direction of list entry.",
+			Required:  true,
+			PathParam: "direction",
 		},
 		&requestflag.Flag[string]{
-			Name:     "type",
-			Usage:    "Type of list entry.",
-			Required: true,
+			Name:      "type",
+			Usage:     "Type of list entry.",
+			Required:  true,
+			PathParam: "type",
 		},
 		&requestflag.Flag[string]{
 			Name:     "entry",
@@ -56,19 +59,22 @@ var inboxesListsList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "direction",
-			Usage:    "Direction of list entry.",
-			Required: true,
+			Name:      "direction",
+			Usage:     "Direction of list entry.",
+			Required:  true,
+			PathParam: "direction",
 		},
 		&requestflag.Flag[string]{
-			Name:     "type",
-			Usage:    "Type of list entry.",
-			Required: true,
+			Name:      "type",
+			Usage:     "Type of list entry.",
+			Required:  true,
+			PathParam: "type",
 		},
 		&requestflag.Flag[*int64]{
 			Name:      "limit",
@@ -91,23 +97,27 @@ var inboxesListsDelete = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "direction",
-			Usage:    "Direction of list entry.",
-			Required: true,
+			Name:      "direction",
+			Usage:     "Direction of list entry.",
+			Required:  true,
+			PathParam: "direction",
 		},
 		&requestflag.Flag[string]{
-			Name:     "type",
-			Usage:    "Type of list entry.",
-			Required: true,
+			Name:      "type",
+			Usage:     "Type of list entry.",
+			Required:  true,
+			PathParam: "type",
 		},
 		&requestflag.Flag[string]{
-			Name:     "entry",
-			Required: true,
+			Name:      "entry",
+			Required:  true,
+			PathParam: "entry",
 		},
 	},
 	Action:          handleInboxesListsDelete,
@@ -120,23 +130,27 @@ var inboxesListsGet = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "direction",
-			Usage:    "Direction of list entry.",
-			Required: true,
+			Name:      "direction",
+			Usage:     "Direction of list entry.",
+			Required:  true,
+			PathParam: "direction",
 		},
 		&requestflag.Flag[string]{
-			Name:     "type",
-			Usage:    "Type of list entry.",
-			Required: true,
+			Name:      "type",
+			Usage:     "Type of list entry.",
+			Required:  true,
+			PathParam: "type",
 		},
 		&requestflag.Flag[string]{
-			Name:     "entry",
-			Required: true,
+			Name:      "entry",
+			Required:  true,
+			PathParam: "entry",
 		},
 	},
 	Action:          handleInboxesListsGet,
@@ -154,11 +168,6 @@ func handleInboxesListsCreate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxListNewParams{
-		InboxID:   cmd.Value("inbox-id").(string),
-		Direction: agentmail.InboxListNewParamsDirection(cmd.Value("direction").(string)),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -168,6 +177,11 @@ func handleInboxesListsCreate(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.InboxListNewParams{
+		InboxID:   cmd.Value("inbox-id").(string),
+		Direction: agentmail.InboxListNewParamsDirection(cmd.Value("direction").(string)),
 	}
 
 	var res []byte
@@ -206,11 +220,6 @@ func handleInboxesListsList(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxListListParams{
-		InboxID:   cmd.Value("inbox-id").(string),
-		Direction: agentmail.InboxListListParamsDirection(cmd.Value("direction").(string)),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -220,6 +229,11 @@ func handleInboxesListsList(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.InboxListListParams{
+		InboxID:   cmd.Value("inbox-id").(string),
+		Direction: agentmail.InboxListListParamsDirection(cmd.Value("direction").(string)),
 	}
 
 	var res []byte
@@ -258,12 +272,6 @@ func handleInboxesListsDelete(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxListDeleteParams{
-		InboxID:   cmd.Value("inbox-id").(string),
-		Direction: agentmail.InboxListDeleteParamsDirection(cmd.Value("direction").(string)),
-		Type:      agentmail.InboxListDeleteParamsType(cmd.Value("type").(string)),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -273,6 +281,12 @@ func handleInboxesListsDelete(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.InboxListDeleteParams{
+		InboxID:   cmd.Value("inbox-id").(string),
+		Direction: agentmail.InboxListDeleteParamsDirection(cmd.Value("direction").(string)),
+		Type:      agentmail.InboxListDeleteParamsType(cmd.Value("type").(string)),
 	}
 
 	return client.Inboxes.Lists.Delete(
@@ -294,12 +308,6 @@ func handleInboxesListsGet(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxListGetParams{
-		InboxID:   cmd.Value("inbox-id").(string),
-		Direction: agentmail.InboxListGetParamsDirection(cmd.Value("direction").(string)),
-		Type:      agentmail.InboxListGetParamsType(cmd.Value("type").(string)),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -309,6 +317,12 @@ func handleInboxesListsGet(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.InboxListGetParams{
+		InboxID:   cmd.Value("inbox-id").(string),
+		Direction: agentmail.InboxListGetParamsDirection(cmd.Value("direction").(string)),
+		Type:      agentmail.InboxListGetParamsType(cmd.Value("type").(string)),
 	}
 
 	var res []byte

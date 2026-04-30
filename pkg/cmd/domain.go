@@ -42,9 +42,10 @@ var domainsUpdate = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "domain-id",
-			Usage:    "The ID of the domain.",
-			Required: true,
+			Name:      "domain-id",
+			Usage:     "The ID of the domain.",
+			Required:  true,
+			PathParam: "domain_id",
 		},
 		&requestflag.Flag[*bool]{
 			Name:     "feedback-enabled",
@@ -87,9 +88,10 @@ var domainsDelete = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "domain-id",
-			Usage:    "The ID of the domain.",
-			Required: true,
+			Name:      "domain-id",
+			Usage:     "The ID of the domain.",
+			Required:  true,
+			PathParam: "domain_id",
 		},
 	},
 	Action:          handleDomainsDelete,
@@ -102,9 +104,10 @@ var domainsGet = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "domain-id",
-			Usage:    "The ID of the domain.",
-			Required: true,
+			Name:      "domain-id",
+			Usage:     "The ID of the domain.",
+			Required:  true,
+			PathParam: "domain_id",
 		},
 	},
 	Action:          handleDomainsGet,
@@ -117,9 +120,10 @@ var domainsGetZoneFile = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "domain-id",
-			Usage:    "The ID of the domain.",
-			Required: true,
+			Name:      "domain-id",
+			Usage:     "The ID of the domain.",
+			Required:  true,
+			PathParam: "domain_id",
 		},
 	},
 	Action:          handleDomainsGetZoneFile,
@@ -132,9 +136,10 @@ var domainsVerify = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "domain-id",
-			Usage:    "The ID of the domain.",
-			Required: true,
+			Name:      "domain-id",
+			Usage:     "The ID of the domain.",
+			Required:  true,
+			PathParam: "domain_id",
 		},
 	},
 	Action:          handleDomainsVerify,
@@ -149,8 +154,6 @@ func handleDomainsCreate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.DomainNewParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -161,6 +164,8 @@ func handleDomainsCreate(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := agentmail.DomainNewParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -193,8 +198,6 @@ func handleDomainsUpdate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.DomainUpdateParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -205,6 +208,8 @@ func handleDomainsUpdate(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := agentmail.DomainUpdateParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -239,8 +244,6 @@ func handleDomainsList(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.DomainListParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -251,6 +254,8 @@ func handleDomainsList(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := agentmail.DomainListParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))

@@ -20,14 +20,16 @@ var inboxesMessagesUpdate = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "message-id",
-			Usage:    "ID of message.",
-			Required: true,
+			Name:      "message-id",
+			Usage:     "ID of message.",
+			Required:  true,
+			PathParam: "message_id",
 		},
 		&requestflag.Flag[any]{
 			Name:     "add-labels",
@@ -50,9 +52,10 @@ var inboxesMessagesList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[any]{
 			Name:      "after",
@@ -110,14 +113,16 @@ var inboxesMessagesForward = requestflag.WithInnerFlags(cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "message-id",
-			Usage:    "ID of message.",
-			Required: true,
+			Name:      "message-id",
+			Usage:     "ID of message.",
+			Required:  true,
+			PathParam: "message_id",
 		},
 		&requestflag.Flag[any]{
 			Name:     "attachment",
@@ -215,14 +220,16 @@ var inboxesMessagesGet = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "message-id",
-			Usage:    "ID of message.",
-			Required: true,
+			Name:      "message-id",
+			Usage:     "ID of message.",
+			Required:  true,
+			PathParam: "message_id",
 		},
 	},
 	Action:          handleInboxesMessagesGet,
@@ -235,19 +242,22 @@ var inboxesMessagesGetAttachment = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "message-id",
-			Usage:    "ID of message.",
-			Required: true,
+			Name:      "message-id",
+			Usage:     "ID of message.",
+			Required:  true,
+			PathParam: "message_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "attachment-id",
-			Usage:    "ID of attachment.",
-			Required: true,
+			Name:      "attachment-id",
+			Usage:     "ID of attachment.",
+			Required:  true,
+			PathParam: "attachment_id",
 		},
 	},
 	Action:          handleInboxesMessagesGetAttachment,
@@ -260,14 +270,16 @@ var inboxesMessagesGetRaw = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "message-id",
-			Usage:    "ID of message.",
-			Required: true,
+			Name:      "message-id",
+			Usage:     "ID of message.",
+			Required:  true,
+			PathParam: "message_id",
 		},
 	},
 	Action:          handleInboxesMessagesGetRaw,
@@ -280,14 +292,16 @@ var inboxesMessagesReply = requestflag.WithInnerFlags(cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "message-id",
-			Usage:    "ID of message.",
-			Required: true,
+			Name:      "message-id",
+			Usage:     "ID of message.",
+			Required:  true,
+			PathParam: "message_id",
 		},
 		&requestflag.Flag[any]{
 			Name:     "attachment",
@@ -385,14 +399,16 @@ var inboxesMessagesReplyAll = requestflag.WithInnerFlags(cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "message-id",
-			Usage:    "ID of message.",
-			Required: true,
+			Name:      "message-id",
+			Usage:     "ID of message.",
+			Required:  true,
+			PathParam: "message_id",
 		},
 		&requestflag.Flag[any]{
 			Name:     "attachment",
@@ -473,9 +489,10 @@ var inboxesMessagesSend = requestflag.WithInnerFlags(cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[any]{
 			Name:     "attachment",
@@ -578,10 +595,6 @@ func handleInboxesMessagesUpdate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxMessageUpdateParams{
-		InboxID: cmd.Value("inbox-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -591,6 +604,10 @@ func handleInboxesMessagesUpdate(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.InboxMessageUpdateParams{
+		InboxID: cmd.Value("inbox-id").(string),
 	}
 
 	var res []byte
@@ -629,8 +646,6 @@ func handleInboxesMessagesList(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxMessageListParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -641,6 +656,8 @@ func handleInboxesMessagesList(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := agentmail.InboxMessageListParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -678,10 +695,6 @@ func handleInboxesMessagesForward(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxMessageForwardParams{
-		InboxID: cmd.Value("inbox-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -691,6 +704,10 @@ func handleInboxesMessagesForward(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.InboxMessageForwardParams{
+		InboxID: cmd.Value("inbox-id").(string),
 	}
 
 	var res []byte
@@ -729,10 +746,6 @@ func handleInboxesMessagesGet(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxMessageGetParams{
-		InboxID: cmd.Value("inbox-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -742,6 +755,10 @@ func handleInboxesMessagesGet(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.InboxMessageGetParams{
+		InboxID: cmd.Value("inbox-id").(string),
 	}
 
 	var res []byte
@@ -780,11 +797,6 @@ func handleInboxesMessagesGetAttachment(ctx context.Context, cmd *cli.Command) e
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxMessageGetAttachmentParams{
-		InboxID:   cmd.Value("inbox-id").(string),
-		MessageID: cmd.Value("message-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -794,6 +806,11 @@ func handleInboxesMessagesGetAttachment(ctx context.Context, cmd *cli.Command) e
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.InboxMessageGetAttachmentParams{
+		InboxID:   cmd.Value("inbox-id").(string),
+		MessageID: cmd.Value("message-id").(string),
 	}
 
 	var res []byte
@@ -832,10 +849,6 @@ func handleInboxesMessagesGetRaw(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxMessageGetRawParams{
-		InboxID: cmd.Value("inbox-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -845,6 +858,10 @@ func handleInboxesMessagesGetRaw(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.InboxMessageGetRawParams{
+		InboxID: cmd.Value("inbox-id").(string),
 	}
 
 	var res []byte
@@ -883,10 +900,6 @@ func handleInboxesMessagesReply(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxMessageReplyParams{
-		InboxID: cmd.Value("inbox-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -896,6 +909,10 @@ func handleInboxesMessagesReply(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.InboxMessageReplyParams{
+		InboxID: cmd.Value("inbox-id").(string),
 	}
 
 	var res []byte
@@ -934,10 +951,6 @@ func handleInboxesMessagesReplyAll(ctx context.Context, cmd *cli.Command) error 
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxMessageReplyAllParams{
-		InboxID: cmd.Value("inbox-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -947,6 +960,10 @@ func handleInboxesMessagesReplyAll(ctx context.Context, cmd *cli.Command) error 
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.InboxMessageReplyAllParams{
+		InboxID: cmd.Value("inbox-id").(string),
 	}
 
 	var res []byte
@@ -985,8 +1002,6 @@ func handleInboxesMessagesSend(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxMessageSendParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -997,6 +1012,8 @@ func handleInboxesMessagesSend(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := agentmail.InboxMessageSendParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))

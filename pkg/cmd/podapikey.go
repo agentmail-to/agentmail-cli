@@ -20,9 +20,10 @@ var podsAPIKeysCreate = requestflag.WithInnerFlags(cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "pod-id",
-			Usage:    "ID of pod.",
-			Required: true,
+			Name:      "pod-id",
+			Usage:     "ID of pod.",
+			Required:  true,
+			PathParam: "pod_id",
 		},
 		&requestflag.Flag[*string]{
 			Name:     "name",
@@ -223,9 +224,10 @@ var podsAPIKeysList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "pod-id",
-			Usage:    "ID of pod.",
-			Required: true,
+			Name:      "pod-id",
+			Usage:     "ID of pod.",
+			Required:  true,
+			PathParam: "pod_id",
 		},
 		&requestflag.Flag[*int64]{
 			Name:      "limit",
@@ -248,14 +250,16 @@ var podsAPIKeysDelete = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "pod-id",
-			Usage:    "ID of pod.",
-			Required: true,
+			Name:      "pod-id",
+			Usage:     "ID of pod.",
+			Required:  true,
+			PathParam: "pod_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "api-key-id",
-			Usage:    "ID of api key.",
-			Required: true,
+			Name:      "api-key-id",
+			Usage:     "ID of api key.",
+			Required:  true,
+			PathParam: "api_key_id",
 		},
 	},
 	Action:          handlePodsAPIKeysDelete,
@@ -273,8 +277,6 @@ func handlePodsAPIKeysCreate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.PodAPIKeyNewParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -285,6 +287,8 @@ func handlePodsAPIKeysCreate(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := agentmail.PodAPIKeyNewParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -322,8 +326,6 @@ func handlePodsAPIKeysList(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.PodAPIKeyListParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -334,6 +336,8 @@ func handlePodsAPIKeysList(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := agentmail.PodAPIKeyListParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -371,10 +375,6 @@ func handlePodsAPIKeysDelete(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.PodAPIKeyDeleteParams{
-		PodID: cmd.Value("pod-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -384,6 +384,10 @@ func handlePodsAPIKeysDelete(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.PodAPIKeyDeleteParams{
+		PodID: cmd.Value("pod-id").(string),
 	}
 
 	return client.Pods.APIKeys.Delete(

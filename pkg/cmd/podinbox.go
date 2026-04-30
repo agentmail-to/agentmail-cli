@@ -20,9 +20,10 @@ var podsInboxesCreate = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "pod-id",
-			Usage:    "ID of pod.",
-			Required: true,
+			Name:      "pod-id",
+			Usage:     "ID of pod.",
+			Required:  true,
+			PathParam: "pod_id",
 		},
 		&requestflag.Flag[*string]{
 			Name:     "client-id",
@@ -55,14 +56,16 @@ var podsInboxesUpdate = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "pod-id",
-			Usage:    "ID of pod.",
-			Required: true,
+			Name:      "pod-id",
+			Usage:     "ID of pod.",
+			Required:  true,
+			PathParam: "pod_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[string]{
 			Name:     "display-name",
@@ -81,9 +84,10 @@ var podsInboxesList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "pod-id",
-			Usage:    "ID of pod.",
-			Required: true,
+			Name:      "pod-id",
+			Usage:     "ID of pod.",
+			Required:  true,
+			PathParam: "pod_id",
 		},
 		&requestflag.Flag[*bool]{
 			Name:      "ascending",
@@ -111,14 +115,16 @@ var podsInboxesDelete = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "pod-id",
-			Usage:    "ID of pod.",
-			Required: true,
+			Name:      "pod-id",
+			Usage:     "ID of pod.",
+			Required:  true,
+			PathParam: "pod_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 	},
 	Action:          handlePodsInboxesDelete,
@@ -131,14 +137,16 @@ var podsInboxesGet = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "pod-id",
-			Usage:    "ID of pod.",
-			Required: true,
+			Name:      "pod-id",
+			Usage:     "ID of pod.",
+			Required:  true,
+			PathParam: "pod_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 	},
 	Action:          handlePodsInboxesGet,
@@ -156,8 +164,6 @@ func handlePodsInboxesCreate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.PodInboxNewParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -168,6 +174,8 @@ func handlePodsInboxesCreate(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := agentmail.PodInboxNewParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -205,10 +213,6 @@ func handlePodsInboxesUpdate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.PodInboxUpdateParams{
-		PodID: cmd.Value("pod-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -218,6 +222,10 @@ func handlePodsInboxesUpdate(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.PodInboxUpdateParams{
+		PodID: cmd.Value("pod-id").(string),
 	}
 
 	var res []byte
@@ -256,8 +264,6 @@ func handlePodsInboxesList(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.PodInboxListParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -268,6 +274,8 @@ func handlePodsInboxesList(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := agentmail.PodInboxListParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -305,10 +313,6 @@ func handlePodsInboxesDelete(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.PodInboxDeleteParams{
-		PodID: cmd.Value("pod-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -318,6 +322,10 @@ func handlePodsInboxesDelete(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.PodInboxDeleteParams{
+		PodID: cmd.Value("pod-id").(string),
 	}
 
 	return client.Pods.Inboxes.Delete(
@@ -339,10 +347,6 @@ func handlePodsInboxesGet(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.PodInboxGetParams{
-		PodID: cmd.Value("pod-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -352,6 +356,10 @@ func handlePodsInboxesGet(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.PodInboxGetParams{
+		PodID: cmd.Value("pod-id").(string),
 	}
 
 	var res []byte

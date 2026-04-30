@@ -20,9 +20,10 @@ var inboxesAPIKeysCreate = requestflag.WithInnerFlags(cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[*string]{
 			Name:     "name",
@@ -223,9 +224,10 @@ var inboxesAPIKeysList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[*int64]{
 			Name:      "limit",
@@ -248,14 +250,16 @@ var inboxesAPIKeysDelete = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "api-key-id",
-			Usage:    "ID of api key.",
-			Required: true,
+			Name:      "api-key-id",
+			Usage:     "ID of api key.",
+			Required:  true,
+			PathParam: "api_key_id",
 		},
 	},
 	Action:          handleInboxesAPIKeysDelete,
@@ -273,8 +277,6 @@ func handleInboxesAPIKeysCreate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxAPIKeyNewParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -285,6 +287,8 @@ func handleInboxesAPIKeysCreate(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := agentmail.InboxAPIKeyNewParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -322,8 +326,6 @@ func handleInboxesAPIKeysList(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxAPIKeyListParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -334,6 +336,8 @@ func handleInboxesAPIKeysList(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := agentmail.InboxAPIKeyListParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -371,10 +375,6 @@ func handleInboxesAPIKeysDelete(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxAPIKeyDeleteParams{
-		InboxID: cmd.Value("inbox-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -384,6 +384,10 @@ func handleInboxesAPIKeysDelete(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.InboxAPIKeyDeleteParams{
+		InboxID: cmd.Value("inbox-id").(string),
 	}
 
 	return client.Inboxes.APIKeys.Delete(

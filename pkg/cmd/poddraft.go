@@ -20,9 +20,10 @@ var podsDraftsList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "pod-id",
-			Usage:    "ID of pod.",
-			Required: true,
+			Name:      "pod-id",
+			Usage:     "ID of pod.",
+			Required:  true,
+			PathParam: "pod_id",
 		},
 		&requestflag.Flag[any]{
 			Name:      "after",
@@ -65,14 +66,16 @@ var podsDraftsGet = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "pod-id",
-			Usage:    "ID of pod.",
-			Required: true,
+			Name:      "pod-id",
+			Usage:     "ID of pod.",
+			Required:  true,
+			PathParam: "pod_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "draft-id",
-			Usage:    "ID of draft.",
-			Required: true,
+			Name:      "draft-id",
+			Usage:     "ID of draft.",
+			Required:  true,
+			PathParam: "draft_id",
 		},
 	},
 	Action:          handlePodsDraftsGet,
@@ -85,19 +88,22 @@ var podsDraftsGetAttachment = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "pod-id",
-			Usage:    "ID of pod.",
-			Required: true,
+			Name:      "pod-id",
+			Usage:     "ID of pod.",
+			Required:  true,
+			PathParam: "pod_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "draft-id",
-			Usage:    "ID of draft.",
-			Required: true,
+			Name:      "draft-id",
+			Usage:     "ID of draft.",
+			Required:  true,
+			PathParam: "draft_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "attachment-id",
-			Usage:    "ID of attachment.",
-			Required: true,
+			Name:      "attachment-id",
+			Usage:     "ID of attachment.",
+			Required:  true,
+			PathParam: "attachment_id",
 		},
 	},
 	Action:          handlePodsDraftsGetAttachment,
@@ -115,8 +121,6 @@ func handlePodsDraftsList(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.PodDraftListParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -127,6 +131,8 @@ func handlePodsDraftsList(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := agentmail.PodDraftListParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -164,10 +170,6 @@ func handlePodsDraftsGet(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.PodDraftGetParams{
-		PodID: cmd.Value("pod-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -177,6 +179,10 @@ func handlePodsDraftsGet(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.PodDraftGetParams{
+		PodID: cmd.Value("pod-id").(string),
 	}
 
 	var res []byte
@@ -215,11 +221,6 @@ func handlePodsDraftsGetAttachment(ctx context.Context, cmd *cli.Command) error 
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.PodDraftGetAttachmentParams{
-		PodID:   cmd.Value("pod-id").(string),
-		DraftID: cmd.Value("draft-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -229,6 +230,11 @@ func handlePodsDraftsGetAttachment(ctx context.Context, cmd *cli.Command) error 
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.PodDraftGetAttachmentParams{
+		PodID:   cmd.Value("pod-id").(string),
+		DraftID: cmd.Value("draft-id").(string),
 	}
 
 	var res []byte
