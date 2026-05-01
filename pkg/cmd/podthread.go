@@ -55,6 +55,11 @@ var podsThreadsList = cli.Command{
 			Usage:     "Include trash in results.",
 			QueryPath: "include_trash",
 		},
+		&requestflag.Flag[*bool]{
+			Name:      "include-unauthenticated",
+			Usage:     "Include unauthenticated in results.",
+			QueryPath: "include_unauthenticated",
+		},
 		&requestflag.Flag[any]{
 			Name:      "label",
 			Usage:     "Labels to filter by.",
