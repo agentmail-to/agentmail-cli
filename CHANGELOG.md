@@ -1,5 +1,42 @@
 # Changelog
 
+## 0.7.12 (2026-05-14)
+
+Full Changelog: [v0.7.11...v0.7.12](https://github.com/agentmail-to/agentmail-cli/compare/v0.7.11...v0.7.12)
+
+### Features
+
+* **api:** api update ([2a05aba](https://github.com/agentmail-to/agentmail-cli/commit/2a05aba658ca45f0a782575b47c8f159ca67a186))
+* **api:** api update ([8daa4e3](https://github.com/agentmail-to/agentmail-cli/commit/8daa4e303af3d3e8b2543e1c294dbbac08dbbb2a))
+* **api:** api update ([42b296a](https://github.com/agentmail-to/agentmail-cli/commit/42b296accc273d1f43984b7a978500f5f4c890fd))
+* **cli:** add `--raw-output`/`-r` option to print raw (non-JSON) strings ([f9df419](https://github.com/agentmail-to/agentmail-cli/commit/f9df419dc3ba3b15a8a267db59207e81eea217f5))
+* **cli:** alias parameters in data with `x-stainless-cli-data-alias` ([ea26a8c](https://github.com/agentmail-to/agentmail-cli/commit/ea26a8c2a975386b3a00bf181d877e3eeb40c3f1))
+* **cli:** send filename and content type when reading input from files ([65a86ee](https://github.com/agentmail-to/agentmail-cli/commit/65a86ee9ddb38368eebc5a472380d9d85b4fb6c5))
+* support passing path and query params over stdin ([86c8aab](https://github.com/agentmail-to/agentmail-cli/commit/86c8aab82328e0362b0d699464f1a55a9421b4e7))
+
+
+### Bug Fixes
+
+* **cli:** correctly load zsh autocompletion ([1b982f7](https://github.com/agentmail-to/agentmail-cli/commit/1b982f78a9d150901b940791d7bc05fe1a396e49))
+* flags for nullable body scalar fields are strictly typed ([f105a97](https://github.com/agentmail-to/agentmail-cli/commit/f105a97104a8e6be911e6419733d9c7628577d84))
+
+
+### Chores
+
+* **ci:** support manually triggering release workflow ([0e60014](https://github.com/agentmail-to/agentmail-cli/commit/0e6001439c676f9b793176e39417f69ff94d01ac))
+* **cli:** fall back to JSON when using default "explore" with non-TTY ([fbfe2c1](https://github.com/agentmail-to/agentmail-cli/commit/fbfe2c1e0e56a779a885443c2d0d4743b512e242))
+* **cli:** switch long lists of positional args over to param structs ([d227554](https://github.com/agentmail-to/agentmail-cli/commit/d227554129ec4bddcf6ba84af9f08fe49247ea82))
+* **cli:** use `ShowJSONOpts` as argument to `formatJSON` instead of many positionals ([0e94446](https://github.com/agentmail-to/agentmail-cli/commit/0e944460e3f00ab8cb1040bb18e0380bb3574dbe))
+* **internal:** codegen related update ([aa96815](https://github.com/agentmail-to/agentmail-cli/commit/aa9681503fff5488e7b02db6e210c055f6699f19))
+* **internal:** codegen related update ([95968dd](https://github.com/agentmail-to/agentmail-cli/commit/95968dd8267ca302ca54e626fff6e71a58542cbf))
+* **internal:** codegen related update ([dbc4e39](https://github.com/agentmail-to/agentmail-cli/commit/dbc4e3921846cff6f687cd96b4c46163f8785baf))
+* **internal:** codegen related update ([5b36c53](https://github.com/agentmail-to/agentmail-cli/commit/5b36c5391637ffda46b95c9095acda6f6be532e9))
+* **internal:** codegen related update ([c7f1282](https://github.com/agentmail-to/agentmail-cli/commit/c7f1282aabb0958db3b8dd601bdca796e5dc0f57))
+* **internal:** codegen related update ([b25c8cb](https://github.com/agentmail-to/agentmail-cli/commit/b25c8cb53998ae20441273aa550a0b435b608bf3))
+* **internal:** more robust bootstrap script ([8b39e72](https://github.com/agentmail-to/agentmail-cli/commit/8b39e720cbe7e3c2c150bd7f2a563dd0feb298bf))
+* redact api-key headers in debug logs ([d3bae3e](https://github.com/agentmail-to/agentmail-cli/commit/d3bae3e70698a8869a12853ee029755a7654ff67))
+* update SDK settings ([a842755](https://github.com/agentmail-to/agentmail-cli/commit/a842755950fd6fa4ccbf2c890025e2d22ab48f97))
+
 ## 0.7.11 (2026-04-14)
 
 Full Changelog: [v0.7.10...v0.7.11](https://github.com/agentmail-to/agentmail-cli/compare/v0.7.10...v0.7.11)
