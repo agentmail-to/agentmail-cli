@@ -31,6 +31,16 @@ var agentSignUp = cli.Command{
 			Required: true,
 			BodyPath: "username",
 		},
+		&requestflag.Flag[*string]{
+			Name:     "referrer",
+			Usage:    "The channel that drove this sign-up — where the agent or its developer discovered AgentMail\n(e.g. `agent.email`, a partner URL, a campaign tag). Answers \"where did this sign-up come from\".\nMax 2048 characters.",
+			BodyPath: "referrer",
+		},
+		&requestflag.Flag[*string]{
+			Name:     "source",
+			Usage:    "The SDK, framework, or platform issuing this sign-up (e.g. `agentmail-python`, `agentmail-cli`, `agentmail-mcp`).\nIdentifies the caller — answers \"who is signing up\".\nMax 2048 characters.",
+			BodyPath: "source",
+		},
 	},
 	Action:          handleAgentSignUp,
 	HideHelpCommand: true,
