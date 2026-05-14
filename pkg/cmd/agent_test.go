@@ -17,6 +17,8 @@ func TestAgentSignUp(t *testing.T) {
 			"agent", "sign-up",
 			"--human-email", "human_email",
 			"--username", "username",
+			"--referrer", "referrer",
+			"--source", "source",
 		)
 	})
 
@@ -24,7 +26,9 @@ func TestAgentSignUp(t *testing.T) {
 		// Test piping YAML data over stdin
 		pipeData := []byte("" +
 			"human_email: human_email\n" +
-			"username: username\n")
+			"username: username\n" +
+			"referrer: referrer\n" +
+			"source: source\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",

@@ -5,7 +5,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/agentmail-to/agentmail-cli/internal/apiquery"
 	"github.com/agentmail-to/agentmail-cli/internal/requestflag"
@@ -21,9 +20,10 @@ var inboxesDraftsCreate = requestflag.WithInnerFlags(cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[any]{
 			Name:     "attachment",
@@ -40,17 +40,17 @@ var inboxesDraftsCreate = requestflag.WithInnerFlags(cli.Command{
 			Usage:    "Addresses of CC recipients. In format `username@domain.com` or `Display Name <username@domain.com>`.",
 			BodyPath: "cc",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "client-id",
 			Usage:    "Client ID of draft.",
 			BodyPath: "client_id",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "html",
 			Usage:    "HTML body of draft.",
 			BodyPath: "html",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "in-reply-to",
 			Usage:    "ID of message being replied to.",
 			BodyPath: "in_reply_to",
@@ -70,12 +70,12 @@ var inboxesDraftsCreate = requestflag.WithInnerFlags(cli.Command{
 			Usage:    "Time at which to schedule send draft.",
 			BodyPath: "send_at",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "subject",
 			Usage:    "Subject of draft.",
 			BodyPath: "subject",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "text",
 			Usage:    "Plain text body of draft.",
 			BodyPath: "text",
@@ -90,35 +90,41 @@ var inboxesDraftsCreate = requestflag.WithInnerFlags(cli.Command{
 	HideHelpCommand: true,
 }, map[string][]requestflag.HasOuterFlag{
 	"attachment": {
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.content",
-			Usage:      "Base64 encoded content of attachment.",
-			InnerField: "content",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content",
+			Usage:                 "Base64 encoded content of attachment.",
+			InnerField:            "content",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[string]{
-			Name:       "attachment.content-disposition",
-			Usage:      "Content disposition of attachment.",
-			InnerField: "content_disposition",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content-disposition",
+			Usage:                 "Content disposition of attachment.",
+			InnerField:            "content_disposition",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.content-id",
-			Usage:      "Content ID of attachment.",
-			InnerField: "content_id",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content-id",
+			Usage:                 "Content ID of attachment.",
+			InnerField:            "content_id",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.content-type",
-			Usage:      "Content type of attachment.",
-			InnerField: "content_type",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content-type",
+			Usage:                 "Content type of attachment.",
+			InnerField:            "content_type",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.filename",
-			Usage:      "Filename of attachment.",
-			InnerField: "filename",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.filename",
+			Usage:                 "Filename of attachment.",
+			InnerField:            "filename",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.url",
-			Usage:      "URL to the attachment.",
-			InnerField: "url",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.url",
+			Usage:                 "URL to the attachment.",
+			InnerField:            "url",
+			OuterIsArrayOfObjects: true,
 		},
 	},
 })
@@ -129,14 +135,16 @@ var inboxesDraftsUpdate = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "draft-id",
-			Usage:    "ID of draft.",
-			Required: true,
+			Name:      "draft-id",
+			Usage:     "ID of draft.",
+			Required:  true,
+			PathParam: "draft_id",
 		},
 		&requestflag.Flag[any]{
 			Name:     "bcc",
@@ -148,7 +156,7 @@ var inboxesDraftsUpdate = cli.Command{
 			Usage:    "Addresses of CC recipients. In format `username@domain.com` or `Display Name <username@domain.com>`.",
 			BodyPath: "cc",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "html",
 			Usage:    "HTML body of draft.",
 			BodyPath: "html",
@@ -163,12 +171,12 @@ var inboxesDraftsUpdate = cli.Command{
 			Usage:    "Time at which to schedule send draft.",
 			BodyPath: "send_at",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "subject",
 			Usage:    "Subject of draft.",
 			BodyPath: "subject",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "text",
 			Usage:    "Plain text body of draft.",
 			BodyPath: "text",
@@ -189,16 +197,17 @@ var inboxesDraftsList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[any]{
 			Name:      "after",
 			Usage:     "Timestamp after which to filter by.",
 			QueryPath: "after",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "ascending",
 			Usage:     "Sort in ascending temporal order.",
 			QueryPath: "ascending",
@@ -213,12 +222,12 @@ var inboxesDraftsList = cli.Command{
 			Usage:     "Labels to filter by.",
 			QueryPath: "labels",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*int64]{
 			Name:      "limit",
 			Usage:     "Limit of number of items returned.",
 			QueryPath: "limit",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:      "page-token",
 			Usage:     "Page token for pagination.",
 			QueryPath: "page_token",
@@ -234,14 +243,16 @@ var inboxesDraftsDelete = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "draft-id",
-			Usage:    "ID of draft.",
-			Required: true,
+			Name:      "draft-id",
+			Usage:     "ID of draft.",
+			Required:  true,
+			PathParam: "draft_id",
 		},
 	},
 	Action:          handleInboxesDraftsDelete,
@@ -254,14 +265,16 @@ var inboxesDraftsGet = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "draft-id",
-			Usage:    "ID of draft.",
-			Required: true,
+			Name:      "draft-id",
+			Usage:     "ID of draft.",
+			Required:  true,
+			PathParam: "draft_id",
 		},
 	},
 	Action:          handleInboxesDraftsGet,
@@ -274,19 +287,22 @@ var inboxesDraftsGetAttachment = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "draft-id",
-			Usage:    "ID of draft.",
-			Required: true,
+			Name:      "draft-id",
+			Usage:     "ID of draft.",
+			Required:  true,
+			PathParam: "draft_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "attachment-id",
-			Usage:    "ID of attachment.",
-			Required: true,
+			Name:      "attachment-id",
+			Usage:     "ID of attachment.",
+			Required:  true,
+			PathParam: "attachment_id",
 		},
 	},
 	Action:          handleInboxesDraftsGetAttachment,
@@ -299,14 +315,16 @@ var inboxesDraftsSend = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "draft-id",
-			Usage:    "ID of draft.",
-			Required: true,
+			Name:      "draft-id",
+			Usage:     "ID of draft.",
+			Required:  true,
+			PathParam: "draft_id",
 		},
 		&requestflag.Flag[any]{
 			Name:     "add-labels",
@@ -334,8 +352,6 @@ func handleInboxesDraftsCreate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxDraftNewParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -346,6 +362,8 @@ func handleInboxesDraftsCreate(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := agentmail.InboxDraftNewParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -361,8 +379,15 @@ func handleInboxesDraftsCreate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes:drafts create", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "inboxes:drafts create",
+		Transform:      transform,
+	})
 }
 
 func handleInboxesDraftsUpdate(ctx context.Context, cmd *cli.Command) error {
@@ -376,10 +401,6 @@ func handleInboxesDraftsUpdate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxDraftUpdateParams{
-		InboxID: cmd.Value("inbox-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -389,6 +410,10 @@ func handleInboxesDraftsUpdate(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.InboxDraftUpdateParams{
+		InboxID: cmd.Value("inbox-id").(string),
 	}
 
 	var res []byte
@@ -405,8 +430,15 @@ func handleInboxesDraftsUpdate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes:drafts update", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "inboxes:drafts update",
+		Transform:      transform,
+	})
 }
 
 func handleInboxesDraftsList(ctx context.Context, cmd *cli.Command) error {
@@ -420,8 +452,6 @@ func handleInboxesDraftsList(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxDraftListParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -432,6 +462,8 @@ func handleInboxesDraftsList(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := agentmail.InboxDraftListParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -447,8 +479,15 @@ func handleInboxesDraftsList(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes:drafts list", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "inboxes:drafts list",
+		Transform:      transform,
+	})
 }
 
 func handleInboxesDraftsDelete(ctx context.Context, cmd *cli.Command) error {
@@ -462,10 +501,6 @@ func handleInboxesDraftsDelete(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxDraftDeleteParams{
-		InboxID: cmd.Value("inbox-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -475,6 +510,10 @@ func handleInboxesDraftsDelete(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.InboxDraftDeleteParams{
+		InboxID: cmd.Value("inbox-id").(string),
 	}
 
 	return client.Inboxes.Drafts.Delete(
@@ -496,10 +535,6 @@ func handleInboxesDraftsGet(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxDraftGetParams{
-		InboxID: cmd.Value("inbox-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -509,6 +544,10 @@ func handleInboxesDraftsGet(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.InboxDraftGetParams{
+		InboxID: cmd.Value("inbox-id").(string),
 	}
 
 	var res []byte
@@ -525,8 +564,15 @@ func handleInboxesDraftsGet(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes:drafts get", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "inboxes:drafts get",
+		Transform:      transform,
+	})
 }
 
 func handleInboxesDraftsGetAttachment(ctx context.Context, cmd *cli.Command) error {
@@ -540,11 +586,6 @@ func handleInboxesDraftsGetAttachment(ctx context.Context, cmd *cli.Command) err
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxDraftGetAttachmentParams{
-		InboxID: cmd.Value("inbox-id").(string),
-		DraftID: cmd.Value("draft-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -554,6 +595,11 @@ func handleInboxesDraftsGetAttachment(ctx context.Context, cmd *cli.Command) err
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.InboxDraftGetAttachmentParams{
+		InboxID: cmd.Value("inbox-id").(string),
+		DraftID: cmd.Value("draft-id").(string),
 	}
 
 	var res []byte
@@ -570,8 +616,15 @@ func handleInboxesDraftsGetAttachment(ctx context.Context, cmd *cli.Command) err
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes:drafts get-attachment", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "inboxes:drafts get-attachment",
+		Transform:      transform,
+	})
 }
 
 func handleInboxesDraftsSend(ctx context.Context, cmd *cli.Command) error {
@@ -585,10 +638,6 @@ func handleInboxesDraftsSend(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxDraftSendParams{
-		InboxID: cmd.Value("inbox-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -598,6 +647,10 @@ func handleInboxesDraftsSend(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.InboxDraftSendParams{
+		InboxID: cmd.Value("inbox-id").(string),
 	}
 
 	var res []byte
@@ -614,6 +667,13 @@ func handleInboxesDraftsSend(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes:drafts send", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "inboxes:drafts send",
+		Transform:      transform,
+	})
 }

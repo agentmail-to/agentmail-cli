@@ -5,7 +5,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/agentmail-to/agentmail-cli/internal/apiquery"
 	"github.com/agentmail-to/agentmail-cli/internal/requestflag"
@@ -43,11 +42,12 @@ var domainsUpdate = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "domain-id",
-			Usage:    "The ID of the domain.",
-			Required: true,
+			Name:      "domain-id",
+			Usage:     "The ID of the domain.",
+			Required:  true,
+			PathParam: "domain_id",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:     "feedback-enabled",
 			Usage:    "Bounce and complaint notifications are sent to your inboxes.",
 			BodyPath: "feedback_enabled",
@@ -62,17 +62,17 @@ var domainsList = cli.Command{
 	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "ascending",
 			Usage:     "Sort in ascending temporal order.",
 			QueryPath: "ascending",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*int64]{
 			Name:      "limit",
 			Usage:     "Limit of number of items returned.",
 			QueryPath: "limit",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:      "page-token",
 			Usage:     "Page token for pagination.",
 			QueryPath: "page_token",
@@ -88,9 +88,10 @@ var domainsDelete = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "domain-id",
-			Usage:    "The ID of the domain.",
-			Required: true,
+			Name:      "domain-id",
+			Usage:     "The ID of the domain.",
+			Required:  true,
+			PathParam: "domain_id",
 		},
 	},
 	Action:          handleDomainsDelete,
@@ -103,9 +104,10 @@ var domainsGet = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "domain-id",
-			Usage:    "The ID of the domain.",
-			Required: true,
+			Name:      "domain-id",
+			Usage:     "The ID of the domain.",
+			Required:  true,
+			PathParam: "domain_id",
 		},
 	},
 	Action:          handleDomainsGet,
@@ -118,9 +120,10 @@ var domainsGetZoneFile = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "domain-id",
-			Usage:    "The ID of the domain.",
-			Required: true,
+			Name:      "domain-id",
+			Usage:     "The ID of the domain.",
+			Required:  true,
+			PathParam: "domain_id",
 		},
 	},
 	Action:          handleDomainsGetZoneFile,
@@ -133,9 +136,10 @@ var domainsVerify = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "domain-id",
-			Usage:    "The ID of the domain.",
-			Required: true,
+			Name:      "domain-id",
+			Usage:     "The ID of the domain.",
+			Required:  true,
+			PathParam: "domain_id",
 		},
 	},
 	Action:          handleDomainsVerify,
@@ -150,8 +154,6 @@ func handleDomainsCreate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.DomainNewParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -163,6 +165,8 @@ func handleDomainsCreate(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
+	params := agentmail.DomainNewParams{}
+
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Domains.New(ctx, params, options...)
@@ -172,8 +176,15 @@ func handleDomainsCreate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "domains create", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "domains create",
+		Transform:      transform,
+	})
 }
 
 func handleDomainsUpdate(ctx context.Context, cmd *cli.Command) error {
@@ -187,8 +198,6 @@ func handleDomainsUpdate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.DomainUpdateParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -199,6 +208,8 @@ func handleDomainsUpdate(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := agentmail.DomainUpdateParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -214,8 +225,15 @@ func handleDomainsUpdate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "domains update", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "domains update",
+		Transform:      transform,
+	})
 }
 
 func handleDomainsList(ctx context.Context, cmd *cli.Command) error {
@@ -225,8 +243,6 @@ func handleDomainsList(ctx context.Context, cmd *cli.Command) error {
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
-
-	params := agentmail.DomainListParams{}
 
 	options, err := flagOptions(
 		cmd,
@@ -239,6 +255,8 @@ func handleDomainsList(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
+	params := agentmail.DomainListParams{}
+
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Domains.List(ctx, params, options...)
@@ -248,8 +266,15 @@ func handleDomainsList(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "domains list", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "domains list",
+		Transform:      transform,
+	})
 }
 
 func handleDomainsDelete(ctx context.Context, cmd *cli.Command) error {
@@ -308,8 +333,15 @@ func handleDomainsGet(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "domains get", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "domains get",
+		Transform:      transform,
+	})
 }
 
 func handleDomainsGetZoneFile(ctx context.Context, cmd *cli.Command) error {

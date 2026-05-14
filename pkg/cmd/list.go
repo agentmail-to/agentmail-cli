@@ -5,7 +5,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/agentmail-to/agentmail-cli/internal/apiquery"
 	"github.com/agentmail-to/agentmail-cli/internal/requestflag"
@@ -21,14 +20,16 @@ var listsCreate = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "direction",
-			Usage:    "Direction of list entry.",
-			Required: true,
+			Name:      "direction",
+			Usage:     "Direction of list entry.",
+			Required:  true,
+			PathParam: "direction",
 		},
 		&requestflag.Flag[string]{
-			Name:     "type",
-			Usage:    "Type of list entry.",
-			Required: true,
+			Name:      "type",
+			Usage:     "Type of list entry.",
+			Required:  true,
+			PathParam: "type",
 		},
 		&requestflag.Flag[string]{
 			Name:     "entry",
@@ -36,7 +37,7 @@ var listsCreate = cli.Command{
 			Required: true,
 			BodyPath: "entry",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "reason",
 			Usage:    "Reason for adding the entry.",
 			BodyPath: "reason",
@@ -52,21 +53,23 @@ var listsList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "direction",
-			Usage:    "Direction of list entry.",
-			Required: true,
+			Name:      "direction",
+			Usage:     "Direction of list entry.",
+			Required:  true,
+			PathParam: "direction",
 		},
 		&requestflag.Flag[string]{
-			Name:     "type",
-			Usage:    "Type of list entry.",
-			Required: true,
+			Name:      "type",
+			Usage:     "Type of list entry.",
+			Required:  true,
+			PathParam: "type",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*int64]{
 			Name:      "limit",
 			Usage:     "Limit of number of items returned.",
 			QueryPath: "limit",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:      "page-token",
 			Usage:     "Page token for pagination.",
 			QueryPath: "page_token",
@@ -82,18 +85,21 @@ var listsDelete = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "direction",
-			Usage:    "Direction of list entry.",
-			Required: true,
+			Name:      "direction",
+			Usage:     "Direction of list entry.",
+			Required:  true,
+			PathParam: "direction",
 		},
 		&requestflag.Flag[string]{
-			Name:     "type",
-			Usage:    "Type of list entry.",
-			Required: true,
+			Name:      "type",
+			Usage:     "Type of list entry.",
+			Required:  true,
+			PathParam: "type",
 		},
 		&requestflag.Flag[string]{
-			Name:     "entry",
-			Required: true,
+			Name:      "entry",
+			Required:  true,
+			PathParam: "entry",
 		},
 	},
 	Action:          handleListsDelete,
@@ -106,18 +112,21 @@ var listsGet = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "direction",
-			Usage:    "Direction of list entry.",
-			Required: true,
+			Name:      "direction",
+			Usage:     "Direction of list entry.",
+			Required:  true,
+			PathParam: "direction",
 		},
 		&requestflag.Flag[string]{
-			Name:     "type",
-			Usage:    "Type of list entry.",
-			Required: true,
+			Name:      "type",
+			Usage:     "Type of list entry.",
+			Required:  true,
+			PathParam: "type",
 		},
 		&requestflag.Flag[string]{
-			Name:     "entry",
-			Required: true,
+			Name:      "entry",
+			Required:  true,
+			PathParam: "entry",
 		},
 	},
 	Action:          handleListsGet,
@@ -135,10 +144,6 @@ func handleListsCreate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.ListNewParams{
-		Direction: agentmail.ListNewParamsDirection(cmd.Value("direction").(string)),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -148,6 +153,10 @@ func handleListsCreate(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.ListNewParams{
+		Direction: agentmail.ListNewParamsDirection(cmd.Value("direction").(string)),
 	}
 
 	var res []byte
@@ -164,8 +173,15 @@ func handleListsCreate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "lists create", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "lists create",
+		Transform:      transform,
+	})
 }
 
 func handleListsList(ctx context.Context, cmd *cli.Command) error {
@@ -179,10 +195,6 @@ func handleListsList(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.ListListParams{
-		Direction: agentmail.ListListParamsDirection(cmd.Value("direction").(string)),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -192,6 +204,10 @@ func handleListsList(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.ListListParams{
+		Direction: agentmail.ListListParamsDirection(cmd.Value("direction").(string)),
 	}
 
 	var res []byte
@@ -208,8 +224,15 @@ func handleListsList(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "lists list", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "lists list",
+		Transform:      transform,
+	})
 }
 
 func handleListsDelete(ctx context.Context, cmd *cli.Command) error {
@@ -223,11 +246,6 @@ func handleListsDelete(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.ListDeleteParams{
-		Direction: agentmail.ListDeleteParamsDirection(cmd.Value("direction").(string)),
-		Type:      agentmail.ListDeleteParamsType(cmd.Value("type").(string)),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -237,6 +255,11 @@ func handleListsDelete(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.ListDeleteParams{
+		Direction: agentmail.ListDeleteParamsDirection(cmd.Value("direction").(string)),
+		Type:      agentmail.ListDeleteParamsType(cmd.Value("type").(string)),
 	}
 
 	return client.Lists.Delete(
@@ -258,11 +281,6 @@ func handleListsGet(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.ListGetParams{
-		Direction: agentmail.ListGetParamsDirection(cmd.Value("direction").(string)),
-		Type:      agentmail.ListGetParamsType(cmd.Value("type").(string)),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -272,6 +290,11 @@ func handleListsGet(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.ListGetParams{
+		Direction: agentmail.ListGetParamsDirection(cmd.Value("direction").(string)),
+		Type:      agentmail.ListGetParamsType(cmd.Value("type").(string)),
 	}
 
 	var res []byte
@@ -288,6 +311,13 @@ func handleListsGet(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "lists get", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "lists get",
+		Transform:      transform,
+	})
 }

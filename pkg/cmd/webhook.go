@@ -5,7 +5,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/agentmail-to/agentmail-cli/internal/apiquery"
 	"github.com/agentmail-to/agentmail-cli/internal/requestflag"
@@ -22,7 +21,7 @@ var webhooksCreate = cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[[]string]{
 			Name:     "event-type",
-			Usage:    "Event types for which to send events.",
+			Usage:    "Full list of event types this webhook should receive. At least one type is required. Send every type you\nwant in this array (not incremental). See [Webhooks overview](https://docs.agentmail.to/webhooks-overview)\nfor spam, blocked, and unauthenticated events and required permissions.",
 			Required: true,
 			BodyPath: "event_types",
 		},
@@ -32,7 +31,7 @@ var webhooksCreate = cli.Command{
 			Required: true,
 			BodyPath: "url",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "client-id",
 			Usage:    "Client ID of webhook.",
 			BodyPath: "client_id",
@@ -54,13 +53,14 @@ var webhooksCreate = cli.Command{
 
 var webhooksUpdate = cli.Command{
 	Name:    "update",
-	Usage:   "**CLI:**",
+	Usage:   "Update inbox or pod subscriptions, or replace the webhook's `event_types` in\nfull when you pass a non-empty `event_types` array (see request field docs).\nInbox and pod changes use add/remove lists.",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "webhook-id",
-			Usage:    "ID of webhook.",
-			Required: true,
+			Name:      "webhook-id",
+			Usage:     "ID of webhook.",
+			Required:  true,
+			PathParam: "webhook_id",
 		},
 		&requestflag.Flag[any]{
 			Name:     "add-inbox-id",
@@ -71,6 +71,11 @@ var webhooksUpdate = cli.Command{
 			Name:     "add-pod-id",
 			Usage:    "Pod IDs to subscribe to the webhook.",
 			BodyPath: "add_pod_ids",
+		},
+		&requestflag.Flag[any]{
+			Name:     "event-type",
+			Usage:    "When you send a non-empty list, it replaces the webhook's subscribed event types in full (the same\n\"set the list\" behavior as create). It is not a merge or diff: include every event type you want after\nthe update. Sending a one-element array means the webhook will only receive that one type afterward.\nOmit this field or send an empty array to leave event types unchanged. Clearing all types with an empty\nlist is not supported. Subscribing to `message.received.spam`, `message.received.blocked`, or\n`message.received.unauthenticated` requires the matching label permission on the API key.",
+			BodyPath: "event_types",
 		},
 		&requestflag.Flag[any]{
 			Name:     "remove-inbox-id",
@@ -92,17 +97,17 @@ var webhooksList = cli.Command{
 	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "ascending",
 			Usage:     "Sort in ascending temporal order.",
 			QueryPath: "ascending",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*int64]{
 			Name:      "limit",
 			Usage:     "Limit of number of items returned.",
 			QueryPath: "limit",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:      "page-token",
 			Usage:     "Page token for pagination.",
 			QueryPath: "page_token",
@@ -118,9 +123,10 @@ var webhooksDelete = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "webhook-id",
-			Usage:    "ID of webhook.",
-			Required: true,
+			Name:      "webhook-id",
+			Usage:     "ID of webhook.",
+			Required:  true,
+			PathParam: "webhook_id",
 		},
 	},
 	Action:          handleWebhooksDelete,
@@ -133,9 +139,10 @@ var webhooksGet = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "webhook-id",
-			Usage:    "ID of webhook.",
-			Required: true,
+			Name:      "webhook-id",
+			Usage:     "ID of webhook.",
+			Required:  true,
+			PathParam: "webhook_id",
 		},
 	},
 	Action:          handleWebhooksGet,
@@ -150,8 +157,6 @@ func handleWebhooksCreate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.WebhookNewParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -163,6 +168,8 @@ func handleWebhooksCreate(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
+	params := agentmail.WebhookNewParams{}
+
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Webhooks.New(ctx, params, options...)
@@ -172,8 +179,15 @@ func handleWebhooksCreate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "webhooks create", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "webhooks create",
+		Transform:      transform,
+	})
 }
 
 func handleWebhooksUpdate(ctx context.Context, cmd *cli.Command) error {
@@ -187,8 +201,6 @@ func handleWebhooksUpdate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.WebhookUpdateParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -199,6 +211,8 @@ func handleWebhooksUpdate(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := agentmail.WebhookUpdateParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -214,8 +228,15 @@ func handleWebhooksUpdate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "webhooks update", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "webhooks update",
+		Transform:      transform,
+	})
 }
 
 func handleWebhooksList(ctx context.Context, cmd *cli.Command) error {
@@ -225,8 +246,6 @@ func handleWebhooksList(ctx context.Context, cmd *cli.Command) error {
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
-
-	params := agentmail.WebhookListParams{}
 
 	options, err := flagOptions(
 		cmd,
@@ -239,6 +258,8 @@ func handleWebhooksList(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
+	params := agentmail.WebhookListParams{}
+
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Webhooks.List(ctx, params, options...)
@@ -248,8 +269,15 @@ func handleWebhooksList(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "webhooks list", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "webhooks list",
+		Transform:      transform,
+	})
 }
 
 func handleWebhooksDelete(ctx context.Context, cmd *cli.Command) error {
@@ -308,6 +336,13 @@ func handleWebhooksGet(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "webhooks get", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "webhooks get",
+		Transform:      transform,
+	})
 }

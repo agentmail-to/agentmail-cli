@@ -5,7 +5,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/agentmail-to/agentmail-cli/internal/apiquery"
 	"github.com/agentmail-to/agentmail-cli/internal/requestflag"
@@ -25,7 +24,7 @@ var threadsList = cli.Command{
 			Usage:     "Timestamp after which to filter by.",
 			QueryPath: "after",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "ascending",
 			Usage:     "Sort in ascending temporal order.",
 			QueryPath: "ascending",
@@ -35,32 +34,37 @@ var threadsList = cli.Command{
 			Usage:     "Timestamp before which to filter by.",
 			QueryPath: "before",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "include-blocked",
 			Usage:     "Include blocked in results.",
 			QueryPath: "include_blocked",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "include-spam",
 			Usage:     "Include spam in results.",
 			QueryPath: "include_spam",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "include-trash",
 			Usage:     "Include trash in results.",
 			QueryPath: "include_trash",
+		},
+		&requestflag.Flag[*bool]{
+			Name:      "include-unauthenticated",
+			Usage:     "Include unauthenticated in results.",
+			QueryPath: "include_unauthenticated",
 		},
 		&requestflag.Flag[any]{
 			Name:      "label",
 			Usage:     "Labels to filter by.",
 			QueryPath: "labels",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*int64]{
 			Name:      "limit",
 			Usage:     "Limit of number of items returned.",
 			QueryPath: "limit",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:      "page-token",
 			Usage:     "Page token for pagination.",
 			QueryPath: "page_token",
@@ -76,11 +80,12 @@ var threadsDelete = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "thread-id",
-			Usage:    "ID of thread.",
-			Required: true,
+			Name:      "thread-id",
+			Usage:     "ID of thread.",
+			Required:  true,
+			PathParam: "thread_id",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "permanent",
 			Usage:     "If true, permanently delete the thread instead of moving to trash.",
 			QueryPath: "permanent",
@@ -96,9 +101,10 @@ var threadsGet = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "thread-id",
-			Usage:    "ID of thread.",
-			Required: true,
+			Name:      "thread-id",
+			Usage:     "ID of thread.",
+			Required:  true,
+			PathParam: "thread_id",
 		},
 	},
 	Action:          handleThreadsGet,
@@ -111,14 +117,16 @@ var threadsGetAttachment = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "thread-id",
-			Usage:    "ID of thread.",
-			Required: true,
+			Name:      "thread-id",
+			Usage:     "ID of thread.",
+			Required:  true,
+			PathParam: "thread_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "attachment-id",
-			Usage:    "ID of attachment.",
-			Required: true,
+			Name:      "attachment-id",
+			Usage:     "ID of attachment.",
+			Required:  true,
+			PathParam: "attachment_id",
 		},
 	},
 	Action:          handleThreadsGetAttachment,
@@ -133,8 +141,6 @@ func handleThreadsList(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.ThreadListParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -146,6 +152,8 @@ func handleThreadsList(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
+	params := agentmail.ThreadListParams{}
+
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Threads.List(ctx, params, options...)
@@ -155,8 +163,15 @@ func handleThreadsList(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "threads list", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "threads list",
+		Transform:      transform,
+	})
 }
 
 func handleThreadsDelete(ctx context.Context, cmd *cli.Command) error {
@@ -170,8 +185,6 @@ func handleThreadsDelete(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.ThreadDeleteParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -182,6 +195,8 @@ func handleThreadsDelete(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := agentmail.ThreadDeleteParams{}
 
 	return client.Threads.Delete(
 		ctx,
@@ -222,8 +237,15 @@ func handleThreadsGet(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "threads get", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "threads get",
+		Transform:      transform,
+	})
 }
 
 func handleThreadsGetAttachment(ctx context.Context, cmd *cli.Command) error {
@@ -237,10 +259,6 @@ func handleThreadsGetAttachment(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.ThreadGetAttachmentParams{
-		ThreadID: cmd.Value("thread-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -250,6 +268,10 @@ func handleThreadsGetAttachment(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.ThreadGetAttachmentParams{
+		ThreadID: cmd.Value("thread-id").(string),
 	}
 
 	var res []byte
@@ -266,6 +288,13 @@ func handleThreadsGetAttachment(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "threads get-attachment", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "threads get-attachment",
+		Transform:      transform,
+	})
 }

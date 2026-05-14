@@ -5,7 +5,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/agentmail-to/agentmail-cli/internal/apiquery"
 	"github.com/agentmail-to/agentmail-cli/internal/requestflag"
@@ -21,19 +20,22 @@ var podsListsCreate = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "pod-id",
-			Usage:    "ID of pod.",
-			Required: true,
+			Name:      "pod-id",
+			Usage:     "ID of pod.",
+			Required:  true,
+			PathParam: "pod_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "direction",
-			Usage:    "Direction of list entry.",
-			Required: true,
+			Name:      "direction",
+			Usage:     "Direction of list entry.",
+			Required:  true,
+			PathParam: "direction",
 		},
 		&requestflag.Flag[string]{
-			Name:     "type",
-			Usage:    "Type of list entry.",
-			Required: true,
+			Name:      "type",
+			Usage:     "Type of list entry.",
+			Required:  true,
+			PathParam: "type",
 		},
 		&requestflag.Flag[string]{
 			Name:     "entry",
@@ -41,7 +43,7 @@ var podsListsCreate = cli.Command{
 			Required: true,
 			BodyPath: "entry",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "reason",
 			Usage:    "Reason for adding the entry.",
 			BodyPath: "reason",
@@ -57,26 +59,29 @@ var podsListsList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "pod-id",
-			Usage:    "ID of pod.",
-			Required: true,
+			Name:      "pod-id",
+			Usage:     "ID of pod.",
+			Required:  true,
+			PathParam: "pod_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "direction",
-			Usage:    "Direction of list entry.",
-			Required: true,
+			Name:      "direction",
+			Usage:     "Direction of list entry.",
+			Required:  true,
+			PathParam: "direction",
 		},
 		&requestflag.Flag[string]{
-			Name:     "type",
-			Usage:    "Type of list entry.",
-			Required: true,
+			Name:      "type",
+			Usage:     "Type of list entry.",
+			Required:  true,
+			PathParam: "type",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*int64]{
 			Name:      "limit",
 			Usage:     "Limit of number of items returned.",
 			QueryPath: "limit",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:      "page-token",
 			Usage:     "Page token for pagination.",
 			QueryPath: "page_token",
@@ -92,23 +97,27 @@ var podsListsDelete = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "pod-id",
-			Usage:    "ID of pod.",
-			Required: true,
+			Name:      "pod-id",
+			Usage:     "ID of pod.",
+			Required:  true,
+			PathParam: "pod_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "direction",
-			Usage:    "Direction of list entry.",
-			Required: true,
+			Name:      "direction",
+			Usage:     "Direction of list entry.",
+			Required:  true,
+			PathParam: "direction",
 		},
 		&requestflag.Flag[string]{
-			Name:     "type",
-			Usage:    "Type of list entry.",
-			Required: true,
+			Name:      "type",
+			Usage:     "Type of list entry.",
+			Required:  true,
+			PathParam: "type",
 		},
 		&requestflag.Flag[string]{
-			Name:     "entry",
-			Required: true,
+			Name:      "entry",
+			Required:  true,
+			PathParam: "entry",
 		},
 	},
 	Action:          handlePodsListsDelete,
@@ -121,23 +130,27 @@ var podsListsGet = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "pod-id",
-			Usage:    "ID of pod.",
-			Required: true,
+			Name:      "pod-id",
+			Usage:     "ID of pod.",
+			Required:  true,
+			PathParam: "pod_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "direction",
-			Usage:    "Direction of list entry.",
-			Required: true,
+			Name:      "direction",
+			Usage:     "Direction of list entry.",
+			Required:  true,
+			PathParam: "direction",
 		},
 		&requestflag.Flag[string]{
-			Name:     "type",
-			Usage:    "Type of list entry.",
-			Required: true,
+			Name:      "type",
+			Usage:     "Type of list entry.",
+			Required:  true,
+			PathParam: "type",
 		},
 		&requestflag.Flag[string]{
-			Name:     "entry",
-			Required: true,
+			Name:      "entry",
+			Required:  true,
+			PathParam: "entry",
 		},
 	},
 	Action:          handlePodsListsGet,
@@ -155,11 +168,6 @@ func handlePodsListsCreate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.PodListNewParams{
-		PodID:     cmd.Value("pod-id").(string),
-		Direction: agentmail.PodListNewParamsDirection(cmd.Value("direction").(string)),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -169,6 +177,11 @@ func handlePodsListsCreate(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.PodListNewParams{
+		PodID:     cmd.Value("pod-id").(string),
+		Direction: agentmail.PodListNewParamsDirection(cmd.Value("direction").(string)),
 	}
 
 	var res []byte
@@ -185,8 +198,15 @@ func handlePodsListsCreate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods:lists create", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "pods:lists create",
+		Transform:      transform,
+	})
 }
 
 func handlePodsListsList(ctx context.Context, cmd *cli.Command) error {
@@ -200,11 +220,6 @@ func handlePodsListsList(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.PodListListParams{
-		PodID:     cmd.Value("pod-id").(string),
-		Direction: agentmail.PodListListParamsDirection(cmd.Value("direction").(string)),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -214,6 +229,11 @@ func handlePodsListsList(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.PodListListParams{
+		PodID:     cmd.Value("pod-id").(string),
+		Direction: agentmail.PodListListParamsDirection(cmd.Value("direction").(string)),
 	}
 
 	var res []byte
@@ -230,8 +250,15 @@ func handlePodsListsList(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods:lists list", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "pods:lists list",
+		Transform:      transform,
+	})
 }
 
 func handlePodsListsDelete(ctx context.Context, cmd *cli.Command) error {
@@ -245,12 +272,6 @@ func handlePodsListsDelete(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.PodListDeleteParams{
-		PodID:     cmd.Value("pod-id").(string),
-		Direction: agentmail.PodListDeleteParamsDirection(cmd.Value("direction").(string)),
-		Type:      agentmail.PodListDeleteParamsType(cmd.Value("type").(string)),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -260,6 +281,12 @@ func handlePodsListsDelete(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.PodListDeleteParams{
+		PodID:     cmd.Value("pod-id").(string),
+		Direction: agentmail.PodListDeleteParamsDirection(cmd.Value("direction").(string)),
+		Type:      agentmail.PodListDeleteParamsType(cmd.Value("type").(string)),
 	}
 
 	return client.Pods.Lists.Delete(
@@ -281,12 +308,6 @@ func handlePodsListsGet(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.PodListGetParams{
-		PodID:     cmd.Value("pod-id").(string),
-		Direction: agentmail.PodListGetParamsDirection(cmd.Value("direction").(string)),
-		Type:      agentmail.PodListGetParamsType(cmd.Value("type").(string)),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -296,6 +317,12 @@ func handlePodsListsGet(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.PodListGetParams{
+		PodID:     cmd.Value("pod-id").(string),
+		Direction: agentmail.PodListGetParamsDirection(cmd.Value("direction").(string)),
+		Type:      agentmail.PodListGetParamsType(cmd.Value("type").(string)),
 	}
 
 	var res []byte
@@ -312,6 +339,13 @@ func handlePodsListsGet(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods:lists get", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "pods:lists get",
+		Transform:      transform,
+	})
 }

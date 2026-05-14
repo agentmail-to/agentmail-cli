@@ -5,7 +5,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/agentmail-to/agentmail-cli/internal/apiquery"
 	"github.com/agentmail-to/agentmail-cli/internal/requestflag"
@@ -20,7 +19,7 @@ var apiKeysCreate = requestflag.WithInnerFlags(cli.Command{
 	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "name",
 			Usage:    "Name of api key.",
 			BodyPath: "name",
@@ -35,177 +34,177 @@ var apiKeysCreate = requestflag.WithInnerFlags(cli.Command{
 	HideHelpCommand: true,
 }, map[string][]requestflag.HasOuterFlag{
 	"permissions": {
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.api-key-create",
 			Usage:      "Create API keys.",
 			InnerField: "api_key_create",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.api-key-delete",
 			Usage:      "Delete API keys.",
 			InnerField: "api_key_delete",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.api-key-read",
 			Usage:      "Read API keys.",
 			InnerField: "api_key_read",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.domain-create",
 			Usage:      "Create domains.",
 			InnerField: "domain_create",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.domain-delete",
 			Usage:      "Delete domains.",
 			InnerField: "domain_delete",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.domain-read",
 			Usage:      "Read domain details.",
 			InnerField: "domain_read",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.domain-update",
 			Usage:      "Update domains.",
 			InnerField: "domain_update",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.draft-create",
 			Usage:      "Create drafts.",
 			InnerField: "draft_create",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.draft-delete",
 			Usage:      "Delete drafts.",
 			InnerField: "draft_delete",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.draft-read",
 			Usage:      "Read drafts.",
 			InnerField: "draft_read",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.draft-send",
 			Usage:      "Send drafts.",
 			InnerField: "draft_send",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.draft-update",
 			Usage:      "Update drafts.",
 			InnerField: "draft_update",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.inbox-create",
 			Usage:      "Create new inboxes.",
 			InnerField: "inbox_create",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.inbox-delete",
 			Usage:      "Delete inboxes.",
 			InnerField: "inbox_delete",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.inbox-read",
 			Usage:      "Read inbox details.",
 			InnerField: "inbox_read",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.inbox-update",
 			Usage:      "Update inbox settings.",
 			InnerField: "inbox_update",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.label-blocked-read",
 			Usage:      "Access messages labeled blocked.",
 			InnerField: "label_blocked_read",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.label-spam-read",
 			Usage:      "Access messages labeled spam.",
 			InnerField: "label_spam_read",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.label-trash-read",
 			Usage:      "Access messages labeled trash.",
 			InnerField: "label_trash_read",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.list-entry-create",
 			Usage:      "Create list entries.",
 			InnerField: "list_entry_create",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.list-entry-delete",
 			Usage:      "Delete list entries.",
 			InnerField: "list_entry_delete",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.list-entry-read",
 			Usage:      "Read list entries.",
 			InnerField: "list_entry_read",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.message-read",
 			Usage:      "Read messages.",
 			InnerField: "message_read",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.message-send",
 			Usage:      "Send messages.",
 			InnerField: "message_send",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.message-update",
 			Usage:      "Update message labels.",
 			InnerField: "message_update",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.metrics-read",
 			Usage:      "Read metrics.",
 			InnerField: "metrics_read",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.pod-create",
 			Usage:      "Create pods.",
 			InnerField: "pod_create",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.pod-delete",
 			Usage:      "Delete pods.",
 			InnerField: "pod_delete",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.pod-read",
 			Usage:      "Read pods.",
 			InnerField: "pod_read",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.thread-delete",
 			Usage:      "Delete threads.",
 			InnerField: "thread_delete",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.thread-read",
 			Usage:      "Read threads.",
 			InnerField: "thread_read",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.webhook-create",
 			Usage:      "Create webhooks.",
 			InnerField: "webhook_create",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.webhook-delete",
 			Usage:      "Delete webhooks.",
 			InnerField: "webhook_delete",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.webhook-read",
 			Usage:      "Read webhook configurations.",
 			InnerField: "webhook_read",
 		},
-		&requestflag.InnerFlag[any]{
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.webhook-update",
 			Usage:      "Update webhooks.",
 			InnerField: "webhook_update",
@@ -218,17 +217,17 @@ var apiKeysList = cli.Command{
 	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "ascending",
 			Usage:     "Sort in ascending temporal order.",
 			QueryPath: "ascending",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*int64]{
 			Name:      "limit",
 			Usage:     "Limit of number of items returned.",
 			QueryPath: "limit",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:      "page-token",
 			Usage:     "Page token for pagination.",
 			QueryPath: "page_token",
@@ -244,9 +243,10 @@ var apiKeysDelete = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "api-key-id",
-			Usage:    "ID of api key.",
-			Required: true,
+			Name:      "api-key-id",
+			Usage:     "ID of api key.",
+			Required:  true,
+			PathParam: "api_key_id",
 		},
 	},
 	Action:          handleAPIKeysDelete,
@@ -261,8 +261,6 @@ func handleAPIKeysCreate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.APIKeyNewParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -274,6 +272,8 @@ func handleAPIKeysCreate(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
+	params := agentmail.APIKeyNewParams{}
+
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.APIKeys.New(ctx, params, options...)
@@ -283,8 +283,15 @@ func handleAPIKeysCreate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "api-keys create", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "api-keys create",
+		Transform:      transform,
+	})
 }
 
 func handleAPIKeysList(ctx context.Context, cmd *cli.Command) error {
@@ -294,8 +301,6 @@ func handleAPIKeysList(ctx context.Context, cmd *cli.Command) error {
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
-
-	params := agentmail.APIKeyListParams{}
 
 	options, err := flagOptions(
 		cmd,
@@ -308,6 +313,8 @@ func handleAPIKeysList(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
+	params := agentmail.APIKeyListParams{}
+
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.APIKeys.List(ctx, params, options...)
@@ -317,8 +324,15 @@ func handleAPIKeysList(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "api-keys list", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "api-keys list",
+		Transform:      transform,
+	})
 }
 
 func handleAPIKeysDelete(ctx context.Context, cmd *cli.Command) error {

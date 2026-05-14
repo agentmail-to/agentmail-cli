@@ -5,7 +5,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/agentmail-to/agentmail-cli/internal/apiquery"
 	"github.com/agentmail-to/agentmail-cli/internal/requestflag"
@@ -31,6 +30,16 @@ var agentSignUp = cli.Command{
 			Usage:    `Username for the auto-created inbox (e.g. "my-agent" creates my-agent@agentmail.to).`,
 			Required: true,
 			BodyPath: "username",
+		},
+		&requestflag.Flag[*string]{
+			Name:     "referrer",
+			Usage:    "The channel that drove this sign-up — where the agent or its developer discovered AgentMail\n(e.g. `agent.email`, a partner URL, a campaign tag). Answers \"where did this sign-up come from\".\nMax 2048 characters.",
+			BodyPath: "referrer",
+		},
+		&requestflag.Flag[*string]{
+			Name:     "source",
+			Usage:    "The SDK, framework, or platform issuing this sign-up (e.g. `agentmail-python`, `agentmail-cli`, `agentmail-mcp`).\nIdentifies the caller — answers \"who is signing up\".\nMax 2048 characters.",
+			BodyPath: "source",
 		},
 	},
 	Action:          handleAgentSignUp,
@@ -61,8 +70,6 @@ func handleAgentSignUp(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.AgentSignUpParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -73,6 +80,8 @@ func handleAgentSignUp(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := agentmail.AgentSignUpParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -83,8 +92,15 @@ func handleAgentSignUp(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "agent sign-up", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "agent sign-up",
+		Transform:      transform,
+	})
 }
 
 func handleAgentVerify(ctx context.Context, cmd *cli.Command) error {
@@ -94,8 +110,6 @@ func handleAgentVerify(ctx context.Context, cmd *cli.Command) error {
 	if len(unusedArgs) > 0 {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
-
-	params := agentmail.AgentVerifyParams{}
 
 	options, err := flagOptions(
 		cmd,
@@ -108,6 +122,8 @@ func handleAgentVerify(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
+	params := agentmail.AgentVerifyParams{}
+
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Agent.Verify(ctx, params, options...)
@@ -117,6 +133,13 @@ func handleAgentVerify(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "agent verify", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "agent verify",
+		Transform:      transform,
+	})
 }

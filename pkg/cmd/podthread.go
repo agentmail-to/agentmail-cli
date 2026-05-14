@@ -5,7 +5,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/agentmail-to/agentmail-cli/internal/apiquery"
 	"github.com/agentmail-to/agentmail-cli/internal/requestflag"
@@ -21,16 +20,17 @@ var podsThreadsList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "pod-id",
-			Usage:    "ID of pod.",
-			Required: true,
+			Name:      "pod-id",
+			Usage:     "ID of pod.",
+			Required:  true,
+			PathParam: "pod_id",
 		},
 		&requestflag.Flag[any]{
 			Name:      "after",
 			Usage:     "Timestamp after which to filter by.",
 			QueryPath: "after",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "ascending",
 			Usage:     "Sort in ascending temporal order.",
 			QueryPath: "ascending",
@@ -40,32 +40,37 @@ var podsThreadsList = cli.Command{
 			Usage:     "Timestamp before which to filter by.",
 			QueryPath: "before",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "include-blocked",
 			Usage:     "Include blocked in results.",
 			QueryPath: "include_blocked",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "include-spam",
 			Usage:     "Include spam in results.",
 			QueryPath: "include_spam",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "include-trash",
 			Usage:     "Include trash in results.",
 			QueryPath: "include_trash",
+		},
+		&requestflag.Flag[*bool]{
+			Name:      "include-unauthenticated",
+			Usage:     "Include unauthenticated in results.",
+			QueryPath: "include_unauthenticated",
 		},
 		&requestflag.Flag[any]{
 			Name:      "label",
 			Usage:     "Labels to filter by.",
 			QueryPath: "labels",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*int64]{
 			Name:      "limit",
 			Usage:     "Limit of number of items returned.",
 			QueryPath: "limit",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:      "page-token",
 			Usage:     "Page token for pagination.",
 			QueryPath: "page_token",
@@ -81,16 +86,18 @@ var podsThreadsDelete = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "pod-id",
-			Usage:    "ID of pod.",
-			Required: true,
+			Name:      "pod-id",
+			Usage:     "ID of pod.",
+			Required:  true,
+			PathParam: "pod_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "thread-id",
-			Usage:    "ID of thread.",
-			Required: true,
+			Name:      "thread-id",
+			Usage:     "ID of thread.",
+			Required:  true,
+			PathParam: "thread_id",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "permanent",
 			Usage:     "If true, permanently delete the thread instead of moving to trash.",
 			QueryPath: "permanent",
@@ -106,14 +113,16 @@ var podsThreadsGet = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "pod-id",
-			Usage:    "ID of pod.",
-			Required: true,
+			Name:      "pod-id",
+			Usage:     "ID of pod.",
+			Required:  true,
+			PathParam: "pod_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "thread-id",
-			Usage:    "ID of thread.",
-			Required: true,
+			Name:      "thread-id",
+			Usage:     "ID of thread.",
+			Required:  true,
+			PathParam: "thread_id",
 		},
 	},
 	Action:          handlePodsThreadsGet,
@@ -126,19 +135,22 @@ var podsThreadsGetAttachment = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "pod-id",
-			Usage:    "ID of pod.",
-			Required: true,
+			Name:      "pod-id",
+			Usage:     "ID of pod.",
+			Required:  true,
+			PathParam: "pod_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "thread-id",
-			Usage:    "ID of thread.",
-			Required: true,
+			Name:      "thread-id",
+			Usage:     "ID of thread.",
+			Required:  true,
+			PathParam: "thread_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "attachment-id",
-			Usage:    "ID of attachment.",
-			Required: true,
+			Name:      "attachment-id",
+			Usage:     "ID of attachment.",
+			Required:  true,
+			PathParam: "attachment_id",
 		},
 	},
 	Action:          handlePodsThreadsGetAttachment,
@@ -156,8 +168,6 @@ func handlePodsThreadsList(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.PodThreadListParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -168,6 +178,8 @@ func handlePodsThreadsList(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := agentmail.PodThreadListParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -183,8 +195,15 @@ func handlePodsThreadsList(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods:threads list", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "pods:threads list",
+		Transform:      transform,
+	})
 }
 
 func handlePodsThreadsDelete(ctx context.Context, cmd *cli.Command) error {
@@ -198,10 +217,6 @@ func handlePodsThreadsDelete(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.PodThreadDeleteParams{
-		PodID: cmd.Value("pod-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -211,6 +226,10 @@ func handlePodsThreadsDelete(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.PodThreadDeleteParams{
+		PodID: cmd.Value("pod-id").(string),
 	}
 
 	return client.Pods.Threads.Delete(
@@ -232,10 +251,6 @@ func handlePodsThreadsGet(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.PodThreadGetParams{
-		PodID: cmd.Value("pod-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -245,6 +260,10 @@ func handlePodsThreadsGet(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.PodThreadGetParams{
+		PodID: cmd.Value("pod-id").(string),
 	}
 
 	var res []byte
@@ -261,8 +280,15 @@ func handlePodsThreadsGet(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods:threads get", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "pods:threads get",
+		Transform:      transform,
+	})
 }
 
 func handlePodsThreadsGetAttachment(ctx context.Context, cmd *cli.Command) error {
@@ -276,11 +302,6 @@ func handlePodsThreadsGetAttachment(ctx context.Context, cmd *cli.Command) error
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.PodThreadGetAttachmentParams{
-		PodID:    cmd.Value("pod-id").(string),
-		ThreadID: cmd.Value("thread-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -290,6 +311,11 @@ func handlePodsThreadsGetAttachment(ctx context.Context, cmd *cli.Command) error
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.PodThreadGetAttachmentParams{
+		PodID:    cmd.Value("pod-id").(string),
+		ThreadID: cmd.Value("thread-id").(string),
 	}
 
 	var res []byte
@@ -306,6 +332,13 @@ func handlePodsThreadsGetAttachment(ctx context.Context, cmd *cli.Command) error
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods:threads get-attachment", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "pods:threads get-attachment",
+		Transform:      transform,
+	})
 }

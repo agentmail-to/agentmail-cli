@@ -5,7 +5,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/agentmail-to/agentmail-cli/internal/apiquery"
 	"github.com/agentmail-to/agentmail-cli/internal/requestflag"
@@ -21,16 +20,17 @@ var inboxesThreadsList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[any]{
 			Name:      "after",
 			Usage:     "Timestamp after which to filter by.",
 			QueryPath: "after",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "ascending",
 			Usage:     "Sort in ascending temporal order.",
 			QueryPath: "ascending",
@@ -40,32 +40,37 @@ var inboxesThreadsList = cli.Command{
 			Usage:     "Timestamp before which to filter by.",
 			QueryPath: "before",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "include-blocked",
 			Usage:     "Include blocked in results.",
 			QueryPath: "include_blocked",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "include-spam",
 			Usage:     "Include spam in results.",
 			QueryPath: "include_spam",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "include-trash",
 			Usage:     "Include trash in results.",
 			QueryPath: "include_trash",
+		},
+		&requestflag.Flag[*bool]{
+			Name:      "include-unauthenticated",
+			Usage:     "Include unauthenticated in results.",
+			QueryPath: "include_unauthenticated",
 		},
 		&requestflag.Flag[any]{
 			Name:      "label",
 			Usage:     "Labels to filter by.",
 			QueryPath: "labels",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*int64]{
 			Name:      "limit",
 			Usage:     "Limit of number of items returned.",
 			QueryPath: "limit",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:      "page-token",
 			Usage:     "Page token for pagination.",
 			QueryPath: "page_token",
@@ -81,16 +86,18 @@ var inboxesThreadsDelete = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "thread-id",
-			Usage:    "ID of thread.",
-			Required: true,
+			Name:      "thread-id",
+			Usage:     "ID of thread.",
+			Required:  true,
+			PathParam: "thread_id",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "permanent",
 			Usage:     "If true, permanently delete the thread instead of moving to trash.",
 			QueryPath: "permanent",
@@ -106,14 +113,16 @@ var inboxesThreadsGet = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "thread-id",
-			Usage:    "ID of thread.",
-			Required: true,
+			Name:      "thread-id",
+			Usage:     "ID of thread.",
+			Required:  true,
+			PathParam: "thread_id",
 		},
 	},
 	Action:          handleInboxesThreadsGet,
@@ -126,19 +135,22 @@ var inboxesThreadsGetAttachment = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "thread-id",
-			Usage:    "ID of thread.",
-			Required: true,
+			Name:      "thread-id",
+			Usage:     "ID of thread.",
+			Required:  true,
+			PathParam: "thread_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "attachment-id",
-			Usage:    "ID of attachment.",
-			Required: true,
+			Name:      "attachment-id",
+			Usage:     "ID of attachment.",
+			Required:  true,
+			PathParam: "attachment_id",
 		},
 	},
 	Action:          handleInboxesThreadsGetAttachment,
@@ -156,8 +168,6 @@ func handleInboxesThreadsList(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxThreadListParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -168,6 +178,8 @@ func handleInboxesThreadsList(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := agentmail.InboxThreadListParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -183,8 +195,15 @@ func handleInboxesThreadsList(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes:threads list", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "inboxes:threads list",
+		Transform:      transform,
+	})
 }
 
 func handleInboxesThreadsDelete(ctx context.Context, cmd *cli.Command) error {
@@ -198,10 +217,6 @@ func handleInboxesThreadsDelete(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxThreadDeleteParams{
-		InboxID: cmd.Value("inbox-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -211,6 +226,10 @@ func handleInboxesThreadsDelete(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.InboxThreadDeleteParams{
+		InboxID: cmd.Value("inbox-id").(string),
 	}
 
 	return client.Inboxes.Threads.Delete(
@@ -232,10 +251,6 @@ func handleInboxesThreadsGet(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxThreadGetParams{
-		InboxID: cmd.Value("inbox-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -245,6 +260,10 @@ func handleInboxesThreadsGet(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.InboxThreadGetParams{
+		InboxID: cmd.Value("inbox-id").(string),
 	}
 
 	var res []byte
@@ -261,8 +280,15 @@ func handleInboxesThreadsGet(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes:threads get", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "inboxes:threads get",
+		Transform:      transform,
+	})
 }
 
 func handleInboxesThreadsGetAttachment(ctx context.Context, cmd *cli.Command) error {
@@ -276,11 +302,6 @@ func handleInboxesThreadsGetAttachment(ctx context.Context, cmd *cli.Command) er
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxThreadGetAttachmentParams{
-		InboxID:  cmd.Value("inbox-id").(string),
-		ThreadID: cmd.Value("thread-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -290,6 +311,11 @@ func handleInboxesThreadsGetAttachment(ctx context.Context, cmd *cli.Command) er
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.InboxThreadGetAttachmentParams{
+		InboxID:  cmd.Value("inbox-id").(string),
+		ThreadID: cmd.Value("thread-id").(string),
 	}
 
 	var res []byte
@@ -306,6 +332,13 @@ func handleInboxesThreadsGetAttachment(ctx context.Context, cmd *cli.Command) er
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes:threads get-attachment", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "inboxes:threads get-attachment",
+		Transform:      transform,
+	})
 }

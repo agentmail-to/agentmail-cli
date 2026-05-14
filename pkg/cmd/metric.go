@@ -5,7 +5,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/agentmail-to/agentmail-cli/internal/apiquery"
 	"github.com/agentmail-to/agentmail-cli/internal/requestflag"
@@ -20,7 +19,7 @@ var metricsList = cli.Command{
 	Usage:   "**CLI:**",
 	Suggest: true,
 	Flags: []cli.Flag{
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "descending",
 			Usage:     "Sort in descending order.",
 			QueryPath: "descending",
@@ -35,12 +34,12 @@ var metricsList = cli.Command{
 			Usage:     "List of metric event types to query.",
 			QueryPath: "event_types",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*int64]{
 			Name:      "limit",
 			Usage:     "Limit on number of buckets to return.",
 			QueryPath: "limit",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:      "period",
 			Usage:     "Period in number of seconds for the query.",
 			QueryPath: "period",
@@ -63,8 +62,6 @@ func handleMetricsList(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.MetricListParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -76,6 +73,8 @@ func handleMetricsList(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
+	params := agentmail.MetricListParams{}
+
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
 	_, err = client.Metrics.List(ctx, params, options...)
@@ -85,6 +84,13 @@ func handleMetricsList(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "metrics list", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "metrics list",
+		Transform:      transform,
+	})
 }

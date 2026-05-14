@@ -5,7 +5,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/agentmail-to/agentmail-cli/internal/apiquery"
 	"github.com/agentmail-to/agentmail-cli/internal/requestflag"
@@ -21,9 +20,10 @@ var podsDomainsCreate = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "pod-id",
-			Usage:    "ID of pod.",
-			Required: true,
+			Name:      "pod-id",
+			Usage:     "ID of pod.",
+			Required:  true,
+			PathParam: "pod_id",
 		},
 		&requestflag.Flag[string]{
 			Name:     "domain",
@@ -48,16 +48,18 @@ var podsDomainsUpdate = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "pod-id",
-			Usage:    "ID of pod.",
-			Required: true,
+			Name:      "pod-id",
+			Usage:     "ID of pod.",
+			Required:  true,
+			PathParam: "pod_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "domain-id",
-			Usage:    "The ID of the domain.",
-			Required: true,
+			Name:      "domain-id",
+			Usage:     "The ID of the domain.",
+			Required:  true,
+			PathParam: "domain_id",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:     "feedback-enabled",
 			Usage:    "Bounce and complaint notifications are sent to your inboxes.",
 			BodyPath: "feedback_enabled",
@@ -73,21 +75,22 @@ var podsDomainsList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "pod-id",
-			Usage:    "ID of pod.",
-			Required: true,
+			Name:      "pod-id",
+			Usage:     "ID of pod.",
+			Required:  true,
+			PathParam: "pod_id",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "ascending",
 			Usage:     "Sort in ascending temporal order.",
 			QueryPath: "ascending",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*int64]{
 			Name:      "limit",
 			Usage:     "Limit of number of items returned.",
 			QueryPath: "limit",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:      "page-token",
 			Usage:     "Page token for pagination.",
 			QueryPath: "page_token",
@@ -103,14 +106,16 @@ var podsDomainsDelete = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "pod-id",
-			Usage:    "ID of pod.",
-			Required: true,
+			Name:      "pod-id",
+			Usage:     "ID of pod.",
+			Required:  true,
+			PathParam: "pod_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "domain-id",
-			Usage:    "The ID of the domain.",
-			Required: true,
+			Name:      "domain-id",
+			Usage:     "The ID of the domain.",
+			Required:  true,
+			PathParam: "domain_id",
 		},
 	},
 	Action:          handlePodsDomainsDelete,
@@ -123,14 +128,16 @@ var podsDomainsGet = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "pod-id",
-			Usage:    "ID of pod.",
-			Required: true,
+			Name:      "pod-id",
+			Usage:     "ID of pod.",
+			Required:  true,
+			PathParam: "pod_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "domain-id",
-			Usage:    "The ID of the domain.",
-			Required: true,
+			Name:      "domain-id",
+			Usage:     "The ID of the domain.",
+			Required:  true,
+			PathParam: "domain_id",
 		},
 	},
 	Action:          handlePodsDomainsGet,
@@ -143,14 +150,16 @@ var podsDomainsGetZoneFile = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "pod-id",
-			Usage:    "ID of pod.",
-			Required: true,
+			Name:      "pod-id",
+			Usage:     "ID of pod.",
+			Required:  true,
+			PathParam: "pod_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "domain-id",
-			Usage:    "The ID of the domain.",
-			Required: true,
+			Name:      "domain-id",
+			Usage:     "The ID of the domain.",
+			Required:  true,
+			PathParam: "domain_id",
 		},
 	},
 	Action:          handlePodsDomainsGetZoneFile,
@@ -163,14 +172,16 @@ var podsDomainsVerify = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "pod-id",
-			Usage:    "ID of pod.",
-			Required: true,
+			Name:      "pod-id",
+			Usage:     "ID of pod.",
+			Required:  true,
+			PathParam: "pod_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "domain-id",
-			Usage:    "The ID of the domain.",
-			Required: true,
+			Name:      "domain-id",
+			Usage:     "The ID of the domain.",
+			Required:  true,
+			PathParam: "domain_id",
 		},
 	},
 	Action:          handlePodsDomainsVerify,
@@ -188,8 +199,6 @@ func handlePodsDomainsCreate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.PodDomainNewParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -200,6 +209,8 @@ func handlePodsDomainsCreate(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := agentmail.PodDomainNewParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -215,8 +226,15 @@ func handlePodsDomainsCreate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods:domains create", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "pods:domains create",
+		Transform:      transform,
+	})
 }
 
 func handlePodsDomainsUpdate(ctx context.Context, cmd *cli.Command) error {
@@ -230,10 +248,6 @@ func handlePodsDomainsUpdate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.PodDomainUpdateParams{
-		PodID: cmd.Value("pod-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -243,6 +257,10 @@ func handlePodsDomainsUpdate(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.PodDomainUpdateParams{
+		PodID: cmd.Value("pod-id").(string),
 	}
 
 	var res []byte
@@ -259,8 +277,15 @@ func handlePodsDomainsUpdate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods:domains update", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "pods:domains update",
+		Transform:      transform,
+	})
 }
 
 func handlePodsDomainsList(ctx context.Context, cmd *cli.Command) error {
@@ -274,8 +299,6 @@ func handlePodsDomainsList(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.PodDomainListParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -286,6 +309,8 @@ func handlePodsDomainsList(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := agentmail.PodDomainListParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -301,8 +326,15 @@ func handlePodsDomainsList(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods:domains list", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "pods:domains list",
+		Transform:      transform,
+	})
 }
 
 func handlePodsDomainsDelete(ctx context.Context, cmd *cli.Command) error {
@@ -316,10 +348,6 @@ func handlePodsDomainsDelete(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.PodDomainDeleteParams{
-		PodID: cmd.Value("pod-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -329,6 +357,10 @@ func handlePodsDomainsDelete(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.PodDomainDeleteParams{
+		PodID: cmd.Value("pod-id").(string),
 	}
 
 	return client.Pods.Domains.Delete(
@@ -350,10 +382,6 @@ func handlePodsDomainsGet(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.PodDomainGetParams{
-		PodID: cmd.Value("pod-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -363,6 +391,10 @@ func handlePodsDomainsGet(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.PodDomainGetParams{
+		PodID: cmd.Value("pod-id").(string),
 	}
 
 	var res []byte
@@ -379,8 +411,15 @@ func handlePodsDomainsGet(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "pods:domains get", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "pods:domains get",
+		Transform:      transform,
+	})
 }
 
 func handlePodsDomainsGetZoneFile(ctx context.Context, cmd *cli.Command) error {
@@ -394,10 +433,6 @@ func handlePodsDomainsGetZoneFile(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.PodDomainGetZoneFileParams{
-		PodID: cmd.Value("pod-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -407,6 +442,10 @@ func handlePodsDomainsGetZoneFile(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.PodDomainGetZoneFileParams{
+		PodID: cmd.Value("pod-id").(string),
 	}
 
 	return client.Pods.Domains.GetZoneFile(
@@ -428,10 +467,6 @@ func handlePodsDomainsVerify(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.PodDomainVerifyParams{
-		PodID: cmd.Value("pod-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -441,6 +476,10 @@ func handlePodsDomainsVerify(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.PodDomainVerifyParams{
+		PodID: cmd.Value("pod-id").(string),
 	}
 
 	return client.Pods.Domains.Verify(

@@ -22,6 +22,7 @@ func TestPodsThreadsList(t *testing.T) {
 			"--include-blocked=true",
 			"--include-spam=true",
 			"--include-trash=true",
+			"--include-unauthenticated=true",
 			"--label", "[string]",
 			"--limit", "0",
 			"--page-token", "page_token",

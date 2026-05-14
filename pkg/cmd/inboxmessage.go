@@ -5,7 +5,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/agentmail-to/agentmail-cli/internal/apiquery"
 	"github.com/agentmail-to/agentmail-cli/internal/requestflag"
@@ -21,14 +20,16 @@ var inboxesMessagesUpdate = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "message-id",
-			Usage:    "ID of message.",
-			Required: true,
+			Name:      "message-id",
+			Usage:     "ID of message.",
+			Required:  true,
+			PathParam: "message_id",
 		},
 		&requestflag.Flag[any]{
 			Name:     "add-labels",
@@ -51,16 +52,17 @@ var inboxesMessagesList = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[any]{
 			Name:      "after",
 			Usage:     "Timestamp after which to filter by.",
 			QueryPath: "after",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "ascending",
 			Usage:     "Sort in ascending temporal order.",
 			QueryPath: "ascending",
@@ -70,32 +72,37 @@ var inboxesMessagesList = cli.Command{
 			Usage:     "Timestamp before which to filter by.",
 			QueryPath: "before",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "include-blocked",
 			Usage:     "Include blocked in results.",
 			QueryPath: "include_blocked",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "include-spam",
 			Usage:     "Include spam in results.",
 			QueryPath: "include_spam",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:      "include-trash",
 			Usage:     "Include trash in results.",
 			QueryPath: "include_trash",
+		},
+		&requestflag.Flag[*bool]{
+			Name:      "include-unauthenticated",
+			Usage:     "Include unauthenticated in results.",
+			QueryPath: "include_unauthenticated",
 		},
 		&requestflag.Flag[any]{
 			Name:      "label",
 			Usage:     "Labels to filter by.",
 			QueryPath: "labels",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*int64]{
 			Name:      "limit",
 			Usage:     "Limit of number of items returned.",
 			QueryPath: "limit",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:      "page-token",
 			Usage:     "Page token for pagination.",
 			QueryPath: "page_token",
@@ -111,14 +118,16 @@ var inboxesMessagesForward = requestflag.WithInnerFlags(cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "message-id",
-			Usage:    "ID of message.",
-			Required: true,
+			Name:      "message-id",
+			Usage:     "ID of message.",
+			Required:  true,
+			PathParam: "message_id",
 		},
 		&requestflag.Flag[any]{
 			Name:     "attachment",
@@ -138,7 +147,7 @@ var inboxesMessagesForward = requestflag.WithInnerFlags(cli.Command{
 			Usage:    "Headers to include in message.",
 			BodyPath: "headers",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "html",
 			Usage:    "HTML body of message.",
 			BodyPath: "html",
@@ -152,12 +161,12 @@ var inboxesMessagesForward = requestflag.WithInnerFlags(cli.Command{
 			Name:     "reply-to",
 			BodyPath: "reply_to",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "subject",
 			Usage:    "Subject of message.",
 			BodyPath: "subject",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "text",
 			Usage:    "Plain text body of message.",
 			BodyPath: "text",
@@ -171,35 +180,41 @@ var inboxesMessagesForward = requestflag.WithInnerFlags(cli.Command{
 	HideHelpCommand: true,
 }, map[string][]requestflag.HasOuterFlag{
 	"attachment": {
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.content",
-			Usage:      "Base64 encoded content of attachment.",
-			InnerField: "content",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content",
+			Usage:                 "Base64 encoded content of attachment.",
+			InnerField:            "content",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[string]{
-			Name:       "attachment.content-disposition",
-			Usage:      "Content disposition of attachment.",
-			InnerField: "content_disposition",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content-disposition",
+			Usage:                 "Content disposition of attachment.",
+			InnerField:            "content_disposition",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.content-id",
-			Usage:      "Content ID of attachment.",
-			InnerField: "content_id",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content-id",
+			Usage:                 "Content ID of attachment.",
+			InnerField:            "content_id",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.content-type",
-			Usage:      "Content type of attachment.",
-			InnerField: "content_type",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content-type",
+			Usage:                 "Content type of attachment.",
+			InnerField:            "content_type",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.filename",
-			Usage:      "Filename of attachment.",
-			InnerField: "filename",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.filename",
+			Usage:                 "Filename of attachment.",
+			InnerField:            "filename",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.url",
-			Usage:      "URL to the attachment.",
-			InnerField: "url",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.url",
+			Usage:                 "URL to the attachment.",
+			InnerField:            "url",
+			OuterIsArrayOfObjects: true,
 		},
 	},
 })
@@ -210,14 +225,16 @@ var inboxesMessagesGet = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "message-id",
-			Usage:    "ID of message.",
-			Required: true,
+			Name:      "message-id",
+			Usage:     "ID of message.",
+			Required:  true,
+			PathParam: "message_id",
 		},
 	},
 	Action:          handleInboxesMessagesGet,
@@ -230,19 +247,22 @@ var inboxesMessagesGetAttachment = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "message-id",
-			Usage:    "ID of message.",
-			Required: true,
+			Name:      "message-id",
+			Usage:     "ID of message.",
+			Required:  true,
+			PathParam: "message_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "attachment-id",
-			Usage:    "ID of attachment.",
-			Required: true,
+			Name:      "attachment-id",
+			Usage:     "ID of attachment.",
+			Required:  true,
+			PathParam: "attachment_id",
 		},
 	},
 	Action:          handleInboxesMessagesGetAttachment,
@@ -255,14 +275,16 @@ var inboxesMessagesGetRaw = cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "message-id",
-			Usage:    "ID of message.",
-			Required: true,
+			Name:      "message-id",
+			Usage:     "ID of message.",
+			Required:  true,
+			PathParam: "message_id",
 		},
 	},
 	Action:          handleInboxesMessagesGetRaw,
@@ -275,14 +297,16 @@ var inboxesMessagesReply = requestflag.WithInnerFlags(cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "message-id",
-			Usage:    "ID of message.",
-			Required: true,
+			Name:      "message-id",
+			Usage:     "ID of message.",
+			Required:  true,
+			PathParam: "message_id",
 		},
 		&requestflag.Flag[any]{
 			Name:     "attachment",
@@ -302,7 +326,7 @@ var inboxesMessagesReply = requestflag.WithInnerFlags(cli.Command{
 			Usage:    "Headers to include in message.",
 			BodyPath: "headers",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "html",
 			Usage:    "HTML body of message.",
 			BodyPath: "html",
@@ -312,7 +336,7 @@ var inboxesMessagesReply = requestflag.WithInnerFlags(cli.Command{
 			Usage:    "Labels of message.",
 			BodyPath: "labels",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*bool]{
 			Name:     "reply-all",
 			Usage:    "Reply to all recipients of the original message.",
 			BodyPath: "reply_all",
@@ -321,7 +345,7 @@ var inboxesMessagesReply = requestflag.WithInnerFlags(cli.Command{
 			Name:     "reply-to",
 			BodyPath: "reply_to",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "text",
 			Usage:    "Plain text body of message.",
 			BodyPath: "text",
@@ -335,35 +359,41 @@ var inboxesMessagesReply = requestflag.WithInnerFlags(cli.Command{
 	HideHelpCommand: true,
 }, map[string][]requestflag.HasOuterFlag{
 	"attachment": {
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.content",
-			Usage:      "Base64 encoded content of attachment.",
-			InnerField: "content",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content",
+			Usage:                 "Base64 encoded content of attachment.",
+			InnerField:            "content",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[string]{
-			Name:       "attachment.content-disposition",
-			Usage:      "Content disposition of attachment.",
-			InnerField: "content_disposition",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content-disposition",
+			Usage:                 "Content disposition of attachment.",
+			InnerField:            "content_disposition",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.content-id",
-			Usage:      "Content ID of attachment.",
-			InnerField: "content_id",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content-id",
+			Usage:                 "Content ID of attachment.",
+			InnerField:            "content_id",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.content-type",
-			Usage:      "Content type of attachment.",
-			InnerField: "content_type",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content-type",
+			Usage:                 "Content type of attachment.",
+			InnerField:            "content_type",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.filename",
-			Usage:      "Filename of attachment.",
-			InnerField: "filename",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.filename",
+			Usage:                 "Filename of attachment.",
+			InnerField:            "filename",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.url",
-			Usage:      "URL to the attachment.",
-			InnerField: "url",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.url",
+			Usage:                 "URL to the attachment.",
+			InnerField:            "url",
+			OuterIsArrayOfObjects: true,
 		},
 	},
 })
@@ -374,14 +404,16 @@ var inboxesMessagesReplyAll = requestflag.WithInnerFlags(cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[string]{
-			Name:     "message-id",
-			Usage:    "ID of message.",
-			Required: true,
+			Name:      "message-id",
+			Usage:     "ID of message.",
+			Required:  true,
+			PathParam: "message_id",
 		},
 		&requestflag.Flag[any]{
 			Name:     "attachment",
@@ -393,7 +425,7 @@ var inboxesMessagesReplyAll = requestflag.WithInnerFlags(cli.Command{
 			Usage:    "Headers to include in message.",
 			BodyPath: "headers",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "html",
 			Usage:    "HTML body of message.",
 			BodyPath: "html",
@@ -407,7 +439,7 @@ var inboxesMessagesReplyAll = requestflag.WithInnerFlags(cli.Command{
 			Name:     "reply-to",
 			BodyPath: "reply_to",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "text",
 			Usage:    "Plain text body of message.",
 			BodyPath: "text",
@@ -417,35 +449,41 @@ var inboxesMessagesReplyAll = requestflag.WithInnerFlags(cli.Command{
 	HideHelpCommand: true,
 }, map[string][]requestflag.HasOuterFlag{
 	"attachment": {
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.content",
-			Usage:      "Base64 encoded content of attachment.",
-			InnerField: "content",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content",
+			Usage:                 "Base64 encoded content of attachment.",
+			InnerField:            "content",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[string]{
-			Name:       "attachment.content-disposition",
-			Usage:      "Content disposition of attachment.",
-			InnerField: "content_disposition",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content-disposition",
+			Usage:                 "Content disposition of attachment.",
+			InnerField:            "content_disposition",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.content-id",
-			Usage:      "Content ID of attachment.",
-			InnerField: "content_id",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content-id",
+			Usage:                 "Content ID of attachment.",
+			InnerField:            "content_id",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.content-type",
-			Usage:      "Content type of attachment.",
-			InnerField: "content_type",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content-type",
+			Usage:                 "Content type of attachment.",
+			InnerField:            "content_type",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.filename",
-			Usage:      "Filename of attachment.",
-			InnerField: "filename",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.filename",
+			Usage:                 "Filename of attachment.",
+			InnerField:            "filename",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.url",
-			Usage:      "URL to the attachment.",
-			InnerField: "url",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.url",
+			Usage:                 "URL to the attachment.",
+			InnerField:            "url",
+			OuterIsArrayOfObjects: true,
 		},
 	},
 })
@@ -456,9 +494,10 @@ var inboxesMessagesSend = requestflag.WithInnerFlags(cli.Command{
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
-			Name:     "inbox-id",
-			Usage:    "The ID of the inbox.",
-			Required: true,
+			Name:      "inbox-id",
+			Usage:     "The ID of the inbox.",
+			Required:  true,
+			PathParam: "inbox_id",
 		},
 		&requestflag.Flag[any]{
 			Name:     "attachment",
@@ -478,7 +517,7 @@ var inboxesMessagesSend = requestflag.WithInnerFlags(cli.Command{
 			Usage:    "Headers to include in message.",
 			BodyPath: "headers",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "html",
 			Usage:    "HTML body of message.",
 			BodyPath: "html",
@@ -492,12 +531,12 @@ var inboxesMessagesSend = requestflag.WithInnerFlags(cli.Command{
 			Name:     "reply-to",
 			BodyPath: "reply_to",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "subject",
 			Usage:    "Subject of message.",
 			BodyPath: "subject",
 		},
-		&requestflag.Flag[any]{
+		&requestflag.Flag[*string]{
 			Name:     "text",
 			Usage:    "Plain text body of message.",
 			BodyPath: "text",
@@ -511,35 +550,41 @@ var inboxesMessagesSend = requestflag.WithInnerFlags(cli.Command{
 	HideHelpCommand: true,
 }, map[string][]requestflag.HasOuterFlag{
 	"attachment": {
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.content",
-			Usage:      "Base64 encoded content of attachment.",
-			InnerField: "content",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content",
+			Usage:                 "Base64 encoded content of attachment.",
+			InnerField:            "content",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[string]{
-			Name:       "attachment.content-disposition",
-			Usage:      "Content disposition of attachment.",
-			InnerField: "content_disposition",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content-disposition",
+			Usage:                 "Content disposition of attachment.",
+			InnerField:            "content_disposition",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.content-id",
-			Usage:      "Content ID of attachment.",
-			InnerField: "content_id",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content-id",
+			Usage:                 "Content ID of attachment.",
+			InnerField:            "content_id",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.content-type",
-			Usage:      "Content type of attachment.",
-			InnerField: "content_type",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.content-type",
+			Usage:                 "Content type of attachment.",
+			InnerField:            "content_type",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.filename",
-			Usage:      "Filename of attachment.",
-			InnerField: "filename",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.filename",
+			Usage:                 "Filename of attachment.",
+			InnerField:            "filename",
+			OuterIsArrayOfObjects: true,
 		},
-		&requestflag.InnerFlag[any]{
-			Name:       "attachment.url",
-			Usage:      "URL to the attachment.",
-			InnerField: "url",
+		&requestflag.InnerFlag[*string]{
+			Name:                  "attachment.url",
+			Usage:                 "URL to the attachment.",
+			InnerField:            "url",
+			OuterIsArrayOfObjects: true,
 		},
 	},
 })
@@ -555,10 +600,6 @@ func handleInboxesMessagesUpdate(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxMessageUpdateParams{
-		InboxID: cmd.Value("inbox-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -568,6 +609,10 @@ func handleInboxesMessagesUpdate(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.InboxMessageUpdateParams{
+		InboxID: cmd.Value("inbox-id").(string),
 	}
 
 	var res []byte
@@ -584,8 +629,15 @@ func handleInboxesMessagesUpdate(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes:messages update", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "inboxes:messages update",
+		Transform:      transform,
+	})
 }
 
 func handleInboxesMessagesList(ctx context.Context, cmd *cli.Command) error {
@@ -599,8 +651,6 @@ func handleInboxesMessagesList(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxMessageListParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -611,6 +661,8 @@ func handleInboxesMessagesList(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := agentmail.InboxMessageListParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -626,8 +678,15 @@ func handleInboxesMessagesList(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes:messages list", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "inboxes:messages list",
+		Transform:      transform,
+	})
 }
 
 func handleInboxesMessagesForward(ctx context.Context, cmd *cli.Command) error {
@@ -641,10 +700,6 @@ func handleInboxesMessagesForward(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxMessageForwardParams{
-		InboxID: cmd.Value("inbox-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -654,6 +709,10 @@ func handleInboxesMessagesForward(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.InboxMessageForwardParams{
+		InboxID: cmd.Value("inbox-id").(string),
 	}
 
 	var res []byte
@@ -670,8 +729,15 @@ func handleInboxesMessagesForward(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes:messages forward", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "inboxes:messages forward",
+		Transform:      transform,
+	})
 }
 
 func handleInboxesMessagesGet(ctx context.Context, cmd *cli.Command) error {
@@ -685,10 +751,6 @@ func handleInboxesMessagesGet(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxMessageGetParams{
-		InboxID: cmd.Value("inbox-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -698,6 +760,10 @@ func handleInboxesMessagesGet(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.InboxMessageGetParams{
+		InboxID: cmd.Value("inbox-id").(string),
 	}
 
 	var res []byte
@@ -714,8 +780,15 @@ func handleInboxesMessagesGet(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes:messages get", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "inboxes:messages get",
+		Transform:      transform,
+	})
 }
 
 func handleInboxesMessagesGetAttachment(ctx context.Context, cmd *cli.Command) error {
@@ -729,11 +802,6 @@ func handleInboxesMessagesGetAttachment(ctx context.Context, cmd *cli.Command) e
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxMessageGetAttachmentParams{
-		InboxID:   cmd.Value("inbox-id").(string),
-		MessageID: cmd.Value("message-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -743,6 +811,11 @@ func handleInboxesMessagesGetAttachment(ctx context.Context, cmd *cli.Command) e
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.InboxMessageGetAttachmentParams{
+		InboxID:   cmd.Value("inbox-id").(string),
+		MessageID: cmd.Value("message-id").(string),
 	}
 
 	var res []byte
@@ -759,8 +832,15 @@ func handleInboxesMessagesGetAttachment(ctx context.Context, cmd *cli.Command) e
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes:messages get-attachment", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "inboxes:messages get-attachment",
+		Transform:      transform,
+	})
 }
 
 func handleInboxesMessagesGetRaw(ctx context.Context, cmd *cli.Command) error {
@@ -774,10 +854,6 @@ func handleInboxesMessagesGetRaw(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxMessageGetRawParams{
-		InboxID: cmd.Value("inbox-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -787,6 +863,10 @@ func handleInboxesMessagesGetRaw(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.InboxMessageGetRawParams{
+		InboxID: cmd.Value("inbox-id").(string),
 	}
 
 	var res []byte
@@ -803,8 +883,15 @@ func handleInboxesMessagesGetRaw(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes:messages get-raw", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "inboxes:messages get-raw",
+		Transform:      transform,
+	})
 }
 
 func handleInboxesMessagesReply(ctx context.Context, cmd *cli.Command) error {
@@ -818,10 +905,6 @@ func handleInboxesMessagesReply(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxMessageReplyParams{
-		InboxID: cmd.Value("inbox-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -831,6 +914,10 @@ func handleInboxesMessagesReply(ctx context.Context, cmd *cli.Command) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.InboxMessageReplyParams{
+		InboxID: cmd.Value("inbox-id").(string),
 	}
 
 	var res []byte
@@ -847,8 +934,15 @@ func handleInboxesMessagesReply(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes:messages reply", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "inboxes:messages reply",
+		Transform:      transform,
+	})
 }
 
 func handleInboxesMessagesReplyAll(ctx context.Context, cmd *cli.Command) error {
@@ -862,10 +956,6 @@ func handleInboxesMessagesReplyAll(ctx context.Context, cmd *cli.Command) error 
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxMessageReplyAllParams{
-		InboxID: cmd.Value("inbox-id").(string),
-	}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -875,6 +965,10 @@ func handleInboxesMessagesReplyAll(ctx context.Context, cmd *cli.Command) error 
 	)
 	if err != nil {
 		return err
+	}
+
+	params := agentmail.InboxMessageReplyAllParams{
+		InboxID: cmd.Value("inbox-id").(string),
 	}
 
 	var res []byte
@@ -891,8 +985,15 @@ func handleInboxesMessagesReplyAll(ctx context.Context, cmd *cli.Command) error 
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes:messages reply-all", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "inboxes:messages reply-all",
+		Transform:      transform,
+	})
 }
 
 func handleInboxesMessagesSend(ctx context.Context, cmd *cli.Command) error {
@@ -906,8 +1007,6 @@ func handleInboxesMessagesSend(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
 	}
 
-	params := agentmail.InboxMessageSendParams{}
-
 	options, err := flagOptions(
 		cmd,
 		apiquery.NestedQueryFormatBrackets,
@@ -918,6 +1017,8 @@ func handleInboxesMessagesSend(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
+	params := agentmail.InboxMessageSendParams{}
 
 	var res []byte
 	options = append(options, option.WithResponseBodyInto(&res))
@@ -933,6 +1034,13 @@ func handleInboxesMessagesSend(ctx context.Context, cmd *cli.Command) error {
 
 	obj := gjson.ParseBytes(res)
 	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
 	transform := cmd.Root().String("transform")
-	return ShowJSON(os.Stdout, "inboxes:messages send", obj, format, transform)
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "inboxes:messages send",
+		Transform:      transform,
+	})
 }
