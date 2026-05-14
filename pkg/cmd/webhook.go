@@ -21,7 +21,7 @@ var webhooksCreate = cli.Command{
 	Flags: []cli.Flag{
 		&requestflag.Flag[[]string]{
 			Name:     "event-type",
-			Usage:    "Event types for which to send events.",
+			Usage:    "Full list of event types this webhook should receive. At least one type is required. Send every type you\nwant in this array (not incremental). See [Webhooks overview](https://docs.agentmail.to/webhooks-overview)\nfor spam, blocked, and unauthenticated events and required permissions.",
 			Required: true,
 			BodyPath: "event_types",
 		},
@@ -53,7 +53,7 @@ var webhooksCreate = cli.Command{
 
 var webhooksUpdate = cli.Command{
 	Name:    "update",
-	Usage:   "**CLI:**",
+	Usage:   "Update inbox or pod subscriptions, or replace the webhook's `event_types` in\nfull when you pass a non-empty `event_types` array (see request field docs).\nInbox and pod changes use add/remove lists.",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -71,6 +71,11 @@ var webhooksUpdate = cli.Command{
 			Name:     "add-pod-id",
 			Usage:    "Pod IDs to subscribe to the webhook.",
 			BodyPath: "add_pod_ids",
+		},
+		&requestflag.Flag[any]{
+			Name:     "event-type",
+			Usage:    "When you send a non-empty list, it replaces the webhook's subscribed event types in full (the same\n\"set the list\" behavior as create). It is not a merge or diff: include every event type you want after\nthe update. Sending a one-element array means the webhook will only receive that one type afterward.\nOmit this field or send an empty array to leave event types unchanged. Clearing all types with an empty\nlist is not supported. Subscribing to `message.received.spam`, `message.received.blocked`, or\n`message.received.unauthenticated` requires the matching label permission on the API key.",
+			BodyPath: "event_types",
 		},
 		&requestflag.Flag[any]{
 			Name:     "remove-inbox-id",

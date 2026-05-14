@@ -52,6 +52,7 @@ func TestWebhooksUpdate(t *testing.T) {
 			"--webhook-id", "webhook_id",
 			"--add-inbox-id", "[string]",
 			"--add-pod-id", "[string]",
+			"--event-type", "[message.received]",
 			"--remove-inbox-id", "[string]",
 			"--remove-pod-id", "[string]",
 		)
@@ -64,6 +65,8 @@ func TestWebhooksUpdate(t *testing.T) {
 			"  - string\n" +
 			"add_pod_ids:\n" +
 			"  - string\n" +
+			"event_types:\n" +
+			"  - message.received\n" +
 			"remove_inbox_ids:\n" +
 			"  - string\n" +
 			"remove_pod_ids:\n" +
