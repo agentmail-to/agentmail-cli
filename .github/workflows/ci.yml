@@ -114,3 +114,25 @@ jobs:
 
       - name: Run tests
         run: ./scripts/test
+
+  security:
+    timeout-minutes: 15
+    name: security
+    runs-on: ${{ github.repository == 'stainless-sdks/agentmail-cli' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
+    if: (github.event_name == 'push' || github.event.pull_request.head.repo.fork) && (github.event_name != 'push' || github.event.head_commit.message != 'codegen metadata')
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@7c7e9f9e64e329e6a8c92c7e2c26f1a78ad5f6ab # v0.29.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@49c3cd5deaee37c3cd3ddc0cac1d3ef12e6e13f1 # v4.0.4
+        with:
+          sarif_file: 'trivy-results.sarif'
