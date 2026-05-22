@@ -1,5 +1,7 @@
 # AgentMail CLI
 
+[![CI](https://github.com/okwn/agentmail-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/okwn/agentmail-cli/actions/workflows/ci.yml)
+
 The official CLI for the [AgentMail API](https://docs.agentmail.to).
 
 ## Installation
