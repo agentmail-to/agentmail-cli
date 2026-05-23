@@ -10,6 +10,9 @@ npm install -g agentmail-cli
 
 ## Setup
 
+1. Sign up at [app.agentmail.to](https://app.agentmail.to) to get an API key.
+2. Set the key in your environment:
+
 ```sh
 export AGENTMAIL_API_KEY=am_us_xxx
 ```
