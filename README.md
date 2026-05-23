@@ -101,3 +101,12 @@ agentmail <command> --arg @data://file.txt
 ## Documentation
 
 [docs.agentmail.to](https://docs.agentmail.to)
+
+## Quick Start
+
+```bash
+npm install -g @agentmail/cli
+agentmail init
+agentmail send --to user@example.com --subject "Hello"
+```
+
