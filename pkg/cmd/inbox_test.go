@@ -18,6 +18,7 @@ func TestInboxesCreate(t *testing.T) {
 			"--client-id", "client_id",
 			"--display-name", "display_name",
 			"--domain", "domain",
+			"--metadata", "{foo: string}",
 			"--username", "username",
 		)
 	})
@@ -28,6 +29,8 @@ func TestInboxesCreate(t *testing.T) {
 			"client_id: client_id\n" +
 			"display_name: display_name\n" +
 			"domain: domain\n" +
+			"metadata:\n" +
+			"  foo: string\n" +
 			"username: username\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
@@ -46,12 +49,16 @@ func TestInboxesUpdate(t *testing.T) {
 			"inboxes", "update",
 			"--inbox-id", "inbox_id",
 			"--display-name", "display_name",
+			"--metadata", "{foo: string}",
 		)
 	})
 
 	t.Run("piping data", func(t *testing.T) {
 		// Test piping YAML data over stdin
-		pipeData := []byte("display_name: display_name")
+		pipeData := []byte("" +
+			"display_name: display_name\n" +
+			"metadata:\n" +
+			"  foo: string\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",
