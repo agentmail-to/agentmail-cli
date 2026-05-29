@@ -34,6 +34,11 @@ var inboxesCreate = cli.Command{
 			Usage:    "Domain of address. Must be verified domain. Defaults to `agentmail.to`.",
 			BodyPath: "domain",
 		},
+		&requestflag.Flag[map[string]any]{
+			Name:     "metadata",
+			Usage:    "Custom metadata to attach to the inbox.",
+			BodyPath: "metadata",
+		},
 		&requestflag.Flag[*string]{
 			Name:     "username",
 			Usage:    "Username of address. Randomly generated if not specified.",
@@ -55,11 +60,15 @@ var inboxesUpdate = cli.Command{
 			Required:  true,
 			PathParam: "inbox_id",
 		},
-		&requestflag.Flag[string]{
+		&requestflag.Flag[*string]{
 			Name:     "display-name",
 			Usage:    "Display name: `Display Name <username@domain.com>`.",
-			Required: true,
 			BodyPath: "display_name",
+		},
+		&requestflag.Flag[map[string]any]{
+			Name:     "metadata",
+			Usage:    "Metadata to merge into the inbox's existing metadata. Keys you include\nare added or overwritten; keys you omit are left unchanged. To remove a\nsingle key, send it with a null value. To clear all metadata, send\n`metadata` as null. Provide at least one of `display_name` or `metadata`.",
+			BodyPath: "metadata",
 		},
 	},
 	Action:          handleInboxesUpdate,
