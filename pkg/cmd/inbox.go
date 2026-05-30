@@ -67,7 +67,7 @@ var inboxesUpdate = cli.Command{
 		},
 		&requestflag.Flag[map[string]any]{
 			Name:     "metadata",
-			Usage:    "Metadata to merge into the inbox's existing metadata. Keys you include\nare added or overwritten; keys you omit are left unchanged. To remove a\nsingle key, send it with a null value. To clear all metadata, send\n`metadata` as null. Provide at least one of `display_name` or `metadata`.",
+			Usage:    "Metadata to merge into the inbox's existing metadata. Keys you include\nare added or overwritten; keys you omit are left unchanged. To remove a\nsingle key, send it with a null value. To clear all metadata, send\n`metadata` as null.",
 			BodyPath: "metadata",
 		},
 	},
