@@ -16,7 +16,7 @@ import (
 
 var podsThreadsList = cli.Command{
 	Name:    "list",
-	Usage:   "**CLI:**",
+	Usage:   "Lists threads in the pod, most recent first. Pass `senders`, `recipients`, or\n`subject` to filter by substring. Filtered requests are served by search, which\ncaps `limit` at 100. For relevance-ranked full-text search, use\n`Search Threads`.",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -74,6 +74,21 @@ var podsThreadsList = cli.Command{
 			Name:      "page-token",
 			Usage:     "Page token for pagination.",
 			QueryPath: "page_token",
+		},
+		&requestflag.Flag[any]{
+			Name:      "recipient",
+			Usage:     "Filter to threads whose recipients contain this value (substring match). Repeatable; all values must match.",
+			QueryPath: "recipients",
+		},
+		&requestflag.Flag[any]{
+			Name:      "sender",
+			Usage:     "Filter to threads whose senders contain this value (substring match). Repeatable; all values must match.",
+			QueryPath: "senders",
+		},
+		&requestflag.Flag[any]{
+			Name:      "subject",
+			Usage:     "Filter to threads whose subject contains this value (substring match). Repeatable; all values must match.",
+			QueryPath: "subject",
 		},
 	},
 	Action:          handlePodsThreadsList,
