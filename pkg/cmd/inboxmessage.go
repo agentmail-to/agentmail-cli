@@ -48,7 +48,7 @@ var inboxesMessagesUpdate = cli.Command{
 
 var inboxesMessagesList = cli.Command{
 	Name:    "list",
-	Usage:   "**CLI:**",
+	Usage:   "Lists messages in the inbox, most recent first. Pass `from`, `to`, or `subject`\nto filter by substring. Filtered requests are served by search, which caps\n`limit` at 100. For relevance-ranked full-text search across sender, recipients,\nsubject, and message body, use `Search Messages`.",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -71,6 +71,11 @@ var inboxesMessagesList = cli.Command{
 			Name:      "before",
 			Usage:     "Timestamp before which to filter by.",
 			QueryPath: "before",
+		},
+		&requestflag.Flag[any]{
+			Name:      "from",
+			Usage:     "Filter to messages whose sender contains this value (substring match). Repeatable; all values must match.",
+			QueryPath: "from",
 		},
 		&requestflag.Flag[*bool]{
 			Name:      "include-blocked",
@@ -106,6 +111,16 @@ var inboxesMessagesList = cli.Command{
 			Name:      "page-token",
 			Usage:     "Page token for pagination.",
 			QueryPath: "page_token",
+		},
+		&requestflag.Flag[any]{
+			Name:      "subject",
+			Usage:     "Filter to messages whose subject contains this value (substring match). Repeatable; all values must match.",
+			QueryPath: "subject",
+		},
+		&requestflag.Flag[any]{
+			Name:      "to",
+			Usage:     "Filter to messages whose recipients (to, cc, or bcc) contain this value (substring match). Repeatable; all values must match.",
+			QueryPath: "to",
 		},
 	},
 	Action:          handleInboxesMessagesList,

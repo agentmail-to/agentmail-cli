@@ -16,7 +16,7 @@ import (
 
 var threadsList = cli.Command{
 	Name:    "list",
-	Usage:   "**CLI:**",
+	Usage:   "Lists threads, most recent first. Pass `senders`, `recipients`, or `subject` to\nfilter by substring. Filtered requests are served by search, which caps `limit`\nat 100. For relevance-ranked full-text search across senders, recipients,\nsubject, and message body, use `Search Threads`.",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[any]{
@@ -68,6 +68,21 @@ var threadsList = cli.Command{
 			Name:      "page-token",
 			Usage:     "Page token for pagination.",
 			QueryPath: "page_token",
+		},
+		&requestflag.Flag[any]{
+			Name:      "recipient",
+			Usage:     "Filter to threads whose recipients contain this value (substring match). Repeatable; all values must match.",
+			QueryPath: "recipients",
+		},
+		&requestflag.Flag[any]{
+			Name:      "sender",
+			Usage:     "Filter to threads whose senders contain this value (substring match). Repeatable; all values must match.",
+			QueryPath: "senders",
+		},
+		&requestflag.Flag[any]{
+			Name:      "subject",
+			Usage:     "Filter to threads whose subject contains this value (substring match). Repeatable; all values must match.",
+			QueryPath: "subject",
 		},
 	},
 	Action:          handleThreadsList,

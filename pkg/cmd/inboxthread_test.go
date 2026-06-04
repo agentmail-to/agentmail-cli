@@ -26,6 +26,9 @@ func TestInboxesThreadsList(t *testing.T) {
 			"--label", "[string]",
 			"--limit", "0",
 			"--page-token", "page_token",
+			"--recipient", "[string]",
+			"--sender", "[string]",
+			"--subject", "[string]",
 		)
 	})
 }
