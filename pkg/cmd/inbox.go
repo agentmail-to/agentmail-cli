@@ -31,7 +31,7 @@ var inboxesCreate = cli.Command{
 		},
 		&requestflag.Flag[*string]{
 			Name:     "domain",
-			Usage:    "Domain of address. Must be verified domain. Defaults to `agentmail.to`.",
+			Usage:    "Domain of address. Must be a verified domain, or any subdomain of a\nverified domain that has subdomains enabled (e.g., `bot.example.com`).\nDefaults to `agentmail.to`.",
 			BodyPath: "domain",
 		},
 		&requestflag.Flag[map[string]any]{
