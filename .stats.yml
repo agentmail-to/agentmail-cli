@@ -1,4 +1,4 @@
-configured_endpoints: 94
-openapi_spec_url: https://storage.googleapis.com/stainless-sdk-openapi-specs/agentmail/agentmail-cae947700a86724c464bc302ee03b0b2c505af6cda0b6f6c588f0fd86b8740ee.yml
-openapi_spec_hash: a025488a33d184fccd331d41c9ae7174
+configured_endpoints: 91
+openapi_spec_url: https://storage.googleapis.com/stainless-sdk-openapi-specs/agentmail/agentmail-6aa22edc846cb4543ecb0b89da7edb0f012082be93372289d193226411215758.yml
+openapi_spec_hash: 895f6551e1cb128f9f095d60a86ee8d1
 config_hash: 79c13cf7727d64173933e0d367570632

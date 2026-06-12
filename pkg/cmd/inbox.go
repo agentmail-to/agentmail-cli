@@ -132,52 +132,6 @@ var inboxesGet = cli.Command{
 	HideHelpCommand: true,
 }
 
-var inboxesListMetrics = cli.Command{
-	Name:    "list-metrics",
-	Usage:   "**CLI:**",
-	Suggest: true,
-	Flags: []cli.Flag{
-		&requestflag.Flag[string]{
-			Name:      "inbox-id",
-			Usage:     "The ID of the inbox.",
-			Required:  true,
-			PathParam: "inbox_id",
-		},
-		&requestflag.Flag[*bool]{
-			Name:      "descending",
-			Usage:     "Sort in descending order.",
-			QueryPath: "descending",
-		},
-		&requestflag.Flag[any]{
-			Name:      "end",
-			Usage:     "End timestamp for the query.",
-			QueryPath: "end",
-		},
-		&requestflag.Flag[any]{
-			Name:      "event-type",
-			Usage:     "List of metric event types to query.",
-			QueryPath: "event_types",
-		},
-		&requestflag.Flag[*int64]{
-			Name:      "limit",
-			Usage:     "Limit on number of buckets to return.",
-			QueryPath: "limit",
-		},
-		&requestflag.Flag[*string]{
-			Name:      "period",
-			Usage:     "Period in number of seconds for the query.",
-			QueryPath: "period",
-		},
-		&requestflag.Flag[any]{
-			Name:      "start",
-			Usage:     "Start timestamp for the query.",
-			QueryPath: "start",
-		},
-	},
-	Action:          handleInboxesListMetrics,
-	HideHelpCommand: true,
-}
-
 func handleInboxesCreate(ctx context.Context, cmd *cli.Command) error {
 	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
@@ -372,55 +326,6 @@ func handleInboxesGet(ctx context.Context, cmd *cli.Command) error {
 		Format:         format,
 		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "inboxes get",
-		Transform:      transform,
-	})
-}
-
-func handleInboxesListMetrics(ctx context.Context, cmd *cli.Command) error {
-	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
-	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("inbox-id") && len(unusedArgs) > 0 {
-		cmd.Set("inbox-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
-	if len(unusedArgs) > 0 {
-		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
-	}
-
-	options, err := flagOptions(
-		cmd,
-		apiquery.NestedQueryFormatBrackets,
-		apiquery.ArrayQueryFormatComma,
-		EmptyBody,
-		false,
-	)
-	if err != nil {
-		return err
-	}
-
-	params := agentmail.InboxListMetricsParams{}
-
-	var res []byte
-	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Inboxes.ListMetrics(
-		ctx,
-		cmd.Value("inbox-id").(string),
-		params,
-		options...,
-	)
-	if err != nil {
-		return err
-	}
-
-	obj := gjson.ParseBytes(res)
-	format := cmd.Root().String("format")
-	explicitFormat := cmd.Root().IsSet("format")
-	transform := cmd.Root().String("transform")
-	return ShowJSON(obj, ShowJSONOpts{
-		ExplicitFormat: explicitFormat,
-		Format:         format,
-		RawOutput:      cmd.Root().Bool("raw-output"),
-		Title:          "inboxes list-metrics",
 		Transform:      transform,
 	})
 }

@@ -107,7 +107,6 @@ func init() {
 					&inboxesList,
 					&inboxesDelete,
 					&inboxesGet,
-					&inboxesListMetrics,
 				},
 			},
 			{
@@ -252,14 +251,6 @@ func init() {
 				},
 			},
 			{
-				Name:     "pods:metrics",
-				Category: "API RESOURCE",
-				Suggest:  true,
-				Commands: []*cli.Command{
-					&podsMetricsQuery,
-				},
-			},
-			{
 				Name:     "webhooks",
 				Category: "API RESOURCE",
 				Suggest:  true,
@@ -314,14 +305,6 @@ func init() {
 					&listsList,
 					&listsDelete,
 					&listsGet,
-				},
-			},
-			{
-				Name:     "metrics",
-				Category: "API RESOURCE",
-				Suggest:  true,
-				Commands: []*cli.Command{
-					&metricsList,
 				},
 			},
 			{
