@@ -37,11 +37,6 @@ var webhooksCreate = cli.Command{
 			BodyPath: "client_id",
 		},
 		&requestflag.Flag[any]{
-			Name:     "inbox-id",
-			Usage:    "Inboxes for which to send events. Maximum 10 per webhook.",
-			BodyPath: "inbox_ids",
-		},
-		&requestflag.Flag[any]{
 			Name:     "pod-id",
 			Usage:    "Pods for which to send events. Maximum 10 per webhook.",
 			BodyPath: "pod_ids",
@@ -63,11 +58,6 @@ var webhooksUpdate = cli.Command{
 			PathParam: "webhook_id",
 		},
 		&requestflag.Flag[any]{
-			Name:     "add-inbox-id",
-			Usage:    "Inbox IDs to subscribe to the webhook.",
-			BodyPath: "add_inbox_ids",
-		},
-		&requestflag.Flag[any]{
 			Name:     "add-pod-id",
 			Usage:    "Pod IDs to subscribe to the webhook.",
 			BodyPath: "add_pod_ids",
@@ -76,11 +66,6 @@ var webhooksUpdate = cli.Command{
 			Name:     "event-type",
 			Usage:    "When you send a non-empty list, it replaces the webhook's subscribed event types in full (the same\n\"set the list\" behavior as create). It is not a merge or diff: include every event type you want after\nthe update. Sending a one-element array means the webhook will only receive that one type afterward.\nOmit this field or send an empty array to leave event types unchanged. Clearing all types with an empty\nlist is not supported. Subscribing to `message.received.spam`, `message.received.blocked`, or\n`message.received.unauthenticated` requires the matching label permission on the API key.",
 			BodyPath: "event_types",
-		},
-		&requestflag.Flag[any]{
-			Name:     "remove-inbox-id",
-			Usage:    "Inbox IDs to unsubscribe from the webhook.",
-			BodyPath: "remove_inbox_ids",
 		},
 		&requestflag.Flag[any]{
 			Name:     "remove-pod-id",
