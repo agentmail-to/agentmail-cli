@@ -16,7 +16,7 @@ import (
 
 var inboxesDraftsCreate = requestflag.WithInnerFlags(cli.Command{
 	Name:    "create",
-	Usage:   "**CLI:**",
+	Usage:   "Create a draft. Supply `in_reply_to` to create a reply draft (with `reply_all`\nto address the whole thread), whose recipients, subject, and threading are\nderived from the referenced message, or `forward_of` to create a forward draft,\nwhich derives the subject, threading, and forwarded content from the source but\nkeeps recipients caller-supplied.",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -46,6 +46,11 @@ var inboxesDraftsCreate = requestflag.WithInnerFlags(cli.Command{
 			BodyPath: "client_id",
 		},
 		&requestflag.Flag[*string]{
+			Name:     "forward-of",
+			Usage:    "ID of message being forwarded.",
+			BodyPath: "forward_of",
+		},
+		&requestflag.Flag[*string]{
 			Name:     "html",
 			Usage:    "HTML body of draft.",
 			BodyPath: "html",
@@ -59,6 +64,11 @@ var inboxesDraftsCreate = requestflag.WithInnerFlags(cli.Command{
 			Name:     "label",
 			Usage:    "Labels of draft.",
 			BodyPath: "labels",
+		},
+		&requestflag.Flag[*bool]{
+			Name:     "reply-all",
+			Usage:    "Reply to all recipients of the original message.",
+			BodyPath: "reply_all",
 		},
 		&requestflag.Flag[any]{
 			Name:     "reply-to",
@@ -129,9 +139,9 @@ var inboxesDraftsCreate = requestflag.WithInnerFlags(cli.Command{
 	},
 })
 
-var inboxesDraftsUpdate = cli.Command{
+var inboxesDraftsUpdate = requestflag.WithInnerFlags(cli.Command{
 	Name:    "update",
-	Usage:   "**CLI:**",
+	Usage:   "Edit fields on an existing draft. Passing `null` clears a field (or `[]` for a\nrecipient field); `send_at: null` un-schedules a scheduled draft. A draft that\nis already being sent cannot be edited.",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -147,6 +157,16 @@ var inboxesDraftsUpdate = cli.Command{
 			PathParam: "draft_id",
 		},
 		&requestflag.Flag[any]{
+			Name:     "add-attachment",
+			Usage:    "Attachments to add to the draft.",
+			BodyPath: "add_attachments",
+		},
+		&requestflag.Flag[any]{
+			Name:     "add-label",
+			Usage:    "Label or labels to add to the draft.",
+			BodyPath: "add_labels",
+		},
+		&requestflag.Flag[any]{
 			Name:     "bcc",
 			Usage:    "Addresses of BCC recipients. In format `username@domain.com` or `Display Name <username@domain.com>`.",
 			BodyPath: "bcc",
@@ -160,6 +180,16 @@ var inboxesDraftsUpdate = cli.Command{
 			Name:     "html",
 			Usage:    "HTML body of draft.",
 			BodyPath: "html",
+		},
+		&requestflag.Flag[any]{
+			Name:     "remove-attachment",
+			Usage:    "IDs of attachments to remove from the draft.",
+			BodyPath: "remove_attachments",
+		},
+		&requestflag.Flag[any]{
+			Name:     "remove-label",
+			Usage:    "Label or labels to remove from the draft.",
+			BodyPath: "remove_labels",
 		},
 		&requestflag.Flag[any]{
 			Name:     "reply-to",
@@ -189,7 +219,46 @@ var inboxesDraftsUpdate = cli.Command{
 	},
 	Action:          handleInboxesDraftsUpdate,
 	HideHelpCommand: true,
-}
+}, map[string][]requestflag.HasOuterFlag{
+	"add-attachment": {
+		&requestflag.InnerFlag[*string]{
+			Name:                  "add-attachment.content",
+			Usage:                 "Base64 encoded content of attachment.",
+			InnerField:            "content",
+			OuterIsArrayOfObjects: true,
+		},
+		&requestflag.InnerFlag[*string]{
+			Name:                  "add-attachment.content-disposition",
+			Usage:                 "Content disposition of attachment.",
+			InnerField:            "content_disposition",
+			OuterIsArrayOfObjects: true,
+		},
+		&requestflag.InnerFlag[*string]{
+			Name:                  "add-attachment.content-id",
+			Usage:                 "Content ID of attachment.",
+			InnerField:            "content_id",
+			OuterIsArrayOfObjects: true,
+		},
+		&requestflag.InnerFlag[*string]{
+			Name:                  "add-attachment.content-type",
+			Usage:                 "Content type of attachment.",
+			InnerField:            "content_type",
+			OuterIsArrayOfObjects: true,
+		},
+		&requestflag.InnerFlag[*string]{
+			Name:                  "add-attachment.filename",
+			Usage:                 "Filename of attachment.",
+			InnerField:            "filename",
+			OuterIsArrayOfObjects: true,
+		},
+		&requestflag.InnerFlag[*string]{
+			Name:                  "add-attachment.url",
+			Usage:                 "URL to the attachment.",
+			InnerField:            "url",
+			OuterIsArrayOfObjects: true,
+		},
+	},
+})
 
 var inboxesDraftsList = cli.Command{
 	Name:    "list",
