@@ -91,7 +91,7 @@ var threadsList = cli.Command{
 
 var threadsDelete = cli.Command{
 	Name:    "delete",
-	Usage:   "Moves the thread to trash by adding a trash label to all messages. If the thread\nis already in trash, it will be permanently deleted. Use `permanent=true` to\nforce permanent deletion.",
+	Usage:   "Permanently deletes a thread and all of its messages.",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -99,11 +99,6 @@ var threadsDelete = cli.Command{
 			Usage:     "ID of thread.",
 			Required:  true,
 			PathParam: "thread_id",
-		},
-		&requestflag.Flag[*bool]{
-			Name:      "permanent",
-			Usage:     "If true, permanently delete the thread instead of moving to trash.",
-			QueryPath: "permanent",
 		},
 	},
 	Action:          handleThreadsDelete,
@@ -211,14 +206,7 @@ func handleThreadsDelete(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := agentmail.ThreadDeleteParams{}
-
-	return client.Threads.Delete(
-		ctx,
-		cmd.Value("thread-id").(string),
-		params,
-		options...,
-	)
+	return client.Threads.Delete(ctx, cmd.Value("thread-id").(string), options...)
 }
 
 func handleThreadsGet(ctx context.Context, cmd *cli.Command) error {

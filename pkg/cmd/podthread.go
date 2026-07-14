@@ -97,7 +97,7 @@ var podsThreadsList = cli.Command{
 
 var podsThreadsDelete = cli.Command{
 	Name:    "delete",
-	Usage:   "Moves the thread to trash by adding a trash label to all messages. If the thread\nis already in trash, it will be permanently deleted. Use `permanent=true` to\nforce permanent deletion.",
+	Usage:   "Permanently deletes a thread and all of its messages.",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -111,11 +111,6 @@ var podsThreadsDelete = cli.Command{
 			Usage:     "ID of thread.",
 			Required:  true,
 			PathParam: "thread_id",
-		},
-		&requestflag.Flag[*bool]{
-			Name:      "permanent",
-			Usage:     "If true, permanently delete the thread instead of moving to trash.",
-			QueryPath: "permanent",
 		},
 	},
 	Action:          handlePodsThreadsDelete,
