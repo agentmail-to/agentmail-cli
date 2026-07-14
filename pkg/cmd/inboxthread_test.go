@@ -42,7 +42,6 @@ func TestInboxesThreadsDelete(t *testing.T) {
 			"inboxes:threads", "delete",
 			"--inbox-id", "inbox_id",
 			"--thread-id", "thread_id",
-			"--permanent=true",
 		)
 	})
 }

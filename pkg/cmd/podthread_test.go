@@ -42,7 +42,6 @@ func TestPodsThreadsDelete(t *testing.T) {
 			"pods:threads", "delete",
 			"--pod-id", "pod_id",
 			"--thread-id", "thread_id",
-			"--permanent=true",
 		)
 	})
 }

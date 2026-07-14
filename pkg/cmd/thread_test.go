@@ -40,7 +40,6 @@ func TestThreadsDelete(t *testing.T) {
 			"--api-key", "string",
 			"threads", "delete",
 			"--thread-id", "thread_id",
-			"--permanent=true",
 		)
 	})
 }
