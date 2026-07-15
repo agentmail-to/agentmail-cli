@@ -136,6 +136,7 @@ func init() {
 					&inboxesMessagesGetRaw,
 					&inboxesMessagesReply,
 					&inboxesMessagesReplyAll,
+					&inboxesMessagesSearch,
 					&inboxesMessagesSend,
 				},
 			},
@@ -148,6 +149,7 @@ func init() {
 					&inboxesThreadsDelete,
 					&inboxesThreadsGet,
 					&inboxesThreadsGetAttachment,
+					&inboxesThreadsSearch,
 				},
 			},
 			{
@@ -227,6 +229,7 @@ func init() {
 					&podsThreadsDelete,
 					&podsThreadsGet,
 					&podsThreadsGetAttachment,
+					&podsThreadsSearch,
 				},
 			},
 			{
@@ -324,6 +327,7 @@ func init() {
 					&threadsDelete,
 					&threadsGet,
 					&threadsGetAttachment,
+					&threadsSearch,
 				},
 			},
 			{
