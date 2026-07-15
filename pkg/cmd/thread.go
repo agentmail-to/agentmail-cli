@@ -16,7 +16,7 @@ import (
 
 var threadsList = cli.Command{
 	Name:    "list",
-	Usage:   "**CLI:**",
+	Usage:   "Lists threads, most recent first. Pass `senders`, `recipients`, or `subject` to\nfilter by substring. Filtered requests are served by search, which caps `limit`\nat 100. For relevance-ranked full-text search across senders, recipients,\nsubject, and message body, use `Search Threads`.",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[any]{
@@ -69,6 +69,21 @@ var threadsList = cli.Command{
 			Usage:     "Page token for pagination.",
 			QueryPath: "page_token",
 		},
+		&requestflag.Flag[any]{
+			Name:      "recipient",
+			Usage:     "Filter to threads whose recipients contain this value (substring match). Repeatable; all values must match.",
+			QueryPath: "recipients",
+		},
+		&requestflag.Flag[any]{
+			Name:      "sender",
+			Usage:     "Filter to threads whose senders contain this value (substring match). Repeatable; all values must match.",
+			QueryPath: "senders",
+		},
+		&requestflag.Flag[any]{
+			Name:      "subject",
+			Usage:     "Filter to threads whose subject contains this value (substring match). Repeatable; all values must match.",
+			QueryPath: "subject",
+		},
 	},
 	Action:          handleThreadsList,
 	HideHelpCommand: true,
@@ -76,7 +91,7 @@ var threadsList = cli.Command{
 
 var threadsDelete = cli.Command{
 	Name:    "delete",
-	Usage:   "Moves the thread to trash by adding a trash label to all messages. If the thread\nis already in trash, it will be permanently deleted. Use `permanent=true` to\nforce permanent deletion.",
+	Usage:   "Permanently deletes a thread and all of its messages.",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -84,11 +99,6 @@ var threadsDelete = cli.Command{
 			Usage:     "ID of thread.",
 			Required:  true,
 			PathParam: "thread_id",
-		},
-		&requestflag.Flag[*bool]{
-			Name:      "permanent",
-			Usage:     "If true, permanently delete the thread instead of moving to trash.",
-			QueryPath: "permanent",
 		},
 	},
 	Action:          handleThreadsDelete,
@@ -196,14 +206,7 @@ func handleThreadsDelete(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	params := agentmail.ThreadDeleteParams{}
-
-	return client.Threads.Delete(
-		ctx,
-		cmd.Value("thread-id").(string),
-		params,
-		options...,
-	)
+	return client.Threads.Delete(ctx, cmd.Value("thread-id").(string), options...)
 }
 
 func handleThreadsGet(ctx context.Context, cmd *cli.Command) error {

@@ -25,11 +25,15 @@ var domainsCreate = cli.Command{
 			Required: true,
 			BodyPath: "domain",
 		},
-		&requestflag.Flag[bool]{
+		&requestflag.Flag[*bool]{
 			Name:     "feedback-enabled",
 			Usage:    "Bounce and complaint notifications are sent to your inboxes.",
-			Required: true,
 			BodyPath: "feedback_enabled",
+		},
+		&requestflag.Flag[*bool]{
+			Name:     "subdomains-enabled",
+			Usage:    "Allow inboxes on any subdomain of this domain. Adds a required wildcard MX\nrecord (`*.<domain>`) to `records`.",
+			BodyPath: "subdomains_enabled",
 		},
 	},
 	Action:          handleDomainsCreate,
@@ -51,6 +55,11 @@ var domainsUpdate = cli.Command{
 			Name:     "feedback-enabled",
 			Usage:    "Bounce and complaint notifications are sent to your inboxes.",
 			BodyPath: "feedback_enabled",
+		},
+		&requestflag.Flag[*bool]{
+			Name:     "subdomains-enabled",
+			Usage:    "Allow inboxes on any subdomain of this domain. Adds a required wildcard MX\nrecord (`*.<domain>`) to `records`.",
+			BodyPath: "subdomains_enabled",
 		},
 	},
 	Action:          handleDomainsUpdate,

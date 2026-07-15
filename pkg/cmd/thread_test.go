@@ -25,6 +25,9 @@ func TestThreadsList(t *testing.T) {
 			"--label", "[string]",
 			"--limit", "0",
 			"--page-token", "page_token",
+			"--recipient", "[string]",
+			"--sender", "[string]",
+			"--subject", "[string]",
 		)
 	})
 }
@@ -37,7 +40,6 @@ func TestThreadsDelete(t *testing.T) {
 			"--api-key", "string",
 			"threads", "delete",
 			"--thread-id", "thread_id",
-			"--permanent=true",
 		)
 	})
 }

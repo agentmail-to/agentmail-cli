@@ -16,7 +16,7 @@ import (
 
 var inboxesThreadsList = cli.Command{
 	Name:    "list",
-	Usage:   "**CLI:**",
+	Usage:   "Lists threads in the inbox, most recent first. Pass `senders`, `recipients`, or\n`subject` to filter by substring. Filtered requests are served by search, which\ncaps `limit` at 100. For relevance-ranked full-text search, use\n`Search Threads`.",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -75,6 +75,21 @@ var inboxesThreadsList = cli.Command{
 			Usage:     "Page token for pagination.",
 			QueryPath: "page_token",
 		},
+		&requestflag.Flag[any]{
+			Name:      "recipient",
+			Usage:     "Filter to threads whose recipients contain this value (substring match). Repeatable; all values must match.",
+			QueryPath: "recipients",
+		},
+		&requestflag.Flag[any]{
+			Name:      "sender",
+			Usage:     "Filter to threads whose senders contain this value (substring match). Repeatable; all values must match.",
+			QueryPath: "senders",
+		},
+		&requestflag.Flag[any]{
+			Name:      "subject",
+			Usage:     "Filter to threads whose subject contains this value (substring match). Repeatable; all values must match.",
+			QueryPath: "subject",
+		},
 	},
 	Action:          handleInboxesThreadsList,
 	HideHelpCommand: true,
@@ -82,7 +97,7 @@ var inboxesThreadsList = cli.Command{
 
 var inboxesThreadsDelete = cli.Command{
 	Name:    "delete",
-	Usage:   "Moves the thread to trash by adding a trash label to all messages. If the thread\nis already in trash, it will be permanently deleted. Use `permanent=true` to\nforce permanent deletion.",
+	Usage:   "Permanently deletes a thread and all of its messages.",
 	Suggest: true,
 	Flags: []cli.Flag{
 		&requestflag.Flag[string]{
@@ -96,11 +111,6 @@ var inboxesThreadsDelete = cli.Command{
 			Usage:     "ID of thread.",
 			Required:  true,
 			PathParam: "thread_id",
-		},
-		&requestflag.Flag[*bool]{
-			Name:      "permanent",
-			Usage:     "If true, permanently delete the thread instead of moving to trash.",
-			QueryPath: "permanent",
 		},
 	},
 	Action:          handleInboxesThreadsDelete,

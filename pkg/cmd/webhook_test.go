@@ -18,7 +18,6 @@ func TestWebhooksCreate(t *testing.T) {
 			"--event-type", "message.received",
 			"--url", "url",
 			"--client-id", "client_id",
-			"--inbox-id", "[string]",
 			"--pod-id", "[string]",
 		)
 	})
@@ -30,8 +29,6 @@ func TestWebhooksCreate(t *testing.T) {
 			"  - message.received\n" +
 			"url: url\n" +
 			"client_id: client_id\n" +
-			"inbox_ids:\n" +
-			"  - string\n" +
 			"pod_ids:\n" +
 			"  - string\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
@@ -50,10 +47,8 @@ func TestWebhooksUpdate(t *testing.T) {
 			"--api-key", "string",
 			"webhooks", "update",
 			"--webhook-id", "webhook_id",
-			"--add-inbox-id", "[string]",
 			"--add-pod-id", "[string]",
 			"--event-type", "[message.received]",
-			"--remove-inbox-id", "[string]",
 			"--remove-pod-id", "[string]",
 		)
 	})
@@ -61,14 +56,10 @@ func TestWebhooksUpdate(t *testing.T) {
 	t.Run("piping data", func(t *testing.T) {
 		// Test piping YAML data over stdin
 		pipeData := []byte("" +
-			"add_inbox_ids:\n" +
-			"  - string\n" +
 			"add_pod_ids:\n" +
 			"  - string\n" +
 			"event_types:\n" +
 			"  - message.received\n" +
-			"remove_inbox_ids:\n" +
-			"  - string\n" +
 			"remove_pod_ids:\n" +
 			"  - string\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(

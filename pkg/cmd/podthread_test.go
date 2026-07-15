@@ -26,6 +26,9 @@ func TestPodsThreadsList(t *testing.T) {
 			"--label", "[string]",
 			"--limit", "0",
 			"--page-token", "page_token",
+			"--recipient", "[string]",
+			"--sender", "[string]",
+			"--subject", "[string]",
 		)
 	})
 }
@@ -39,7 +42,6 @@ func TestPodsThreadsDelete(t *testing.T) {
 			"pods:threads", "delete",
 			"--pod-id", "pod_id",
 			"--thread-id", "thread_id",
-			"--permanent=true",
 		)
 	})
 }

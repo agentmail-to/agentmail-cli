@@ -31,8 +31,13 @@ var inboxesCreate = cli.Command{
 		},
 		&requestflag.Flag[*string]{
 			Name:     "domain",
-			Usage:    "Domain of address. Must be verified domain. Defaults to `agentmail.to`.",
+			Usage:    "Domain of address. Must be a verified domain, or any subdomain of a\nverified domain that has subdomains enabled (e.g., `bot.example.com`).\nDefaults to `agentmail.to`.",
 			BodyPath: "domain",
+		},
+		&requestflag.Flag[map[string]any]{
+			Name:     "metadata",
+			Usage:    "Custom metadata to attach to the inbox.",
+			BodyPath: "metadata",
 		},
 		&requestflag.Flag[*string]{
 			Name:     "username",
@@ -55,11 +60,15 @@ var inboxesUpdate = cli.Command{
 			Required:  true,
 			PathParam: "inbox_id",
 		},
-		&requestflag.Flag[string]{
+		&requestflag.Flag[*string]{
 			Name:     "display-name",
 			Usage:    "Display name: `Display Name <username@domain.com>`.",
-			Required: true,
 			BodyPath: "display_name",
+		},
+		&requestflag.Flag[map[string]any]{
+			Name:     "metadata",
+			Usage:    "Metadata to merge into the inbox's existing metadata. Keys you include\nare added or overwritten; keys you omit are left unchanged. To remove a\nsingle key, send it with a null value. To clear all metadata, send\n`metadata` as null. Sending an empty object is rejected; use null to\nclear. Each update must include at least one of `display_name` or\n`metadata`.",
+			BodyPath: "metadata",
 		},
 	},
 	Action:          handleInboxesUpdate,
@@ -120,52 +129,6 @@ var inboxesGet = cli.Command{
 		},
 	},
 	Action:          handleInboxesGet,
-	HideHelpCommand: true,
-}
-
-var inboxesListMetrics = cli.Command{
-	Name:    "list-metrics",
-	Usage:   "**CLI:**",
-	Suggest: true,
-	Flags: []cli.Flag{
-		&requestflag.Flag[string]{
-			Name:      "inbox-id",
-			Usage:     "The ID of the inbox.",
-			Required:  true,
-			PathParam: "inbox_id",
-		},
-		&requestflag.Flag[*bool]{
-			Name:      "descending",
-			Usage:     "Sort in descending order.",
-			QueryPath: "descending",
-		},
-		&requestflag.Flag[any]{
-			Name:      "end",
-			Usage:     "End timestamp for the query.",
-			QueryPath: "end",
-		},
-		&requestflag.Flag[any]{
-			Name:      "event-type",
-			Usage:     "List of metric event types to query.",
-			QueryPath: "event_types",
-		},
-		&requestflag.Flag[*int64]{
-			Name:      "limit",
-			Usage:     "Limit on number of buckets to return.",
-			QueryPath: "limit",
-		},
-		&requestflag.Flag[*string]{
-			Name:      "period",
-			Usage:     "Period in number of seconds for the query.",
-			QueryPath: "period",
-		},
-		&requestflag.Flag[any]{
-			Name:      "start",
-			Usage:     "Start timestamp for the query.",
-			QueryPath: "start",
-		},
-	},
-	Action:          handleInboxesListMetrics,
 	HideHelpCommand: true,
 }
 
@@ -363,55 +326,6 @@ func handleInboxesGet(ctx context.Context, cmd *cli.Command) error {
 		Format:         format,
 		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "inboxes get",
-		Transform:      transform,
-	})
-}
-
-func handleInboxesListMetrics(ctx context.Context, cmd *cli.Command) error {
-	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
-	unusedArgs := cmd.Args().Slice()
-	if !cmd.IsSet("inbox-id") && len(unusedArgs) > 0 {
-		cmd.Set("inbox-id", unusedArgs[0])
-		unusedArgs = unusedArgs[1:]
-	}
-	if len(unusedArgs) > 0 {
-		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
-	}
-
-	options, err := flagOptions(
-		cmd,
-		apiquery.NestedQueryFormatBrackets,
-		apiquery.ArrayQueryFormatComma,
-		EmptyBody,
-		false,
-	)
-	if err != nil {
-		return err
-	}
-
-	params := agentmail.InboxListMetricsParams{}
-
-	var res []byte
-	options = append(options, option.WithResponseBodyInto(&res))
-	_, err = client.Inboxes.ListMetrics(
-		ctx,
-		cmd.Value("inbox-id").(string),
-		params,
-		options...,
-	)
-	if err != nil {
-		return err
-	}
-
-	obj := gjson.ParseBytes(res)
-	format := cmd.Root().String("format")
-	explicitFormat := cmd.Root().IsSet("format")
-	transform := cmd.Root().String("transform")
-	return ShowJSON(obj, ShowJSONOpts{
-		ExplicitFormat: explicitFormat,
-		Format:         format,
-		RawOutput:      cmd.Root().Bool("raw-output"),
-		Title:          "inboxes list-metrics",
 		Transform:      transform,
 	})
 }

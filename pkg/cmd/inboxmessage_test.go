@@ -49,6 +49,7 @@ func TestInboxesMessagesList(t *testing.T) {
 			"--after", "'2019-12-27T18:11:19.117Z'",
 			"--ascending=true",
 			"--before", "'2019-12-27T18:11:19.117Z'",
+			"--from", "[string]",
 			"--include-blocked=true",
 			"--include-spam=true",
 			"--include-trash=true",
@@ -56,6 +57,8 @@ func TestInboxesMessagesList(t *testing.T) {
 			"--label", "[string]",
 			"--limit", "0",
 			"--page-token", "page_token",
+			"--subject", "[string]",
+			"--to", "[string]",
 		)
 	})
 }

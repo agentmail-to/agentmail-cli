@@ -37,8 +37,13 @@ var podsInboxesCreate = cli.Command{
 		},
 		&requestflag.Flag[*string]{
 			Name:     "domain",
-			Usage:    "Domain of address. Must be verified domain. Defaults to `agentmail.to`.",
+			Usage:    "Domain of address. Must be a verified domain, or any subdomain of a\nverified domain that has subdomains enabled (e.g., `bot.example.com`).\nDefaults to `agentmail.to`.",
 			BodyPath: "domain",
+		},
+		&requestflag.Flag[map[string]any]{
+			Name:     "metadata",
+			Usage:    "Custom metadata to attach to the inbox.",
+			BodyPath: "metadata",
 		},
 		&requestflag.Flag[*string]{
 			Name:     "username",
@@ -67,11 +72,15 @@ var podsInboxesUpdate = cli.Command{
 			Required:  true,
 			PathParam: "inbox_id",
 		},
-		&requestflag.Flag[string]{
+		&requestflag.Flag[*string]{
 			Name:     "display-name",
 			Usage:    "Display name: `Display Name <username@domain.com>`.",
-			Required: true,
 			BodyPath: "display_name",
+		},
+		&requestflag.Flag[map[string]any]{
+			Name:     "metadata",
+			Usage:    "Metadata to merge into the inbox's existing metadata. Keys you include\nare added or overwritten; keys you omit are left unchanged. To remove a\nsingle key, send it with a null value. To clear all metadata, send\n`metadata` as null. Sending an empty object is rejected; use null to\nclear. Each update must include at least one of `display_name` or\n`metadata`.",
+			BodyPath: "metadata",
 		},
 	},
 	Action:          handlePodsInboxesUpdate,

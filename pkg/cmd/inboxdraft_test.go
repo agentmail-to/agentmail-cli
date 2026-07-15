@@ -21,9 +21,11 @@ func TestInboxesDraftsCreate(t *testing.T) {
 			"--bcc", "[string]",
 			"--cc", "[string]",
 			"--client-id", "client_id",
+			"--forward-of", "forward_of",
 			"--html", "html",
 			"--in-reply-to", "in_reply_to",
 			"--label", "[string]",
+			"--reply-all=true",
 			"--reply-to", "[string]",
 			"--send-at", "'2019-12-27T18:11:19.117Z'",
 			"--subject", "subject",
@@ -51,9 +53,11 @@ func TestInboxesDraftsCreate(t *testing.T) {
 			"--bcc", "[string]",
 			"--cc", "[string]",
 			"--client-id", "client_id",
+			"--forward-of", "forward_of",
 			"--html", "html",
 			"--in-reply-to", "in_reply_to",
 			"--label", "[string]",
+			"--reply-all=true",
 			"--reply-to", "[string]",
 			"--send-at", "'2019-12-27T18:11:19.117Z'",
 			"--subject", "subject",
@@ -77,10 +81,12 @@ func TestInboxesDraftsCreate(t *testing.T) {
 			"cc:\n" +
 			"  - string\n" +
 			"client_id: client_id\n" +
+			"forward_of: forward_of\n" +
 			"html: html\n" +
 			"in_reply_to: in_reply_to\n" +
 			"labels:\n" +
 			"  - string\n" +
+			"reply_all: true\n" +
 			"reply_to:\n" +
 			"  - string\n" +
 			"send_at: '2019-12-27T18:11:19.117Z'\n" +
@@ -106,9 +112,44 @@ func TestInboxesDraftsUpdate(t *testing.T) {
 			"inboxes:drafts", "update",
 			"--inbox-id", "inbox_id",
 			"--draft-id", "draft_id",
+			"--add-attachment", "[{content: content, content_disposition: inline, content_id: content_id, content_type: content_type, filename: filename, url: url}]",
+			"--add-label", "[string]",
 			"--bcc", "[string]",
 			"--cc", "[string]",
 			"--html", "html",
+			"--remove-attachment", "[string]",
+			"--remove-label", "[string]",
+			"--reply-to", "[string]",
+			"--send-at", "'2019-12-27T18:11:19.117Z'",
+			"--subject", "subject",
+			"--text", "text",
+			"--to", "[string]",
+		)
+	})
+
+	t.Run("inner flags", func(t *testing.T) {
+		// Check that inner flags have been set up correctly
+		requestflag.CheckInnerFlags(inboxesDraftsUpdate)
+
+		// Alternative argument passing style using inner flags
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"inboxes:drafts", "update",
+			"--inbox-id", "inbox_id",
+			"--draft-id", "draft_id",
+			"--add-attachment.content", "content",
+			"--add-attachment.content-disposition", "inline",
+			"--add-attachment.content-id", "content_id",
+			"--add-attachment.content-type", "content_type",
+			"--add-attachment.filename", "filename",
+			"--add-attachment.url", "url",
+			"--add-label", "[string]",
+			"--bcc", "[string]",
+			"--cc", "[string]",
+			"--html", "html",
+			"--remove-attachment", "[string]",
+			"--remove-label", "[string]",
 			"--reply-to", "[string]",
 			"--send-at", "'2019-12-27T18:11:19.117Z'",
 			"--subject", "subject",
@@ -120,11 +161,24 @@ func TestInboxesDraftsUpdate(t *testing.T) {
 	t.Run("piping data", func(t *testing.T) {
 		// Test piping YAML data over stdin
 		pipeData := []byte("" +
+			"add_attachments:\n" +
+			"  - content: content\n" +
+			"    content_disposition: inline\n" +
+			"    content_id: content_id\n" +
+			"    content_type: content_type\n" +
+			"    filename: filename\n" +
+			"    url: url\n" +
+			"add_labels:\n" +
+			"  - string\n" +
 			"bcc:\n" +
 			"  - string\n" +
 			"cc:\n" +
 			"  - string\n" +
 			"html: html\n" +
+			"remove_attachments:\n" +
+			"  - string\n" +
+			"remove_labels:\n" +
+			"  - string\n" +
 			"reply_to:\n" +
 			"  - string\n" +
 			"send_at: '2019-12-27T18:11:19.117Z'\n" +
