@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.7.13 (2026-07-15)
+
+Full Changelog: [v0.7.12...v0.7.13](https://github.com/agentmail-to/agentmail-cli/compare/v0.7.12...v0.7.13)
+
+### Features
+
+* **api:** api update ([e06cbb1](https://github.com/agentmail-to/agentmail-cli/commit/e06cbb15ad15eb8973bce6723d66cf5b748613ba))
+* **api:** api update ([1f4632f](https://github.com/agentmail-to/agentmail-cli/commit/1f4632f9e452427893fe000b6cb963bba0bc82bf))
+* **api:** api update ([4830642](https://github.com/agentmail-to/agentmail-cli/commit/4830642f1b660a451a354c8960bf5bde9ec312d8))
+* **api:** api update ([2dc9e62](https://github.com/agentmail-to/agentmail-cli/commit/2dc9e622b55e052aa44bcad4ccfe2489ed4aa908))
+* **api:** api update ([2508a62](https://github.com/agentmail-to/agentmail-cli/commit/2508a62a7abe87ea5044c75500ee931bf6742692))
+* **api:** api update ([f7e5d93](https://github.com/agentmail-to/agentmail-cli/commit/f7e5d93a4df98db8c2491a316717c0bd63ff9f08))
+* **api:** api update ([95de1df](https://github.com/agentmail-to/agentmail-cli/commit/95de1df13b2ff5a3146cd0ce528e5d305057ee08))
+* **api:** api update ([7f0959e](https://github.com/agentmail-to/agentmail-cli/commit/7f0959e4bbec8893c177ad4e155d7fc950d7c5e6))
+* **api:** api update ([5b5819c](https://github.com/agentmail-to/agentmail-cli/commit/5b5819c93bb814f0e13f4ce45d86212e32defe4f))
+
 ## 0.7.12 (2026-05-14)
 
 Full Changelog: [v0.7.11...v0.7.12](https://github.com/agentmail-to/agentmail-cli/compare/v0.7.11...v0.7.12)
