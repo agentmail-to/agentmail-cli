@@ -167,6 +167,48 @@ var podsThreadsGetAttachment = cli.Command{
 	HideHelpCommand: true,
 }
 
+var podsThreadsSearch = cli.Command{
+	Name:    "search",
+	Usage:   "Full-text search across threads in the pod, ranked by relevance. The query is\nmatched against senders, recipients, and subject (substring) and the message\nbody (tokenized full text). Spam, trash, blocked, and unauthenticated threads\nare always excluded. `limit` cannot exceed 100.",
+	Suggest: true,
+	Flags: []cli.Flag{
+		&requestflag.Flag[string]{
+			Name:      "pod-id",
+			Usage:     "ID of pod.",
+			Required:  true,
+			PathParam: "pod_id",
+		},
+		&requestflag.Flag[string]{
+			Name:      "q",
+			Usage:     "Full-text search query. Matched against the sender, recipients, and\nsubject (substring) and the message body (tokenized full text).",
+			Required:  true,
+			QueryPath: "q",
+		},
+		&requestflag.Flag[any]{
+			Name:      "after",
+			Usage:     "Timestamp after which to filter by.",
+			QueryPath: "after",
+		},
+		&requestflag.Flag[any]{
+			Name:      "before",
+			Usage:     "Timestamp before which to filter by.",
+			QueryPath: "before",
+		},
+		&requestflag.Flag[*int64]{
+			Name:      "limit",
+			Usage:     "Limit of number of items returned.",
+			QueryPath: "limit",
+		},
+		&requestflag.Flag[*string]{
+			Name:      "page-token",
+			Usage:     "Page token for pagination.",
+			QueryPath: "page_token",
+		},
+	},
+	Action:          handlePodsThreadsSearch,
+	HideHelpCommand: true,
+}
+
 func handlePodsThreadsList(ctx context.Context, cmd *cli.Command) error {
 	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
 	unusedArgs := cmd.Args().Slice()
@@ -349,6 +391,55 @@ func handlePodsThreadsGetAttachment(ctx context.Context, cmd *cli.Command) error
 		Format:         format,
 		RawOutput:      cmd.Root().Bool("raw-output"),
 		Title:          "pods:threads get-attachment",
+		Transform:      transform,
+	})
+}
+
+func handlePodsThreadsSearch(ctx context.Context, cmd *cli.Command) error {
+	client := agentmail.NewClient(getDefaultRequestOptions(cmd)...)
+	unusedArgs := cmd.Args().Slice()
+	if !cmd.IsSet("pod-id") && len(unusedArgs) > 0 {
+		cmd.Set("pod-id", unusedArgs[0])
+		unusedArgs = unusedArgs[1:]
+	}
+	if len(unusedArgs) > 0 {
+		return fmt.Errorf("Unexpected extra arguments: %v", unusedArgs)
+	}
+
+	options, err := flagOptions(
+		cmd,
+		apiquery.NestedQueryFormatBrackets,
+		apiquery.ArrayQueryFormatComma,
+		EmptyBody,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+
+	params := agentmail.PodThreadSearchParams{}
+
+	var res []byte
+	options = append(options, option.WithResponseBodyInto(&res))
+	_, err = client.Pods.Threads.Search(
+		ctx,
+		cmd.Value("pod-id").(string),
+		params,
+		options...,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj := gjson.ParseBytes(res)
+	format := cmd.Root().String("format")
+	explicitFormat := cmd.Root().IsSet("format")
+	transform := cmd.Root().String("transform")
+	return ShowJSON(obj, ShowJSONOpts{
+		ExplicitFormat: explicitFormat,
+		Format:         format,
+		RawOutput:      cmd.Root().Bool("raw-output"),
+		Title:          "pods:threads search",
 		Transform:      transform,
 	})
 }

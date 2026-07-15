@@ -72,3 +72,20 @@ func TestInboxesThreadsGetAttachment(t *testing.T) {
 		)
 	})
 }
+
+func TestInboxesThreadsSearch(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	t.Run("regular flags", func(t *testing.T) {
+		mocktest.TestRunMockTestWithFlags(
+			t,
+			"--api-key", "string",
+			"inboxes:threads", "search",
+			"--inbox-id", "inbox_id",
+			"--q", "q",
+			"--after", "'2019-12-27T18:11:19.117Z'",
+			"--before", "'2019-12-27T18:11:19.117Z'",
+			"--limit", "0",
+			"--page-token", "page_token",
+		)
+	})
+}
