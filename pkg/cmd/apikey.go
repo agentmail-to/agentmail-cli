@@ -50,6 +50,11 @@ var apiKeysCreate = requestflag.WithInnerFlags(cli.Command{
 			InnerField: "api_key_read",
 		},
 		&requestflag.InnerFlag[*bool]{
+			Name:       "permissions.api-key-update",
+			Usage:      "Update API keys.",
+			InnerField: "api_key_update",
+		},
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.domain-create",
 			Usage:      "Create domains.",
 			InnerField: "domain_create",

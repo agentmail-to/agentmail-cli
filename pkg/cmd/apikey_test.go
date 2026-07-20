@@ -17,7 +17,7 @@ func TestAPIKeysCreate(t *testing.T) {
 			"--api-key", "string",
 			"api-keys", "create",
 			"--name", "name",
-			"--permissions", "{api_key_create: true, api_key_delete: true, api_key_read: true, domain_create: true, domain_delete: true, domain_read: true, domain_update: true, draft_create: true, draft_delete: true, draft_read: true, draft_send: true, draft_update: true, inbox_create: true, inbox_delete: true, inbox_read: true, inbox_update: true, label_blocked_read: true, label_spam_read: true, label_trash_read: true, list_entry_create: true, list_entry_delete: true, list_entry_read: true, message_read: true, message_send: true, message_update: true, metrics_read: true, pod_create: true, pod_delete: true, pod_read: true, thread_delete: true, thread_read: true, webhook_create: true, webhook_delete: true, webhook_read: true, webhook_update: true}",
+			"--permissions", "{api_key_create: true, api_key_delete: true, api_key_read: true, api_key_update: true, domain_create: true, domain_delete: true, domain_read: true, domain_update: true, draft_create: true, draft_delete: true, draft_read: true, draft_send: true, draft_update: true, inbox_create: true, inbox_delete: true, inbox_read: true, inbox_update: true, label_blocked_read: true, label_spam_read: true, label_trash_read: true, list_entry_create: true, list_entry_delete: true, list_entry_read: true, message_read: true, message_send: true, message_update: true, metrics_read: true, pod_create: true, pod_delete: true, pod_read: true, thread_delete: true, thread_read: true, webhook_create: true, webhook_delete: true, webhook_read: true, webhook_update: true}",
 		)
 	})
 
@@ -34,6 +34,7 @@ func TestAPIKeysCreate(t *testing.T) {
 			"--permissions.api-key-create=true",
 			"--permissions.api-key-delete=true",
 			"--permissions.api-key-read=true",
+			"--permissions.api-key-update=true",
 			"--permissions.domain-create=true",
 			"--permissions.domain-delete=true",
 			"--permissions.domain-read=true",
@@ -77,6 +78,7 @@ func TestAPIKeysCreate(t *testing.T) {
 			"  api_key_create: true\n" +
 			"  api_key_delete: true\n" +
 			"  api_key_read: true\n" +
+			"  api_key_update: true\n" +
 			"  domain_create: true\n" +
 			"  domain_delete: true\n" +
 			"  domain_read: true\n" +
