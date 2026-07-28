@@ -18,7 +18,7 @@ func TestInboxesAPIKeysCreate(t *testing.T) {
 			"inboxes:api-keys", "create",
 			"--inbox-id", "inbox_id",
 			"--name", "name",
-			"--permissions", "{api_key_create: true, api_key_delete: true, api_key_read: true, api_key_update: true, domain_create: true, domain_delete: true, domain_read: true, domain_update: true, draft_create: true, draft_delete: true, draft_read: true, draft_send: true, draft_update: true, inbox_create: true, inbox_delete: true, inbox_read: true, inbox_update: true, label_blocked_read: true, label_spam_read: true, label_trash_read: true, list_entry_create: true, list_entry_delete: true, list_entry_read: true, message_read: true, message_send: true, message_update: true, metrics_read: true, pod_create: true, pod_delete: true, pod_read: true, thread_delete: true, thread_read: true, webhook_create: true, webhook_delete: true, webhook_read: true, webhook_update: true}",
+			"--permissions", "{api_key_create: true, api_key_delete: true, api_key_read: true, api_key_update: true, domain_create: true, domain_delete: true, domain_read: true, domain_update: true, draft_create: true, draft_delete: true, draft_read: true, draft_send: true, draft_update: true, inbox_create: true, inbox_delete: true, inbox_read: true, inbox_update: true, label_blocked_read: true, label_spam_read: true, label_trash_read: true, label_unauthenticated_read: true, list_entry_create: true, list_entry_delete: true, list_entry_read: true, message_delete: true, message_read: true, message_send: true, message_update: true, metrics_read: true, pod_create: true, pod_delete: true, pod_read: true, webhook_create: true, webhook_delete: true, webhook_read: true, webhook_update: true}",
 		)
 	})
 
@@ -53,9 +53,11 @@ func TestInboxesAPIKeysCreate(t *testing.T) {
 			"--permissions.label-blocked-read=true",
 			"--permissions.label-spam-read=true",
 			"--permissions.label-trash-read=true",
+			"--permissions.label-unauthenticated-read=true",
 			"--permissions.list-entry-create=true",
 			"--permissions.list-entry-delete=true",
 			"--permissions.list-entry-read=true",
+			"--permissions.message-delete=true",
 			"--permissions.message-read=true",
 			"--permissions.message-send=true",
 			"--permissions.message-update=true",
@@ -63,8 +65,6 @@ func TestInboxesAPIKeysCreate(t *testing.T) {
 			"--permissions.pod-create=true",
 			"--permissions.pod-delete=true",
 			"--permissions.pod-read=true",
-			"--permissions.thread-delete=true",
-			"--permissions.thread-read=true",
 			"--permissions.webhook-create=true",
 			"--permissions.webhook-delete=true",
 			"--permissions.webhook-read=true",
@@ -97,9 +97,11 @@ func TestInboxesAPIKeysCreate(t *testing.T) {
 			"  label_blocked_read: true\n" +
 			"  label_spam_read: true\n" +
 			"  label_trash_read: true\n" +
+			"  label_unauthenticated_read: true\n" +
 			"  list_entry_create: true\n" +
 			"  list_entry_delete: true\n" +
 			"  list_entry_read: true\n" +
+			"  message_delete: true\n" +
 			"  message_read: true\n" +
 			"  message_send: true\n" +
 			"  message_update: true\n" +
@@ -107,8 +109,6 @@ func TestInboxesAPIKeysCreate(t *testing.T) {
 			"  pod_create: true\n" +
 			"  pod_delete: true\n" +
 			"  pod_read: true\n" +
-			"  thread_delete: true\n" +
-			"  thread_read: true\n" +
 			"  webhook_create: true\n" +
 			"  webhook_delete: true\n" +
 			"  webhook_read: true\n" +
