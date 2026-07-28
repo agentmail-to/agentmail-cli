@@ -141,6 +141,11 @@ var inboxesAPIKeysCreate = requestflag.WithInnerFlags(cli.Command{
 			InnerField: "label_trash_read",
 		},
 		&requestflag.InnerFlag[*bool]{
+			Name:       "permissions.label-unauthenticated-read",
+			Usage:      "Access messages labeled unauthenticated.",
+			InnerField: "label_unauthenticated_read",
+		},
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.list-entry-create",
 			Usage:      "Create list entries.",
 			InnerField: "list_entry_create",
@@ -156,8 +161,13 @@ var inboxesAPIKeysCreate = requestflag.WithInnerFlags(cli.Command{
 			InnerField: "list_entry_read",
 		},
 		&requestflag.InnerFlag[*bool]{
+			Name:       "permissions.message-delete",
+			Usage:      "Delete messages. Also required to delete threads.",
+			InnerField: "message_delete",
+		},
+		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.message-read",
-			Usage:      "Read messages.",
+			Usage:      "Read messages. Also required to read threads.",
 			InnerField: "message_read",
 		},
 		&requestflag.InnerFlag[*bool]{
@@ -167,7 +177,7 @@ var inboxesAPIKeysCreate = requestflag.WithInnerFlags(cli.Command{
 		},
 		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.message-update",
-			Usage:      "Update message labels.",
+			Usage:      "Update message labels. Also required to update threads.",
 			InnerField: "message_update",
 		},
 		&requestflag.InnerFlag[*bool]{
@@ -189,16 +199,6 @@ var inboxesAPIKeysCreate = requestflag.WithInnerFlags(cli.Command{
 			Name:       "permissions.pod-read",
 			Usage:      "Read pods.",
 			InnerField: "pod_read",
-		},
-		&requestflag.InnerFlag[*bool]{
-			Name:       "permissions.thread-delete",
-			Usage:      "Delete threads.",
-			InnerField: "thread_delete",
-		},
-		&requestflag.InnerFlag[*bool]{
-			Name:       "permissions.thread-read",
-			Usage:      "Read threads.",
-			InnerField: "thread_read",
 		},
 		&requestflag.InnerFlag[*bool]{
 			Name:       "permissions.webhook-create",
