@@ -352,7 +352,7 @@ func init() {
 					},
 					&cli.BoolFlag{
 						Name:    "text",
-						Aliases: []string{"z"},
+						Aliases: []string{"t"},
 						Usage:   "output uncompressed text files",
 						Value:   false,
 					},
