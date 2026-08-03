@@ -36,6 +36,11 @@ var webhooksCreate = cli.Command{
 			Usage:    "Client ID of webhook.",
 			BodyPath: "client_id",
 		},
+		&requestflag.Flag[map[string]any]{
+			Name:     "headers",
+			Usage:    "Custom HTTP headers to include with every delivery to this webhook. Header values are write-only:\nAgentMail never returns them from webhook read endpoints. The map must contain at least one entry\nwhen provided, and every name and value must be a valid HTTP header.",
+			BodyPath: "headers",
+		},
 		&requestflag.Flag[any]{
 			Name:     "pod-id",
 			Usage:    "Pods for which to send events. Maximum 10 per webhook.",

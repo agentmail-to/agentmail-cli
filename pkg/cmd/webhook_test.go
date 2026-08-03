@@ -18,6 +18,7 @@ func TestWebhooksCreate(t *testing.T) {
 			"--event-type", "message.received",
 			"--url", "url",
 			"--client-id", "client_id",
+			"--headers", "{foo: string}",
 			"--pod-id", "[string]",
 		)
 	})
@@ -29,6 +30,8 @@ func TestWebhooksCreate(t *testing.T) {
 			"  - message.received\n" +
 			"url: url\n" +
 			"client_id: client_id\n" +
+			"headers:\n" +
+			"  foo: string\n" +
 			"pod_ids:\n" +
 			"  - string\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
