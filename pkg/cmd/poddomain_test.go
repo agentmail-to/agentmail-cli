@@ -19,6 +19,7 @@ func TestPodsDomainsCreate(t *testing.T) {
 			"--domain", "domain",
 			"--feedback-enabled=true",
 			"--subdomains-enabled=true",
+			"--tracking-enabled=true",
 		)
 	})
 
@@ -27,7 +28,8 @@ func TestPodsDomainsCreate(t *testing.T) {
 		pipeData := []byte("" +
 			"domain: domain\n" +
 			"feedback_enabled: true\n" +
-			"subdomains_enabled: true\n")
+			"subdomains_enabled: true\n" +
+			"tracking_enabled: true\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",
@@ -48,6 +50,7 @@ func TestPodsDomainsUpdate(t *testing.T) {
 			"--domain-id", "domain_id",
 			"--feedback-enabled=true",
 			"--subdomains-enabled=true",
+			"--tracking-enabled=true",
 		)
 	})
 
@@ -55,7 +58,8 @@ func TestPodsDomainsUpdate(t *testing.T) {
 		// Test piping YAML data over stdin
 		pipeData := []byte("" +
 			"feedback_enabled: true\n" +
-			"subdomains_enabled: true\n")
+			"subdomains_enabled: true\n" +
+			"tracking_enabled: true\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",

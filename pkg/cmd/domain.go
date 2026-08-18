@@ -35,6 +35,11 @@ var domainsCreate = cli.Command{
 			Usage:    "Allow inboxes on any subdomain of this domain. Adds a required wildcard MX\nrecord (`*.<domain>`) to `records`.",
 			BodyPath: "subdomains_enabled",
 		},
+		&requestflag.Flag[*bool]{
+			Name:     "tracking-enabled",
+			Usage:    "Serve open tracking pixels from this domain. Adds a required `link.<domain>`\nCNAME record to `records`, which must be published and verified before\n`track_opens` can be used on a send.",
+			BodyPath: "tracking_enabled",
+		},
 	},
 	Action:          handleDomainsCreate,
 	HideHelpCommand: true,
@@ -60,6 +65,11 @@ var domainsUpdate = cli.Command{
 			Name:     "subdomains-enabled",
 			Usage:    "Allow inboxes on any subdomain of this domain. Adds a required wildcard MX\nrecord (`*.<domain>`) to `records`.",
 			BodyPath: "subdomains_enabled",
+		},
+		&requestflag.Flag[*bool]{
+			Name:     "tracking-enabled",
+			Usage:    "Serve open tracking pixels from this domain. Adds a required `link.<domain>`\nCNAME record to `records`, which must be published and verified before\n`track_opens` can be used on a send.",
+			BodyPath: "tracking_enabled",
 		},
 	},
 	Action:          handleDomainsUpdate,
