@@ -190,6 +190,11 @@ var inboxesMessagesForward = requestflag.WithInnerFlags(cli.Command{
 			Name:     "to",
 			BodyPath: "to",
 		},
+		&requestflag.Flag[*bool]{
+			Name:     "track-opens",
+			Usage:    "Track when this message is first opened. Requires a custom domain with tracking enabled and\nan HTML body. Opens surface as the `opened` label on the message and as a `message.opened`\nevent. One pixel is injected per message, not per recipient, so a message with several\nrecipients fires once when any of them opens it, and the event does not identify which one.",
+			BodyPath: "track_opens",
+		},
 	},
 	Action:          handleInboxesMessagesForward,
 	HideHelpCommand: true,
@@ -369,6 +374,11 @@ var inboxesMessagesReply = requestflag.WithInnerFlags(cli.Command{
 			Name:     "to",
 			BodyPath: "to",
 		},
+		&requestflag.Flag[*bool]{
+			Name:     "track-opens",
+			Usage:    "Track when this message is first opened. Requires a custom domain with tracking enabled and\nan HTML body. Opens surface as the `opened` label on the message and as a `message.opened`\nevent. One pixel is injected per message, not per recipient, so a message with several\nrecipients fires once when any of them opens it, and the event does not identify which one.",
+			BodyPath: "track_opens",
+		},
 	},
 	Action:          handleInboxesMessagesReply,
 	HideHelpCommand: true,
@@ -458,6 +468,11 @@ var inboxesMessagesReplyAll = requestflag.WithInnerFlags(cli.Command{
 			Name:     "text",
 			Usage:    "Plain text body of message.",
 			BodyPath: "text",
+		},
+		&requestflag.Flag[*bool]{
+			Name:     "track-opens",
+			Usage:    "Track when this message is first opened. Requires a custom domain with tracking enabled and\nan HTML body. Opens surface as the `opened` label on the message and as a `message.opened`\nevent. One pixel is injected per message, not per recipient, so a message with several\nrecipients fires once when any of them opens it, and the event does not identify which one.",
+			BodyPath: "track_opens",
 		},
 	},
 	Action:          handleInboxesMessagesReplyAll,
@@ -601,6 +616,11 @@ var inboxesMessagesSend = requestflag.WithInnerFlags(cli.Command{
 		&requestflag.Flag[any]{
 			Name:     "to",
 			BodyPath: "to",
+		},
+		&requestflag.Flag[*bool]{
+			Name:     "track-opens",
+			Usage:    "Track when this message is first opened. Requires a custom domain with tracking enabled and\nan HTML body. Opens surface as the `opened` label on the message and as a `message.opened`\nevent. One pixel is injected per message, not per recipient, so a message with several\nrecipients fires once when any of them opens it, and the event does not identify which one.",
+			BodyPath: "track_opens",
 		},
 	},
 	Action:          handleInboxesMessagesSend,

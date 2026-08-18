@@ -82,6 +82,7 @@ func TestInboxesMessagesForward(t *testing.T) {
 			"--subject", "subject",
 			"--text", "text",
 			"--to", "string",
+			"--track-opens=true",
 		)
 	})
 
@@ -111,6 +112,7 @@ func TestInboxesMessagesForward(t *testing.T) {
 			"--subject", "subject",
 			"--text", "text",
 			"--to", "string",
+			"--track-opens=true",
 		)
 	})
 
@@ -134,7 +136,8 @@ func TestInboxesMessagesForward(t *testing.T) {
 			"reply_to: string\n" +
 			"subject: subject\n" +
 			"text: text\n" +
-			"to: string\n")
+			"to: string\n" +
+			"track_opens: true\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",
@@ -204,6 +207,7 @@ func TestInboxesMessagesReply(t *testing.T) {
 			"--reply-to", "string",
 			"--text", "text",
 			"--to", "string",
+			"--track-opens=true",
 		)
 	})
 
@@ -233,6 +237,7 @@ func TestInboxesMessagesReply(t *testing.T) {
 			"--reply-to", "string",
 			"--text", "text",
 			"--to", "string",
+			"--track-opens=true",
 		)
 	})
 
@@ -256,7 +261,8 @@ func TestInboxesMessagesReply(t *testing.T) {
 			"reply_all: true\n" +
 			"reply_to: string\n" +
 			"text: text\n" +
-			"to: string\n")
+			"to: string\n" +
+			"track_opens: true\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",
@@ -282,6 +288,7 @@ func TestInboxesMessagesReplyAll(t *testing.T) {
 			"--label", "[string]",
 			"--reply-to", "string",
 			"--text", "text",
+			"--track-opens=true",
 		)
 	})
 
@@ -307,6 +314,7 @@ func TestInboxesMessagesReplyAll(t *testing.T) {
 			"--label", "[string]",
 			"--reply-to", "string",
 			"--text", "text",
+			"--track-opens=true",
 		)
 	})
 
@@ -326,7 +334,8 @@ func TestInboxesMessagesReplyAll(t *testing.T) {
 			"labels:\n" +
 			"  - string\n" +
 			"reply_to: string\n" +
-			"text: text\n")
+			"text: text\n" +
+			"track_opens: true\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",
@@ -372,6 +381,7 @@ func TestInboxesMessagesSend(t *testing.T) {
 			"--subject", "subject",
 			"--text", "text",
 			"--to", "string",
+			"--track-opens=true",
 		)
 	})
 
@@ -400,6 +410,7 @@ func TestInboxesMessagesSend(t *testing.T) {
 			"--subject", "subject",
 			"--text", "text",
 			"--to", "string",
+			"--track-opens=true",
 		)
 	})
 
@@ -423,7 +434,8 @@ func TestInboxesMessagesSend(t *testing.T) {
 			"reply_to: string\n" +
 			"subject: subject\n" +
 			"text: text\n" +
-			"to: string\n")
+			"to: string\n" +
+			"track_opens: true\n")
 		mocktest.TestRunMockTestWithPipeAndFlags(
 			t, pipeData,
 			"--api-key", "string",
