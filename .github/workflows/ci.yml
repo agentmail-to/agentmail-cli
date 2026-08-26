@@ -288,8 +288,20 @@ jobs:
           try {
             execFileSync(binPath, process.argv.slice(2), { stdio: "inherit" });
           } catch (e) {
-            if (e && typeof e === "object" && "status" in e) {
-              process.exit(e.status);
+            if (e && typeof e === "object") {
+              // Normal non-zero exit: pass the code through.
+              if (typeof e.status === "number") {
+                process.exit(e.status);
+              }
+              // Signal death (SIGTERM/SIGSEGV/...): execFileSync reports
+              // status: null + signal. Exiting with e.status here becomes
+              // process.exit(null) -> 0, turning a killed process into
+              // "success" for any caller checking $?. Use the shell
+              // convention 128+signal instead (SIGTERM -> 143).
+              if (e.signal) {
+                const signum = (os.constants && os.constants.signals && os.constants.signals[e.signal]) || 0;
+                process.exit(signum ? 128 + signum : 1);
+              }
             }
             throw e;
           }
