@@ -1,103 +1,145 @@
 # AgentMail CLI
 
-The official CLI for the [AgentMail API](https://docs.agentmail.to).
+[![npm shield](https://img.shields.io/npm/v/agentmail-cli)](https://www.npmjs.com/package/agentmail-cli)
+
+Command-line interface for the AgentMail API.
+
+## Table of contents
+
+- [Installation](#installation)
+- [Authentication](#authentication)
+- [Quick start](#quick-start)
+- [Usage](#usage)
+- [Documentation](#documentation)
+- [Advanced](#advanced)
+  - [Common flags](#common-flags)
+  - [Environment variables](#environment-variables)
+  - [Output formats](#output-formats)
+  - [Shell completion](#shell-completion)
 
 ## Installation
 
-```sh
+### Shell (macOS / Linux)
+
+```bash
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/agentmail-to/agentmail-cli/releases/latest/download/agentmail-cli-installer.sh | sh
+```
+
+### PowerShell (Windows)
+
+```powershell
+powershell -ExecutionPolicy ByPass -c "irm https://github.com/agentmail-to/agentmail-cli/releases/latest/download/agentmail-cli-installer.ps1 | iex"
+```
+
+### npm
+
+```bash
 npm install -g agentmail-cli
 ```
 
-## Setup
+Or run directly without installing:
 
-```sh
-export AGENTMAIL_API_KEY=am_us_xxx
+```bash
+npx agentmail-cli --help
 ```
+
+### Build from source
+
+If you prefer to build from source, install the [Rust toolchain](https://rustup.rs/) and run:
+
+```bash
+cargo build --release
+./target/release/agentmail --help
+```
+
+## Authentication
+
+Set the following environment variable(s) before using the CLI:
+
+```bash
+export AGENTMAIL_API_KEY="<your token>"
+export AGENTMAIL_TOKEN="<your token>"
+```
+
+A `.env` file in the working directory is also supported — the CLI auto-loads it on startup.
+
+## Quick start
+
+List available commands:
+
+```bash
+agentmail --help
+```
+
+Call an API endpoint:
+
+```bash
+agentmail <resource> <method>
+```
+
+Run `agentmail <resource> --help` to see available methods for a resource.
 
 ## Usage
 
-```sh
-agentmail [resource] <command> [flags...]
-```
+Every API resource appears as a subcommand (e.g. `agentmail <resource> <method>`). Run `agentmail <resource> --help` to see available methods.
 
-```sh
-# List inboxes
-agentmail inboxes list
-
-# Create an inbox
-agentmail inboxes create --display-name "My Inbox"
-
-# Send a message
-agentmail inboxes:messages send \
-  --inbox-id inb_xxx \
-  --to user@example.com \
-  --subject "Hello" \
-  --text "Hi there"
-
-# List threads
-agentmail inboxes:threads list --inbox-id inb_xxx
-```
-
-Use `--help` on any command for details.
-
-## Environment variables
-
-| Environment variable | Required |
-| -------------------- | -------- |
-| `AGENTMAIL_API_KEY`  | yes      |
-
-## Global flags
-
-- `--api-key` (can also be set with `AGENTMAIL_API_KEY` env var)
-- `--help` - Show command line usage
-- `--debug` - Enable debug logging (includes HTTP request/response details)
-- `--version`, `-v` - Show the CLI version
-- `--base-url` - Use a custom API backend URL
-- `--format` - Change the output format (`auto`, `explore`, `json`, `jsonl`, `pretty`, `raw`, `yaml`)
-- `--format-error` - Change the output format for errors (`auto`, `explore`, `json`, `jsonl`, `pretty`, `raw`, `yaml`)
-- `--transform` - Transform the data output using [GJSON syntax](https://github.com/tidwall/gjson/blob/master/SYNTAX.md)
-- `--transform-error` - Transform the error output using [GJSON syntax](https://github.com/tidwall/gjson/blob/master/SYNTAX.md)
-
-### Passing files as arguments
-
-To pass files to your API, you can use the `@myfile.ext` syntax:
+Provide request parameters as flags or as JSON:
 
 ```bash
-agentmail <command> --arg @abe.jpg
-```
-
-Files can also be passed inside JSON or YAML blobs:
-
-```bash
-agentmail <command> --arg '{image: "@abe.jpg"}'
-# Equivalent:
-agentmail <command> <<YAML
-arg:
-  image: "@abe.jpg"
-YAML
-```
-
-If you need to pass a string literal that begins with an `@` sign, you can
-escape the `@` sign to avoid accidentally passing a file.
-
-```bash
-agentmail <command> --username '\@abe'
-```
-
-#### Explicit encoding
-
-For JSON endpoints, the CLI tool does filetype sniffing to determine whether the
-file contents should be sent as a string literal (for plain text files) or as a
-base64-encoded string literal (for binary files). If you need to explicitly send
-the file as either plain text or base64-encoded data, you can use
-`@file://myfile.txt` (for string encoding) or `@data://myfile.dat` (for
-base64-encoding). Note that absolute paths will begin with `@file://` or
-`@data://`, followed by a third `/` (for example, `@file:///tmp/file.txt`).
-
-```bash
-agentmail <command> --arg @data://file.txt
+agentmail <resource> <method> --json '{"key": "value"}'
 ```
 
 ## Documentation
 
-[docs.agentmail.to](https://docs.agentmail.to)
+See [reference.md](./reference.md) for the full command reference.
+
+## Advanced
+
+### Common flags
+
+These flags are available on every operation:
+
+| Flag | Description |
+|------|-------------|
+| `--dry-run` | Validate the request locally and print the HTTP request without sending it |
+| `--json <JSON\|->` | Supply a request body as JSON (or `-` to read stdin) |
+| `--params <JSON>` | Merge extra parameters as JSON (overrides individual flags) |
+| `--format <json\|table\|yaml\|csv>` | Output format (default `json`) |
+| `--output <PATH>` | Write binary responses to a file |
+| `--base-url <URL>` | Override the API base URL |
+| `--page-all` | Auto-paginate and stream results as NDJSON |
+| `--page-limit <N>` | Max pages to fetch when auto-paginating (default `10`) |
+| `-q, --quiet` | Suppress stdout output on success (errors still go to stderr) |
+
+### Environment variables
+
+| Variable | Description |
+|----------|-------------|
+| `AGENTMAIL_BASE_URL` | Override the API base URL |
+| `AGENTMAIL_CA_BUNDLE` | Path to PEM file with extra trust roots (or `SSL_CERT_FILE`) |
+| `AGENTMAIL_INSECURE=1` | Skip TLS verification (debugging only) |
+| `AGENTMAIL_PROXY` | HTTP(S) proxy URL |
+| `AGENTMAIL_TIMEOUT_SECS` | Total request timeout in seconds |
+
+Standard environment variables (`HTTPS_PROXY` / `HTTP_PROXY` / `NO_PROXY` / `SSL_CERT_FILE`) are also honored.
+
+### Output formats
+
+Use the global `--format` flag to control output. Supported values: `json` (default), `table`, `yaml`, `csv`.
+
+```bash
+# Pipe JSON output through jq
+agentmail <resource> <method> --format json | jq
+
+# Machine-readable catalog of every operation
+agentmail --help --format json | jq 'length'
+```
+
+### Shell completion
+
+Generate shell completion scripts:
+
+```bash
+agentmail completion <bash|zsh|fish|powershell>
+```
+
