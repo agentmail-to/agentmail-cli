@@ -1,5 +1,4 @@
-.prism.log
-.stdy.log
-dist/
-/agentmail
-*.exe
+/target
+**/*.rs.bk
+.DS_Store
+*.swp

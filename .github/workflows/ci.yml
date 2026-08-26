@@ -1,116 +1,317 @@
-name: CI
-on:
-  push:
-    branches:
-      - '**'
-      - '!integrated/**'
-      - '!stl-preview-head/**'
-      - '!stl-preview-base/**'
-      - '!generated'
-      - '!codegen/**'
-      - 'codegen/stl/**'
-  pull_request:
-    branches-ignore:
-      - 'stl-preview-head/**'
-      - 'stl-preview-base/**'
+name: ci
+
+on: [push]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 env:
-  GOPRIVATE: github.com/agentmail-to/agentmail-go,github.com/stainless-sdks/agentmail-go
+  RUSTFLAGS: "-A warnings"
 
 jobs:
-  lint:
-    timeout-minutes: 10
-    name: lint
-    runs-on: ${{ github.repository == 'stainless-sdks/agentmail-cli' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
-    if: (github.event_name == 'push' || github.event.pull_request.head.repo.fork) && (github.event_name != 'push' || github.event.head_commit.message != 'codegen metadata')
-
+  check:
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Checkout repo
+        uses: actions/checkout@v6
 
-      - uses: ./.github/actions/setup-go
-        with:
-          stainless-api-key: ${{ secrets.STAINLESS_API_KEY }}
+      - name: Set up Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
 
-      - name: Link staging branch
-        if: github.repository == 'stainless-sdks/agentmail-cli'
+      - name: Check
+        run: cargo check
+
+  compile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
+      - name: Set up Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - name: Compile
+        run: cargo build
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
+      - name: Set up Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - name: Test
+        run: cargo test
+
+  # The npm packages take their version from the release tag, while the
+  # binary reports the version in Cargo.toml. Publishing when they disagree
+  # ships a package whose --version names a release that isn't on the
+  # registry, so refuse to publish instead (cargo-dist hard-fails on the
+  # same mismatch for the GitHub Release).
+  version:
+    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
+      - name: Set up Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - name: Check tag matches crate version
+        shell: bash
         run: |
-          ./scripts/link 'github.com/stainless-sdks/agentmail-go@${{ github.ref_name }}' || true
+          set -euo pipefail
 
-      - name: Bootstrap
-        run: ./scripts/bootstrap
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          CRATE_VERSION=$(cargo metadata --no-deps --format-version 1 \
+            | jq -r --arg manifest "${PWD}/Cargo.toml" \
+              '.packages[] | select(.manifest_path == $manifest) | .version')
 
-      - name: Run lints
-        run: ./scripts/lint
+          if [[ -z "${CRATE_VERSION}" ]]; then
+            echo "::error::Could not determine the crate version from cargo metadata (no package matched ${PWD}/Cargo.toml)."
+            exit 1
+          fi
 
-  build:
-    timeout-minutes: 10
-    name: build
+          if [[ "${TAG_VERSION}" != "${CRATE_VERSION}" ]]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} publishes version ${TAG_VERSION}, but Cargo.toml is ${CRATE_VERSION}."
+            echo "::error::The binary would report ${CRATE_VERSION} from --version while the npm packages say ${TAG_VERSION}."
+            echo "::error::Set the generator's output version to ${TAG_VERSION} and regenerate, or tag v${CRATE_VERSION} instead."
+            exit 1
+          fi
+          echo "Tag and crate version agree: ${TAG_VERSION}"
+
+  publish:
+    needs: [check, compile, test, version]
+    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+    runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
       id-token: write
-    runs-on: ${{ github.repository == 'stainless-sdks/agentmail-cli' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
-    if: (github.event_name == 'push' || github.event.pull_request.head.repo.fork) && (github.event_name != 'push' || github.event.head_commit.message != 'codegen metadata')
+    strategy:
+      # Don't cancel sibling matrix jobs on first failure — a transient
+      # failure on one platform would otherwise leave npm in a partial
+      # state (some platform packages published, others not, launcher
+      # never published), with no clean re-run since the already-
+      # published versions reject re-publish.
+      fail-fast: false
+      matrix:
+        include:
+          - rust-target: x86_64-unknown-linux-musl
+            runner: ubuntu-latest
+            npm-platform-suffix: linux-x64
+          - rust-target: aarch64-unknown-linux-musl
+            runner: ubuntu-24.04-arm
+            npm-platform-suffix: linux-arm64
+          - rust-target: x86_64-apple-darwin
+            runner: macos-latest
+            npm-platform-suffix: darwin-x64
+          - rust-target: aarch64-apple-darwin
+            runner: macos-latest
+            npm-platform-suffix: darwin-arm64
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Checkout repo
+        uses: actions/checkout@v6
 
-      - uses: ./.github/actions/setup-go
+      - name: Set up Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          stainless-api-key: ${{ secrets.STAINLESS_API_KEY }}
+          target: ${{ matrix.rust-target }}
 
-      - name: Link staging branch
-        if: github.repository == 'stainless-sdks/agentmail-cli'
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "lts/Krypton"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install musl build tools
+        if: contains(matrix.rust-target, '-linux-musl')
         run: |
-          ./scripts/link 'github.com/stainless-sdks/agentmail-go@${{ github.ref_name }}' || true
+          sudo apt-get update
+          sudo apt-get install -y musl-tools
 
-      - name: Bootstrap
-        run: ./scripts/bootstrap
+      # The TLS backend and the keyring backend are selected per target by
+      # Cargo.toml, so no per-target feature flags are needed here.
+      #
+      # musl targets get a C compiler for the C dependencies, but not a
+      # linker: musl-gcc cannot produce static-pie, so it yields a binary
+      # that needs /lib/ld-musl-*.so.1 at runtime — which defeats the point
+      # of a musl build and crashes where that loader is absent. Left alone,
+      # rustc links the self-contained musl objects statically.
+      - name: Build release binary
+        shell: bash
+        run: |
+          if [[ "${{ matrix.rust-target }}" == *-linux-musl ]]; then
+            TARGET_UNDERSCORE=$(echo "${{ matrix.rust-target }}" | tr '-' '_')
+            export "CC_${TARGET_UNDERSCORE}=musl-gcc"
+          fi
+          cargo build --release --target ${{ matrix.rust-target }}
 
-      - name: Run goreleaser
-        uses: goreleaser/goreleaser-action@9ed2f89a662bf1735a48bc8557fd212fa902bebf # v6.1.0
-        with:
-          version: latest
-          args: release --snapshot --clean --skip=publish
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Package and publish npm platform package
+        shell: bash
+        run: |
+          set -euo pipefail
 
-      - name: Get GitHub OIDC Token
-        if: |-
-          github.repository == 'stainless-sdks/agentmail-cli' &&
-          !startsWith(github.ref, 'refs/heads/stl/')
-        id: github-oidc
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
-        with:
-          script: core.setOutput('github_token', await core.getIDToken());
+          VERSION="${GITHUB_REF_NAME#v}"
+          PLATFORM_PKG="agentmail-cli-${{ matrix.npm-platform-suffix }}"
+          PKG_DIR="npm-pkg/${PLATFORM_PKG}"
+          mkdir -p "${PKG_DIR}"
 
-      - name: Upload tarball
-        if: |-
-          github.repository == 'stainless-sdks/agentmail-cli' &&
-          !startsWith(github.ref, 'refs/heads/stl/')
-        env:
-          URL: https://pkg.stainless.com/s
-          AUTH: ${{ steps.github-oidc.outputs.github_token }}
-          SHA: ${{ github.sha }}
-        run: ./scripts/utils/upload-artifact.sh
+          # Locate the compiled binary
+          BINARY_NAME="agentmail"
+          if [[ "${{ matrix.rust-target }}" == *"windows"* ]]; then
+            BINARY_NAME="agentmail.exe"
+          fi
+          cp "target/${{ matrix.rust-target }}/release/${BINARY_NAME}" "${PKG_DIR}/"
 
-  test:
-    timeout-minutes: 10
-    name: test
-    runs-on: ${{ github.repository == 'stainless-sdks/agentmail-cli' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.fork
+          # Write platform package.json
+          cat > "${PKG_DIR}/package.json" <<PKGJSON
+          {
+            "name": "${PLATFORM_PKG}",
+            "version": "${VERSION}",
+            "description": "Platform-specific binary for agentmail (${{ matrix.npm-platform-suffix }})",
+            "repository": {
+              "type": "git",
+              "url": "https://github.com/agentmail-to/agentmail-cli"
+            },
+            "os": ["$(echo ${{ matrix.npm-platform-suffix }} | cut -d- -f1)"],
+            "cpu": ["$(echo ${{ matrix.npm-platform-suffix }} | cut -d- -f2)"],
+            "main": "${BINARY_NAME}",
+            "files": ["${BINARY_NAME}"]
+          }
+          PKGJSON
+
+          cd "${PKG_DIR}"
+          # Pre-release detection — require the semver "-" separator so a
+          # release tag like v1.0.0 for a package whose version string
+          # happens to contain "alpha"/"beta" as a substring isn't
+          # mis-tagged on npm.
+          if [[ "${VERSION}" == *-alpha* ]]; then
+            npm publish --access public --tag alpha
+          elif [[ "${VERSION}" == *-beta* ]]; then
+            npm publish --access public --tag beta
+          else
+            PKG_NAME=$(node -p "require('./package.json').name")
+            PKG_VERSION=$(node -p "require('./package.json').version")
+            CURRENT_LATEST=$(npm view "${PKG_NAME}" dist-tags.latest 2>/dev/null || echo "0.0.0")
+            if npx -y semver@7.8.1 "${PKG_VERSION}" -r "<${CURRENT_LATEST}" > /dev/null 2>&1; then
+              echo "Publishing ${PKG_VERSION} with --tag backport (current latest is ${CURRENT_LATEST})"
+              npm publish --access public --tag backport
+            else
+              npm publish --access public
+            fi
+          fi
+
+  publish-launcher:
+    needs: [publish]
+    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Checkout repo
+        uses: actions/checkout@v6
 
-      - uses: ./.github/actions/setup-go
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
         with:
-          stainless-api-key: ${{ secrets.STAINLESS_API_KEY }}
+          node-version: "lts/Krypton"
+          registry-url: "https://registry.npmjs.org"
 
-      - name: Link staging branch
-        if: github.repository == 'stainless-sdks/agentmail-cli'
+      - name: Publish launcher package
+        shell: bash
         run: |
-          ./scripts/link 'github.com/stainless-sdks/agentmail-go@${{ github.ref_name }}' || true
+          set -euo pipefail
 
-      - name: Bootstrap
-        run: ./scripts/bootstrap
+          VERSION="${GITHUB_REF_NAME#v}"
+          PKG_DIR="npm-pkg/launcher"
+          mkdir -p "${PKG_DIR}"
 
-      - name: Run tests
-        run: ./scripts/test
+          BINARY_NAME="agentmail"
+
+          # Build optionalDependencies map
+          OPTIONAL_DEPS=""
+          OPTIONAL_DEPS="${OPTIONAL_DEPS}\"agentmail-cli-linux-x64\": \"${VERSION}\","
+          OPTIONAL_DEPS="${OPTIONAL_DEPS}\"agentmail-cli-linux-arm64\": \"${VERSION}\","
+          OPTIONAL_DEPS="${OPTIONAL_DEPS}\"agentmail-cli-darwin-x64\": \"${VERSION}\","
+          OPTIONAL_DEPS="${OPTIONAL_DEPS}\"agentmail-cli-darwin-arm64\": \"${VERSION}\""
+
+          cat > "${PKG_DIR}/package.json" <<PKGJSON
+          {
+            "name": "agentmail-cli",
+            "version": "${VERSION}",
+            "description": "CLI for agentmail",
+            "repository": {
+              "type": "git",
+              "url": "https://github.com/agentmail-to/agentmail-cli"
+            },
+            "bin": {
+              "agentmail": "bin/cli.js"
+            },
+            "optionalDependencies": {
+              ${OPTIONAL_DEPS}
+            },
+            "files": ["bin/"]
+          }
+          PKGJSON
+
+          # Write launcher script
+          mkdir -p "${PKG_DIR}/bin"
+          cat > "${PKG_DIR}/bin/cli.js" <<'LAUNCHER'
+          #!/usr/bin/env node
+          "use strict";
+          const { execFileSync } = require("child_process");
+          const path = require("path");
+          const os = require("os");
+
+          const PLATFORMS = {
+            "linux-x64": "agentmail-cli-linux-x64",
+            "linux-arm64": "agentmail-cli-linux-arm64",
+            "darwin-x64": "agentmail-cli-darwin-x64",
+            "darwin-arm64": "agentmail-cli-darwin-arm64",
+          };
+
+          const platformKey = os.platform() + "-" + os.arch();
+          const pkg = PLATFORMS[platformKey];
+          if (!pkg) {
+            console.error("Unsupported platform: " + platformKey);
+            process.exit(1);
+          }
+
+          const binName = os.platform() === "win32" ? "agentmail.exe" : "agentmail";
+          const binPath = path.join(require.resolve(pkg + "/package.json"), "..", binName);
+
+          try {
+            execFileSync(binPath, process.argv.slice(2), { stdio: "inherit" });
+          } catch (e) {
+            if (e && typeof e === "object" && "status" in e) {
+              process.exit(e.status);
+            }
+            throw e;
+          }
+          LAUNCHER
+
+          cd "${PKG_DIR}"
+          # Pre-release detection — require the semver "-" separator so a
+          # release tag like v1.0.0 for a package whose version string
+          # happens to contain "alpha"/"beta" as a substring isn't
+          # mis-tagged on npm.
+          if [[ "${VERSION}" == *-alpha* ]]; then
+            npm publish --access public --tag alpha
+          elif [[ "${VERSION}" == *-beta* ]]; then
+            npm publish --access public --tag beta
+          else
+            PKG_NAME=$(node -p "require('./package.json').name")
+            PKG_VERSION=$(node -p "require('./package.json').version")
+            CURRENT_LATEST=$(npm view "${PKG_NAME}" dist-tags.latest 2>/dev/null || echo "0.0.0")
+            if npx -y semver@7.8.1 "${PKG_VERSION}" -r "<${CURRENT_LATEST}" > /dev/null 2>&1; then
+              echo "Publishing ${PKG_VERSION} with --tag backport (current latest is ${CURRENT_LATEST})"
+              npm publish --access public --tag backport
+            else
+              npm publish --access public
+            fi
+          fi
