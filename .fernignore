@@ -1,1 +1,8 @@
 # Specify files that shouldn't be modified by Fern
+
+# Repo assets that predate the Fern generator — release history of the
+# 0.7.x (Stainless-era) CLI and the security disclosure policy. The
+# generator treats unknown files as stale output and deletes them, so
+# they must be listed here to survive regeneration.
+CHANGELOG.md
+SECURITY.md
