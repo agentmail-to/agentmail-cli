@@ -48,7 +48,14 @@ impl agentmail_sdk::RequestExecutor for CliExecutorAdapter {
 pub fn client(ctx: &AppContext) -> agentmail_sdk::api::ApiClient {
     let executor = ctx.build_sdk_executor();
     let adapter = Arc::new(CliExecutorAdapter(executor));
-    let config = agentmail_sdk::ClientConfig::default();
+    // Seed the base URL from the CLI's own resolution (--base-url / env >
+    // spec base_url > server root). `ClientConfig::default()` carries an
+    // empty `base_url` for any API that declares no environment, which made
+    // every custom command fail on a relative URL before the executor ran.
+    let config = agentmail_sdk::ClientConfig {
+        base_url: ctx.effective_base_url(),
+        ..Default::default()
+    };
     let http_client = agentmail_sdk::HttpClient::with_executor(
         adapter as Arc<dyn agentmail_sdk::RequestExecutor>,
         config.clone(),
@@ -58,6 +65,7 @@ pub fn client(ctx: &AppContext) -> agentmail_sdk::api::ApiClient {
         inboxes: agentmail_sdk::api::InboxesClient {
             http_client: http_client.clone(),
             api_keys: agentmail_sdk::api::resources::inboxes::ApiKeysClient2 { http_client: http_client.clone() },
+            browser_credentials: agentmail_sdk::api::resources::inboxes::BrowserCredentialsClient { http_client: http_client.clone() },
             drafts: agentmail_sdk::api::resources::inboxes::DraftsClient2 { http_client: http_client.clone() },
             events: agentmail_sdk::api::resources::inboxes::EventsClient { http_client: http_client.clone() },
             lists: agentmail_sdk::api::resources::inboxes::ListsClient2 { http_client: http_client.clone() },
@@ -110,11 +118,9 @@ where
 
 fn convert_api_error(e: agentmail_sdk::ApiError) -> CliError {
     match e {
-        agentmail_sdk::ApiError::Http { status, message } => CliError::Api {
-            code: status,
-            message,
-            reason: http_status_reason(status).to_string(),
-        },
+        agentmail_sdk::ApiError::Http { status, message } => {
+            fern_cli_sdk::error::api_error_from_body(status, &message)
+        }
         agentmail_sdk::ApiError::Network(err) => {
             CliError::Other(anyhow::anyhow!("SDK network error: {err}"))
         }
@@ -123,22 +129,5 @@ fn convert_api_error(e: agentmail_sdk::ApiError) -> CliError {
             Err(other) => CliError::Other(anyhow::anyhow!("SDK executor error: {other}")),
         },
         other => CliError::Other(anyhow::anyhow!("SDK error: {other}")),
-    }
-}
-
-fn http_status_reason(status: u16) -> &'static str {
-    match status {
-        400 => "badRequest",
-        401 => "unauthorized",
-        403 => "forbidden",
-        404 => "notFound",
-        408 => "requestTimeout",
-        409 => "conflict",
-        429 => "tooManyRequests",
-        500 => "internalServerError",
-        502 => "badGateway",
-        503 => "serviceUnavailable",
-        504 => "gatewayTimeout",
-        _ => "httpError",
     }
 }

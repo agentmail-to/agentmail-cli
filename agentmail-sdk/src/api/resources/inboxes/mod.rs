@@ -4,6 +4,8 @@ use reqwest::Method;
 
 pub mod api_keys;
 pub use api_keys::ApiKeysClient2;
+pub mod browser_credentials;
+pub use browser_credentials::BrowserCredentialsClient;
 pub mod drafts;
 pub use drafts::DraftsClient2;
 pub mod events;
@@ -21,6 +23,7 @@ pub use webhooks::WebhooksClient2;
 pub struct InboxesClient {
     pub http_client: HttpClient,
     pub api_keys: ApiKeysClient2,
+    pub browser_credentials: BrowserCredentialsClient,
     pub drafts: DraftsClient2,
     pub events: EventsClient,
     pub lists: ListsClient2,
@@ -35,6 +38,7 @@ impl InboxesClient {
         Ok(Self {
             http_client: HttpClient::new(config.clone())?,
             api_keys: ApiKeysClient2::new(config.clone())?,
+            browser_credentials: BrowserCredentialsClient::new(config.clone())?,
             drafts: DraftsClient2::new(config.clone())?,
             events: EventsClient::new(config.clone())?,
             lists: ListsClient2::new(config.clone())?,

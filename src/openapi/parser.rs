@@ -3,7 +3,7 @@
 //! Converts an OpenAPI 3.0 YAML specification into the internal `RestDescription`
 //! representation used by the CLI command builder and executor.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use serde::{Deserialize, Deserializer};
 
@@ -176,6 +176,11 @@ struct OpenApiSpec {
     info: OpenApiInfo,
     #[serde(default)]
     servers: Vec<OpenApiServer>,
+    /// OpenAPI's document-root tags are optional metadata for generated
+    /// groups. Invalid or primitive entries are skipped by the lenient
+    /// deserializer below.
+    #[serde(default, deserialize_with = "deserialize_openapi_tags")]
+    tags: OpenApiTagMetadata,
     #[serde(default)]
     paths: HashMap<String, OpenApiPathItem>,
     /// OpenAPI 3.1 top-level `webhooks` block. Webhooks describe operations
@@ -236,6 +241,71 @@ struct OpenApiSpec {
     /// `x-fern-sdk-group-name`).
     #[serde(default, rename = "x-fern-groups")]
     x_fern_groups: Option<HashMap<String, RawFernGroup>>,
+}
+
+/// Deserialize document-root OpenAPI tags into the normalized metadata used
+/// by the CLI help surface. Some real-world specs contain primitive entries
+/// in this array, so malformed entries are skipped rather than rejecting the
+/// whole document.
+fn deserialize_openapi_tags<'de, D>(
+    deserializer: D,
+) -> Result<OpenApiTagMetadata, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let value = Option::<serde_yaml::Value>::deserialize(deserializer)?;
+    let Some(value) = value else {
+        return Ok(OpenApiTagMetadata::default());
+    };
+    let serde_yaml::Value::Sequence(entries) = value else {
+        tracing::debug!("Skipping document-root OpenAPI tags because the value is not an array");
+        return Ok(OpenApiTagMetadata::default());
+    };
+
+    let mut descriptions = HashMap::new();
+    let mut order = Vec::new();
+    for entry in entries {
+        match serde_yaml::from_value::<RawOpenApiTag>(entry) {
+            Ok(tag) if !tag.name.trim().is_empty() => {
+                if let Some(description) = tag.description.filter(|d| !d.trim().is_empty()) {
+                    let normalized_name = camel_to_kebab(&tag.name);
+                    order.push(normalized_name.clone());
+                    match descriptions.entry(normalized_name) {
+                        std::collections::hash_map::Entry::Vacant(entry) => {
+                            entry.insert(description);
+                        }
+                        std::collections::hash_map::Entry::Occupied(entry) => {
+                            tracing::debug!(
+                                tag_name = %tag.name,
+                                normalized_name = %entry.key(),
+                                "Keeping the first document-root OpenAPI tag description after normalization collision"
+                            );
+                        }
+                    }
+                }
+            }
+            Ok(_) => {
+                tracing::debug!("Skipping document-root OpenAPI tag with an empty name");
+            }
+            Err(error) => {
+                tracing::debug!(%error, "Skipping malformed document-root OpenAPI tag");
+            }
+        }
+    }
+    Ok(OpenApiTagMetadata { descriptions, order })
+}
+
+#[derive(Debug, Default)]
+struct OpenApiTagMetadata {
+    descriptions: HashMap<String, String>,
+    order: Vec<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct RawOpenApiTag {
+    name: String,
+    #[serde(default)]
+    description: Option<String>,
 }
 
 /// Raw deserialized form of a single entry in `x-fern-idempotency-headers`.
@@ -381,6 +451,28 @@ struct OpenApiServer {
     /// doc-comment on `x_fern_server_name` for the precedence citation.
     #[serde(default, rename = "x-name")]
     x_name: Option<String>,
+    /// Fern's `x-fern-default-url` extension: the concrete URL to use when
+    /// the caller supplies no value for any of the server's template
+    /// variables. Without it, a templated server falls back to
+    /// substituting each variable's `default`.
+    #[serde(default, rename = "x-fern-default-url")]
+    x_fern_default_url: Option<String>,
+    /// OpenAPI `variables:` block. A `BTreeMap` so the lowered order is
+    /// deterministic (flag registration and `--help` rows are derived
+    /// from it).
+    #[serde(default)]
+    variables: std::collections::BTreeMap<String, OpenApiServerVariable>,
+}
+
+/// One entry of a server's OpenAPI `variables:` block.
+#[derive(Debug, Deserialize)]
+struct OpenApiServerVariable {
+    #[serde(default)]
+    default: Option<String>,
+    #[serde(default)]
+    description: Option<String>,
+    #[serde(default, rename = "enum")]
+    enum_values: Vec<String>,
 }
 
 impl OpenApiServer {
@@ -412,6 +504,17 @@ impl OpenApiServer {
             url: self.url.clone(),
             name: self.resolved_name(),
             description: self.description.clone(),
+            default_url: self.x_fern_default_url.clone(),
+            variables: self
+                .variables
+                .iter()
+                .map(|(name, var)| crate::openapi::discovery::ServerVariable {
+                    name: name.clone(),
+                    default: var.default.clone(),
+                    description: var.description.clone(),
+                    enum_values: var.enum_values.clone(),
+                })
+                .collect(),
         }
     }
 }
@@ -625,6 +728,20 @@ struct OpenApiParameter {
 
 #[derive(Debug, Deserialize, Default)]
 struct OpenApiParamSchema {
+    /// `$ref` to a component schema. A parameter is routinely declared as a
+    /// bare `$ref` (`schema: {$ref: '#/components/schemas/Labels'}`), and
+    /// without this field the whole schema deserialized to all-`None` — the
+    /// parameter lost its type, enum, format and bounds, and an array-typed
+    /// one silently became a single-value string flag.
+    #[serde(rename = "$ref", default)]
+    schema_ref: Option<String>,
+    /// `oneOf` / `anyOf` branches on the parameter's own schema. Needed for
+    /// pydantic's `Optional[list[T]]` spelling — see
+    /// [`resolve_param_nullable_branch`].
+    #[serde(rename = "oneOf", default)]
+    one_of: Vec<OpenApiSchemaObject>,
+    #[serde(rename = "anyOf", default)]
+    any_of: Vec<OpenApiSchemaObject>,
     #[serde(rename = "type", default, deserialize_with = "deserialize_type_field")]
     schema_type: Option<String>,
     #[serde(rename = "enum", default, deserialize_with = "deserialize_enum_values")]
@@ -2213,22 +2330,110 @@ fn parse_sdk_variables(mapping: Option<&serde_yaml::Mapping>) -> Vec<SdkVariable
 // Parameter conversion
 // ---------------------------------------------------------------------------
 
+/// Resolve a parameter schema that is a bare `$ref` to its component
+/// schema, following a bounded chain. Returns `None` for an inline schema or
+/// an unresolvable / cyclic reference, in which case the caller uses the
+/// schema as written.
+fn resolve_param_schema_ref<'a>(
+    schema: &OpenApiParamSchema,
+    component_schemas: &'a HashMap<String, OpenApiSchemaObject>,
+) -> Option<&'a OpenApiSchemaObject> {
+    let ref_path = schema.schema_ref.as_ref()?;
+    let resolved = component_schemas.get(&strip_ref_prefix(ref_path))?;
+    resolve_ref_chain(resolved, component_schemas)
+}
+
+/// The single non-null branch of a `oneOf`/`anyOf` on a *parameter* schema,
+/// resolved through `$ref`.
+///
+/// The parameter counterpart to [`recognize_nullable_composite`], which
+/// operates on `OpenApiSchemaObject` and so only ever reached body properties.
+/// `anyOf: [{type: array, ...}, {type: 'null'}]` is what pydantic emits for
+/// `Optional[list[T]]`, and on real specs that spelling dominates the bare
+/// `type: array` one — 29 of 31 array query parameters on the spec this was
+/// tested against. Without it the parameter keeps `param_type: None`, so it is
+/// neither repeatable nor coerced, and a JSON array argument goes on the wire
+/// verbatim as `?x=["a","b"]`.
+///
+/// `None` for a true union (more than one non-null branch), which has no single
+/// type to promote, and for anything without exactly one null branch.
+fn resolve_param_nullable_branch<'a>(
+    schema: &'a OpenApiParamSchema,
+    component_schemas: &'a HashMap<String, OpenApiSchemaObject>,
+) -> Option<&'a OpenApiSchemaObject> {
+    let branches: &[OpenApiSchemaObject] = if !schema.one_of.is_empty() {
+        &schema.one_of
+    } else if !schema.any_of.is_empty() {
+        &schema.any_of
+    } else {
+        return None;
+    };
+
+    let mut null_count: usize = 0;
+    let mut non_null: Option<&OpenApiSchemaObject> = None;
+    for branch in branches {
+        if is_null_sentinel(branch) {
+            null_count += 1;
+            continue;
+        }
+        if non_null.is_some() {
+            return None;
+        }
+        non_null = Some(branch);
+    }
+    if null_count != 1 {
+        return None;
+    }
+    resolve_ref_chain(non_null?, component_schemas)
+}
+
 fn convert_parameter(
     param: &OpenApiParameter,
     ref_site_default: Option<&serde_yaml::Value>,
+    component_schemas: &HashMap<String, OpenApiSchemaObject>,
 ) -> (String, MethodParameter) {
-    let (param_type, enum_values, schema_default, format, fern_enum, minimum, maximum) = match &param.schema {
-        Some(s) => (
-            s.schema_type.clone(),
-            s.enum_values.clone(),
-            s.default.as_ref(),
-            s.format.clone(),
-            convert_fern_enum(s.x_fern_enum.as_ref()),
-            s.minimum,
-            s.maximum,
-        ),
-        None => (None, None, None, None, None, None, None),
-    };
+    // A parameter declared as `schema: {$ref: ...}` carries none of its own
+    // keywords, so read them off the resolved component. Without this the
+    // parameter reached the CLI untyped: no enum constraint, no format, no
+    // bounds, and — worst — an array-typed filter registered as a
+    // single-value flag, so `--labels a --labels b` was rejected outright and
+    // `--labels '["a","b"]'` went on the wire as one literal string.
+    let resolved_ref = param.schema.as_ref().and_then(|s| {
+        resolve_param_schema_ref(s, component_schemas)
+            .or_else(|| resolve_param_nullable_branch(s, component_schemas))
+    });
+
+    let (param_type, enum_values, schema_default, format, fern_enum, minimum, maximum) =
+        match (&param.schema, resolved_ref) {
+            (Some(s), Some(r)) => (
+                r.schema_type().map(str::to_string),
+                effective_enum_values(r),
+                r.default.as_ref(),
+                r.format.clone(),
+                // `x-fern-enum` has no home on a component schema, so it can
+                // only come from the ref site — which is also the precedence
+                // the importer uses when both are present.
+                convert_fern_enum(s.x_fern_enum.as_ref()),
+                r.minimum,
+                r.maximum,
+            ),
+            (Some(s), None) => (
+                s.schema_type.clone(),
+                s.enum_values.clone(),
+                s.default.as_ref(),
+                s.format.clone(),
+                convert_fern_enum(s.x_fern_enum.as_ref()),
+                s.minimum,
+                s.maximum,
+            ),
+            (None, _) => (None, None, None, None, None, None, None),
+        };
+
+    // An `array`-typed parameter is repeatable: `--labels a --labels b`
+    // collects into a JSON array, which the style-aware query serializer then
+    // renders per `style`/`explode`. A single JSON-array argument still works
+    // (the repeated collector splices it), so both spellings now agree.
+    let repeated = param_type.as_deref() == Some("array");
 
     // `x-fern-default` is the only source of a client-side default —
     // i.e. a value the CLI will (a) advertise in `--help` via clap's
@@ -2298,6 +2503,7 @@ fn convert_parameter(
         availability,
         fern_enum,
         variable_reference,
+        repeated,
         ..Default::default()
     };
 
@@ -2635,6 +2841,12 @@ pub fn load_openapi_spec_from_value(
         global_parameters,
         global_headers,
         groups,
+        tag_descriptions: spec.tags.descriptions,
+        group_tag_names: HashMap::new(),
+        group_tag_operation_counts: HashMap::new(),
+        group_operation_counts: HashMap::new(),
+        tag_group_names: HashMap::new(),
+        tag_description_order: spec.tags.order,
         ..Default::default()
     };
 
@@ -2778,7 +2990,7 @@ pub fn load_openapi_spec_from_value(
                         OpenApiParamOrRef::Ref { x_fern_default, .. } => x_fern_default.as_ref(),
                         OpenApiParamOrRef::Inline(_) => None,
                     };
-                    let (name, mut mp) = convert_parameter(p, ref_site_default);
+                    let (name, mut mp) = convert_parameter(p, ref_site_default, component_schemas);
                     mp.display_name = display_name;
                     params.insert(name, mp);
                 }
@@ -2812,10 +3024,23 @@ pub fn load_openapi_spec_from_value(
                 params.entry(name).or_insert(param);
             }
 
+            // `summary` is the terse label and wins for the command table.
+            // `description` is the prose; keep it separately rather than
+            // discarding it, so `<command> --help` has something to show
+            // beyond the table line. Dropped when it adds nothing.
             let description = operation
                 .summary
                 .clone()
                 .or_else(|| operation.description.clone());
+            let long_description = operation
+                .description
+                .clone()
+                .filter(|prose| !prose.trim().is_empty())
+                .filter(|prose| {
+                    description
+                        .as_deref()
+                        .is_none_or(|summary| prose_adds_detail(prose, summary))
+                });
 
             let method_root_url = operation.servers
                 .first()
@@ -2955,6 +3180,7 @@ pub fn load_openapi_spec_from_value(
             let rest_method = RestMethod {
                 id: operation.operation_id.clone(),
                 description,
+                long_description,
                 http_method: http_method.to_string(),
                 path: path.clone(),
                 parameters: params,
@@ -2982,8 +3208,44 @@ pub fn load_openapi_spec_from_value(
             // Walk group_name to create/find nested resources
             let kebab_groups: Vec<String> =
                 group_name.iter().map(|g| camel_to_kebab(g)).collect();
+            let operation_tags = operation.tags.as_deref().unwrap_or(&[]);
+            if let Some(top_level_group) = kebab_groups.first() {
+                *doc.group_operation_counts
+                    .entry(top_level_group.clone())
+                    .or_default() += 1;
+                append_unique_tags(
+                    doc.group_tag_names
+                        .entry(top_level_group.clone())
+                        .or_default(),
+                    operation_tags,
+                );
+                let tag_counts = doc
+                    .group_tag_operation_counts
+                    .entry(top_level_group.clone())
+                    .or_default();
+                let mut counted_tags = HashSet::new();
+                for tag in operation_tags {
+                    let tag_key = tag_match_key(tag);
+                    if counted_tags.insert(tag_key.clone()) {
+                        *tag_counts.entry(tag_key.clone()).or_default() += 1;
+                    }
+                    append_unique_tags(
+                        doc.tag_group_names
+                            .entry(tag_key)
+                            .or_default(),
+                        std::slice::from_ref(top_level_group),
+                    );
+                }
+            }
 
-            insert_method_into_resources(&mut doc.resources, &kebab_groups, &method_name, rest_method);
+            insert_method_into_resources(
+                &mut doc.resources,
+                &kebab_groups,
+                &method_name,
+                rest_method,
+                operation_tags,
+                &mut doc.group_tag_names,
+            );
         }
     }
 
@@ -3011,6 +3273,8 @@ fn insert_method_into_resources(
     groups: &[String],
     method_name: &str,
     method: RestMethod,
+    tags: &[String],
+    group_tag_names: &mut HashMap<String, Vec<String>>,
 ) {
     if groups.is_empty() {
         return;
@@ -3019,12 +3283,55 @@ fn insert_method_into_resources(
     let resource = resources
         .entry(groups[0].clone())
         .or_default();
+    append_unique_tags(group_tag_names.entry(groups[0].clone()).or_default(), tags);
 
     if groups.len() == 1 {
         resource.methods.insert(method_name.to_string(), method);
     } else {
-        insert_method_into_resources(&mut resource.resources, &groups[1..], method_name, method);
+        insert_method_into_resources(
+            &mut resource.resources,
+            &groups[1..],
+            method_name,
+            method,
+            tags,
+            group_tag_names,
+        );
     }
+}
+
+fn append_unique_tags(existing: &mut Vec<String>, incoming: &[String]) {
+    for tag in incoming {
+        if !existing.iter().any(|existing_tag| existing_tag == tag) {
+            existing.push(tag.clone());
+        }
+    }
+}
+
+/// Whether an operation's `description` says more than its `summary`, rather
+/// than restating it in different words.
+///
+/// `--help` is meant to elaborate on `-h`. Specs commonly carry a paraphrase
+/// in `description` ("Audio isolation" / "Removes background noise from
+/// audio."), and promoting one of those makes the two tiers look like they
+/// describe different commands. A description earns the long slot by adding
+/// a further sentence or a substantial clause.
+fn prose_adds_detail(prose: &str, summary: &str) -> bool {
+    const MIN_ADDED_CHARS: usize = 40;
+    let prose = crate::text::collapse_whitespace(prose);
+    let summary = crate::text::collapse_whitespace(summary);
+    if prose.eq_ignore_ascii_case(&summary) {
+        return false;
+    }
+    let multi_sentence = crate::text::first_sentence(&prose).len() < prose.trim_end().len();
+    multi_sentence || prose.chars().count() >= summary.chars().count() + MIN_ADDED_CHARS
+}
+
+fn tag_match_key(value: &str) -> String {
+    value
+        .chars()
+        .filter(|c| c.is_alphanumeric())
+        .flat_map(char::to_lowercase)
+        .collect()
 }
 
 /// Extract request body info from an OpenAPI requestBody.
@@ -3465,6 +3772,7 @@ fn extract_multipart_fields(
                 description: prop.description.clone(),
                 required: required_set.contains(name.as_str()),
                 content_type,
+                repeated: is_repeated_multipart_property(prop, component_schemas),
             }
         })
         .collect();
@@ -3560,6 +3868,77 @@ fn classify_multipart_property_at_depth(
     }
 
     (false, None)
+}
+
+/// Element type of an array schema, resolved through `$ref` and through a
+/// nullable composition on the items. `None` for a non-array, an untyped
+/// element, or a plain string element — the caller treats `None` as "string",
+/// which is what every lowering produced before this existed.
+fn array_item_type(
+    schema: &OpenApiSchemaObject,
+    component_schemas: &HashMap<String, OpenApiSchemaObject>,
+) -> Option<String> {
+    let items = schema.items.as_deref()?;
+    let resolved = resolve_ref_chain(items, component_schemas)
+        .or_else(|| recognize_nullable_composite(items, component_schemas))?;
+    match resolved.schema_type() {
+        // An `allOf` / property-bag element has no `type` of its own but is
+        // object-shaped — the inheritance idiom.
+        None if !resolved.all_of.is_empty() || !resolved.properties.is_empty() => {
+            Some("object".to_string())
+        }
+        Some("string") | None => None,
+        Some(other) => Some(other.to_string()),
+    }
+}
+
+/// True when a multipart property holds a list, so its flag must be
+/// repeatable. `type: array` counts whether it is declared inline, behind a
+/// `$ref`, or inside a nullable composition (`anyOf: [{type: array}, null]` —
+/// what pydantic emits for `Optional[list[T]]`). Each occurrence of the flag
+/// becomes its own part carrying the same `name`, which is how multipart
+/// encodes a list; without this the field is a single-value flag and a
+/// multi-file request (e.g. multi-sample voice cloning) is unreachable.
+fn is_repeated_multipart_property(
+    prop: &OpenApiSchemaObject,
+    component_schemas: &HashMap<String, OpenApiSchemaObject>,
+) -> bool {
+    is_repeated_multipart_property_at_depth(prop, component_schemas, 0)
+}
+
+/// [`is_repeated_multipart_property`] with the composition-nesting counter,
+/// bounded by [`MAX_MULTIPART_COMPOSITION_DEPTH`] so a cyclic `$ref`
+/// composition chain fails closed (single-value flag) instead of
+/// overflowing the stack at CLI startup.
+fn is_repeated_multipart_property_at_depth(
+    prop: &OpenApiSchemaObject,
+    component_schemas: &HashMap<String, OpenApiSchemaObject>,
+    depth: u8,
+) -> bool {
+    let resolved = if let Some(ref_path) = &prop.schema_ref {
+        let name = strip_ref_prefix(ref_path);
+        component_schemas.get(&name).unwrap_or(prop)
+    } else {
+        prop
+    };
+
+    if resolved.schema_type() == Some("array") {
+        return true;
+    }
+
+    if depth < MAX_MULTIPART_COMPOSITION_DEPTH {
+        return resolved
+            .any_of
+            .iter()
+            .chain(resolved.one_of.iter())
+            .chain(resolved.all_of.iter())
+            .filter(|branch| !is_null_sentinel(branch))
+            .any(|branch| {
+                is_repeated_multipart_property_at_depth(branch, component_schemas, depth + 1)
+            });
+    }
+
+    false
 }
 
 /// Recursively walk an object schema and emit one body-located [`MethodParameter`]
@@ -3681,6 +4060,84 @@ fn resolve_branch_scalar_type(
         "number" => Some("number"),
         "boolean" => Some("boolean"),
         _ => None,
+    }
+}
+
+/// Recognize `anyOf`/`oneOf` with **exactly one** null-sentinel branch and
+/// **exactly one** other branch that resolves to a composite type
+/// (`object` or `array`), and return that branch. This is what
+/// FastAPI/pydantic emits for every `Optional[Model]` / `Optional[list[T]]`
+/// field, and it is the composite counterpart to
+/// [`recognize_nullable_union`]: the composition itself carries no `type`
+/// keyword, so without unwrapping it the flag ends up typeless and the
+/// executor sends the user's JSON as an escaped string instead of an
+/// object/array (`"voice_settings": "{\"stability\":0.5}"`).
+///
+/// Scalar branches deliberately return `None` — those stay on
+/// [`recognize_nullable_union`], which also accepts multi-branch unions of
+/// the same scalar type. Only a *single* non-null branch is unwrapped here:
+/// a union of two different object schemas has no single shape to promote.
+fn recognize_nullable_composite<'a>(
+    obj: &'a OpenApiSchemaObject,
+    component_schemas: &'a HashMap<String, OpenApiSchemaObject>,
+) -> Option<&'a OpenApiSchemaObject> {
+    let branches: &[OpenApiSchemaObject] = if !obj.one_of.is_empty() {
+        &obj.one_of
+    } else if !obj.any_of.is_empty() {
+        &obj.any_of
+    } else {
+        return None;
+    };
+
+    let mut null_count: usize = 0;
+    let mut composite: Option<&OpenApiSchemaObject> = None;
+
+    for branch in branches {
+        if is_null_sentinel(branch) {
+            null_count += 1;
+            continue;
+        }
+        // More than one non-null branch: a true union, leave it opaque.
+        if composite.is_some() {
+            return None;
+        }
+        composite = Some(resolve_ref_chain(branch, component_schemas)?);
+    }
+
+    if null_count != 1 {
+        return None;
+    }
+    let resolved = composite?;
+    match resolved.schema_type() {
+        Some("object") | Some("array") => Some(resolved),
+        // An `allOf` composition with properties is object-shaped even
+        // without a `type` keyword (the inheritance idiom).
+        None if !resolved.all_of.is_empty() || !resolved.properties.is_empty() => Some(resolved),
+        _ => None,
+    }
+}
+
+/// Lower a property's `const` into the pair of defaults the flag carries:
+/// `(clap_default, documentation_default)`.
+///
+/// A `const` is only auto-injected — i.e. materialized as a real clap
+/// `default_value` that lands in the request — when the spec **requires**
+/// the field: the value is fixed, so demanding the user type it is pure
+/// ceremony. For an *optional* field the const stays documentation-only, so
+/// omitting the flag omits the field. Injecting it there would (a) put
+/// properties the user never asked for into every request body and (b)
+/// collide with the object-shorthand flag of its own parent ("Cannot
+/// combine --a.b with --a.b.version"), making the parent flag unusable.
+/// Either way the const still constrains the accepted values via
+/// `effective_enum_values`.
+fn const_defaults(
+    obj: &OpenApiSchemaObject,
+    spec_required: bool,
+) -> (Option<serde_json::Value>, Option<serde_json::Value>) {
+    match const_default_value(obj) {
+        Some(v) if spec_required => (Some(v), None),
+        Some(v) => (None, Some(v)),
+        None => (None, None),
     }
 }
 
@@ -3918,7 +4375,14 @@ fn flatten_body_params_prefix(
                             MethodParameter {
                                 param_type: Some("object".to_string()),
                                 location: Some("body".to_string()),
+                                // The shorthand flag stays optional — the
+                                // caller can satisfy this property with
+                                // dot-notation leaves instead — but the
+                                // property itself is required on the wire, and
+                                // `--schema` must say so or it disagrees with
+                                // the validator.
                                 required: false,
+                                required_by_spec: required.contains(name.as_str()),
                                 description: prop
                                     .description
                                     .clone()
@@ -3933,7 +4397,9 @@ fn flatten_body_params_prefix(
                 // repeated flag so the executor JSON-parses array inputs
                 // instead of passing them as literal strings.
                 if let Some(element_type) = recognize_scalar_or_array_union(resolved, component_schemas) {
-                    let const_default = const_default_value(resolved);
+                    let spec_required = required.contains(name.as_str());
+                    let (const_default, const_doc_default) =
+                        const_defaults(resolved, spec_required);
                     let has_null_branch = resolved.one_of.iter()
                         .chain(resolved.any_of.iter())
                         .any(|b| {
@@ -3948,9 +4414,11 @@ fn flatten_body_params_prefix(
                             param_type: Some(element_type.to_string()),
                             description: prop.description.clone().or_else(|| resolved.description.clone()),
                             location: Some("body".to_string()),
-                            required: required.contains(name.as_str()) && const_default.is_none(),
+                            required: spec_required && const_default.is_none(),
+                            required_by_spec: spec_required,
                             format: resolved.format.clone(),
                             default_value: const_default,
+                            documentation_default_value: const_doc_default,
                             repeated: true,
                             scalar_or_array: true,
                             nullable: resolved.is_nullable() || has_null_branch,
@@ -3961,10 +4429,57 @@ fn flatten_body_params_prefix(
                 }
                 // Non-object ref or empty recursion — emit with resolved type.
                 // Promote nullable-union compositions to a scalar flag
-                // routed through ADR-0003's sentinel; see ADR-0005.
+                // routed through ADR-0003's sentinel; see ADR-0005. A
+                // nullable *composite* union (`anyOf: [$ref Model, null]`)
+                // promotes to the wrapped object/array instead; see ADR-0010.
                 let promoted_scalar = recognize_nullable_union(resolved, component_schemas);
-                let is_array = resolved.schema_type() == Some("array");
-                let const_default = const_default_value(resolved);
+                let promoted_composite = if promoted_scalar.is_some() {
+                    None
+                } else {
+                    recognize_nullable_composite(resolved, component_schemas)
+                };
+                let effective = promoted_composite.unwrap_or(resolved);
+                let is_array = effective.schema_type() == Some("array");
+                // Parity with a bare `$ref` to the same object: emit the
+                // dot-notation leaf flags too, not just the JSON shorthand.
+                // `anyOf: [$ref Model, null]` is what pydantic emits for *every*
+                // `Optional[Model]` field, so a promotion that stopped at the
+                // parent flag would leave the per-leaf surface missing on exactly
+                // the specs ADR-0010 exists to serve. `nullable` stays on the
+                // parent so ADR-0003's `null` sentinel still reaches the wire.
+                // Arrays are excluded — they lower to a repeated flag, not a
+                // nested object (same as a plain `type: array` property).
+                if let Some(inner) = promoted_composite.filter(|_| !is_array) {
+                    let nested =
+                        flatten_body_params_prefix(inner, component_schemas, depth + 1, &full_key);
+                    if !nested.is_empty() {
+                        out.extend(nested);
+                        out.insert(
+                            full_key.clone(),
+                            MethodParameter {
+                                param_type: Some("object".to_string()),
+                                location: Some("body".to_string()),
+                                // The shorthand flag stays optional — the
+                                // caller can satisfy this property with
+                                // dot-notation leaves instead — but the
+                                // property itself is required on the wire, and
+                                // `--schema` must say so or it disagrees with
+                                // the validator.
+                                required: false,
+                                required_by_spec: required.contains(name.as_str()),
+                                description: prop
+                                    .description
+                                    .clone()
+                                    .or_else(|| inner.description.clone()),
+                                nullable: true,
+                                ..Default::default()
+                            },
+                        );
+                        continue;
+                    }
+                }
+                let spec_required = required.contains(name.as_str());
+                let (const_default, const_doc_default) = const_defaults(effective, spec_required);
                 out.insert(
                     full_key,
                     MethodParameter {
@@ -3972,21 +4487,34 @@ fn flatten_body_params_prefix(
                             Some("string".to_string())
                         } else if let Some(t) = promoted_scalar {
                             Some(t.to_string())
+                        } else if promoted_composite.is_some() {
+                            // Array branches are handled by `is_array` above,
+                            // so the promoted composite is object-shaped here.
+                            Some("object".to_string())
                         } else {
                             resolved.schema_type().map(str::to_string)
                         },
                         description: prop.description.clone().or_else(|| resolved.description.clone()),
                         location: Some("body".to_string()),
-                        // A `const` makes the field effectively optional: the
-                        // value is fixed, so we auto-inject it via default_value
-                        // when omitted. Spec's `required:` only matters when the
-                        // user could meaningfully choose to omit a value.
-                        required: required.contains(name.as_str()) && const_default.is_none(),
-                        format: resolved.format.clone(),
-                        enum_values: effective_enum_values(resolved),
+                        // A required `const` is auto-injected via
+                        // default_value (the value is fixed, so requiring the
+                        // user to type it is ceremony), which also satisfies
+                        // the required check.
+                        required: spec_required && const_default.is_none(),
+                            required_by_spec: spec_required,
+                        format: effective.format.clone(),
+                        enum_values: effective_enum_values(effective),
                         default_value: const_default,
+                        documentation_default_value: const_doc_default,
                         repeated: is_array,
-                        nullable: is_scalar_nullable(resolved) || promoted_scalar.is_some(),
+                        item_type: if is_array {
+                            array_item_type(effective, component_schemas)
+                        } else {
+                            None
+                        },
+                        nullable: is_scalar_nullable(resolved)
+                            || promoted_scalar.is_some()
+                            || promoted_composite.is_some(),
                         ..Default::default()
                     },
                 );
@@ -4009,7 +4537,10 @@ fn flatten_body_params_prefix(
                     MethodParameter {
                         param_type: Some("object".to_string()),
                         location: Some("body".to_string()),
+                        // See the note on the `$ref` branch: clap-optional,
+                        // spec-required.
                         required: false,
+                        required_by_spec: required.contains(name.as_str()),
                         description: prop.description.clone(),
                         ..Default::default()
                     },
@@ -4020,7 +4551,8 @@ fn flatten_body_params_prefix(
 
         // Recognize inline oneOf/anyOf [T, array<T>] unions.
         if let Some(element_type) = recognize_scalar_or_array_union(prop, component_schemas) {
-            let const_default = const_default_value(prop);
+            let spec_required = required.contains(name.as_str());
+            let (const_default, const_doc_default) = const_defaults(prop, spec_required);
             let has_null_branch = prop.one_of.iter()
                 .chain(prop.any_of.iter())
                 .any(|b| {
@@ -4035,9 +4567,11 @@ fn flatten_body_params_prefix(
                     param_type: Some(element_type.to_string()),
                     description: prop.description.clone(),
                     location: Some("body".to_string()),
-                    required: required.contains(name.as_str()) && const_default.is_none(),
+                    required: spec_required && const_default.is_none(),
+                            required_by_spec: spec_required,
                     format: prop.format.clone(),
                     default_value: const_default,
+                    documentation_default_value: const_doc_default,
                     repeated: true,
                     scalar_or_array: true,
                     nullable: prop.is_nullable() || has_null_branch,
@@ -4051,8 +4585,52 @@ fn flatten_body_params_prefix(
         // or the same shape with `oneOf`) to a nullable scalar flag.
         // Returns None when the composition is a true union or absent.
         let promoted_scalar = recognize_nullable_union(prop, component_schemas);
-        let is_array = prop_type == Some("array");
-        let const_default = const_default_value(prop);
+        // `anyOf: [{...object/array...}, null]` — pydantic's `Optional[T]`.
+        // Promote to the wrapped composite so the value is coerced as JSON
+        // rather than sent as an escaped string; see ADR-0010.
+        let promoted_composite = if promoted_scalar.is_some() {
+            None
+        } else {
+            recognize_nullable_composite(prop, component_schemas)
+        };
+        let effective = promoted_composite.unwrap_or(prop);
+        let is_array = effective.schema_type() == Some("array");
+        // Parity with a bare `$ref` to the same object: emit the
+        // dot-notation leaf flags too, not just the JSON shorthand.
+        // `anyOf: [$ref Model, null]` is what pydantic emits for *every*
+        // `Optional[Model]` field, so a promotion that stopped at the
+        // parent flag would leave the per-leaf surface missing on exactly
+        // the specs ADR-0010 exists to serve. `nullable` stays on the
+        // parent so ADR-0003's `null` sentinel still reaches the wire.
+        // Arrays are excluded — they lower to a repeated flag, not a
+        // nested object (same as a plain `type: array` property).
+        if let Some(inner) = promoted_composite.filter(|_| !is_array) {
+            let nested =
+                flatten_body_params_prefix(inner, component_schemas, depth + 1, &full_key);
+            if !nested.is_empty() {
+                out.extend(nested);
+                out.insert(
+                    full_key.clone(),
+                    MethodParameter {
+                        param_type: Some("object".to_string()),
+                        location: Some("body".to_string()),
+                        // See the note on the `$ref` branch: clap-optional,
+                        // spec-required.
+                        required: false,
+                        required_by_spec: required.contains(name.as_str()),
+                        description: prop
+                            .description
+                            .clone()
+                            .or_else(|| inner.description.clone()),
+                        nullable: true,
+                        ..Default::default()
+                    },
+                );
+                continue;
+            }
+        }
+        let spec_required = required.contains(name.as_str());
+        let (const_default, const_doc_default) = const_defaults(effective, spec_required);
         out.insert(
             full_key,
             MethodParameter {
@@ -4060,17 +4638,28 @@ fn flatten_body_params_prefix(
                     Some("string".to_string())
                 } else if let Some(t) = promoted_scalar {
                     Some(t.to_string())
+                } else if promoted_composite.is_some() {
+                    Some("object".to_string())
                 } else {
                     prop_type.map(str::to_string)
                 },
                 description: prop.description.clone(),
                 location: Some("body".to_string()),
-                required: required.contains(name.as_str()) && const_default.is_none(),
-                format: prop.format.clone(),
-                enum_values: effective_enum_values(prop),
+                required: spec_required && const_default.is_none(),
+                            required_by_spec: spec_required,
+                format: effective.format.clone(),
+                enum_values: effective_enum_values(effective),
                 default_value: const_default,
+                documentation_default_value: const_doc_default,
                 repeated: is_array,
-                nullable: is_scalar_nullable(prop) || promoted_scalar.is_some(),
+                item_type: if is_array {
+                    array_item_type(effective, component_schemas)
+                } else {
+                    None
+                },
+                nullable: is_scalar_nullable(prop)
+                    || promoted_scalar.is_some()
+                    || promoted_composite.is_some(),
                 ..Default::default()
             },
         );
@@ -4101,10 +4690,263 @@ mod tests {
                 maximum: 100
         "#;
         let p: OpenApiParameter = serde_yaml::from_str(raw).unwrap();
-        let (name, mp) = convert_parameter(&p, None);
+        let (name, mp) = convert_parameter(&p, None, &HashMap::new());
         assert_eq!(name, "limit");
         assert_eq!(mp.minimum, Some(1.0), "minimum must lower from schema");
         assert_eq!(mp.maximum, Some(100.0), "maximum must lower from schema");
+    }
+
+    #[test]
+    fn test_ref_typed_parameter_resolves_through_component_schemas() {
+        // A parameter declared as a bare `$ref` carried none of its own
+        // keywords, so it reached the CLI with `param_type: None` — no type
+        // check, no enum constraint, no format, no bounds. On specs where most
+        // parameters are component refs that meant validation was effectively
+        // off for them.
+        let raw = r#"
+            name: status
+            in: query
+            schema:
+                $ref: '#/components/schemas/Status'
+        "#;
+        let param: OpenApiParameter = serde_yaml::from_str(raw).unwrap();
+        let component: OpenApiSchemaObject = serde_yaml::from_str(
+            r#"
+            type: string
+            format: uuid
+            enum: [open, closed]
+            "#,
+        )
+        .unwrap();
+        let mut components = HashMap::new();
+        components.insert("Status".to_string(), component);
+
+        let (name, mp) = convert_parameter(&param, None, &components);
+        assert_eq!(name, "status");
+        assert_eq!(mp.param_type.as_deref(), Some("string"));
+        assert_eq!(mp.format.as_deref(), Some("uuid"));
+        assert_eq!(
+            mp.enum_values.as_deref(),
+            Some(&["open".to_string(), "closed".to_string()][..]),
+        );
+        assert!(!mp.repeated, "a scalar parameter must not be repeatable");
+    }
+
+    #[test]
+    fn test_array_typed_parameter_is_repeatable() {
+        // `--labels a --labels b` was rejected outright ("cannot be used
+        // multiple times") and `--labels '["a","b"]'` went on the wire as one
+        // literal string, because `repeated` was only ever set for body
+        // properties and multipart fields — never for query/header params.
+        // Covers both the inline and `$ref` spellings.
+        let inline: OpenApiParameter = serde_yaml::from_str(
+            r#"
+            name: labels
+            in: query
+            schema:
+                type: array
+                items:
+                    type: string
+            "#,
+        )
+        .unwrap();
+        let (_, inline_mp) = convert_parameter(&inline, None, &HashMap::new());
+        assert_eq!(inline_mp.param_type.as_deref(), Some("array"));
+        assert!(inline_mp.repeated, "inline array param must be repeatable");
+
+        let via_ref: OpenApiParameter = serde_yaml::from_str(
+            r#"
+            name: labels
+            in: query
+            schema:
+                $ref: '#/components/schemas/Labels'
+            "#,
+        )
+        .unwrap();
+        let labels: OpenApiSchemaObject = serde_yaml::from_str(
+            "type: array\nitems:\n  type: string\n",
+        )
+        .unwrap();
+        let mut components = HashMap::new();
+        components.insert("Labels".to_string(), labels);
+        let (_, ref_mp) = convert_parameter(&via_ref, None, &components);
+        assert_eq!(ref_mp.param_type.as_deref(), Some("array"));
+        assert!(ref_mp.repeated, "$ref'd array param must be repeatable");
+    }
+
+    #[test]
+    fn test_nullable_array_parameter_is_repeatable() {
+        // `anyOf: [{type: array}, {type: 'null'}]` — pydantic's
+        // `Optional[list[T]]`, and the dominant spelling for array query
+        // parameters on real specs (29 of 31 on the spec this was tested
+        // against, versus 2 using bare `type: array`). Covers the inline
+        // branch and the `$ref`'d branch.
+        let inline: OpenApiParameter = serde_yaml::from_str(
+            r#"
+            name: voice_ids
+            in: query
+            schema:
+                anyOf:
+                  - type: array
+                    items:
+                        type: string
+                  - type: 'null'
+            "#,
+        )
+        .unwrap();
+        let (_, inline_mp) = convert_parameter(&inline, None, &HashMap::new());
+        assert_eq!(inline_mp.param_type.as_deref(), Some("array"));
+        assert!(inline_mp.repeated, "nullable array param must be repeatable");
+
+        let via_ref: OpenApiParameter = serde_yaml::from_str(
+            r#"
+            name: voice_ids
+            in: query
+            schema:
+                anyOf:
+                  - $ref: '#/components/schemas/VoiceIds'
+                  - type: 'null'
+            "#,
+        )
+        .unwrap();
+        let mut components = HashMap::new();
+        components.insert(
+            "VoiceIds".to_string(),
+            serde_yaml::from_str::<OpenApiSchemaObject>("type: array\nitems:\n  type: string\n").unwrap(),
+        );
+        let (_, ref_mp) = convert_parameter(&via_ref, None, &components);
+        assert_eq!(ref_mp.param_type.as_deref(), Some("array"));
+        assert!(ref_mp.repeated);
+    }
+
+    #[test]
+    fn test_true_union_parameter_is_not_promoted() {
+        // Two non-null branches have no single type to promote to, so the
+        // parameter stays untyped exactly as before.
+        let param: OpenApiParameter = serde_yaml::from_str(
+            r#"
+            name: filter
+            in: query
+            schema:
+                anyOf:
+                  - type: string
+                  - type: integer
+                  - type: 'null'
+            "#,
+        )
+        .unwrap();
+        let (_, mp) = convert_parameter(&param, None, &HashMap::new());
+        assert_eq!(mp.param_type, None, "a true union must stay opaque");
+        assert!(!mp.repeated);
+    }
+
+    #[test]
+    fn test_nullable_scalar_parameter_resolves_its_type() {
+        // The scalar case of the same spelling: the parameter should pick up
+        // its type (and enum) rather than arriving untyped.
+        let param: OpenApiParameter = serde_yaml::from_str(
+            r#"
+            name: sort_direction
+            in: query
+            schema:
+                anyOf:
+                  - type: string
+                    enum: [asc, desc]
+                  - type: 'null'
+            "#,
+        )
+        .unwrap();
+        let (_, mp) = convert_parameter(&param, None, &HashMap::new());
+        assert_eq!(mp.param_type.as_deref(), Some("string"));
+        assert_eq!(
+            mp.enum_values.as_deref(),
+            Some(&["asc".to_string(), "desc".to_string()][..]),
+        );
+        assert!(!mp.repeated, "a scalar must not become repeatable");
+    }
+
+    #[test]
+    fn test_array_of_objects_records_its_element_type() {
+        // `--schema` rendered `items: {type: string}` for an array of objects
+        // because a repeated flag carries `param_type: "string"` (the flag
+        // surface). An agent read that, sent `["x"]`, and the validator — which
+        // was right — rejected it.
+        let schema: OpenApiSchemaObject = serde_yaml::from_str(
+            r#"
+            type: object
+            properties:
+              inputs:
+                type: array
+                items:
+                    $ref: '#/components/schemas/DialogueInput'
+              tags:
+                type: array
+                items:
+                    type: string
+            "#,
+        )
+        .unwrap();
+        let mut components = HashMap::new();
+        components.insert(
+            "DialogueInput".to_string(),
+            serde_yaml::from_str::<OpenApiSchemaObject>(
+                "type: object\nproperties:\n  text:\n    type: string\n",
+            )
+            .unwrap(),
+        );
+        let params = flatten_body_params(&schema, &components, 0);
+
+        let inputs = &params["inputs"];
+        assert!(inputs.repeated);
+        assert_eq!(
+            inputs.item_type.as_deref(),
+            Some("object"),
+            "an array of objects must record its element type",
+        );
+        // A plain string array leaves it `None`, which downstream reads as
+        // "string" — byte-identical to every pre-existing lowering.
+        assert_eq!(params["tags"].item_type, None);
+    }
+
+    #[test]
+    fn test_recursed_object_property_keeps_the_spec_required_bit() {
+        // The shorthand flag must stay clap-optional (leaf flags can satisfy
+        // the property), but the property is still required on the wire.
+        // Dropping the bit made `--schema` disagree with the validator: every
+        // advertised field supplied, request still rejected for one that was
+        // never listed.
+        let schema: OpenApiSchemaObject = serde_yaml::from_str(
+            r#"
+            type: object
+            required: [workflow]
+            properties:
+              workflow:
+                $ref: '#/components/schemas/Workflow'
+              optional_thing:
+                $ref: '#/components/schemas/Workflow'
+            "#,
+        )
+        .unwrap();
+        let mut components = HashMap::new();
+        components.insert(
+            "Workflow".to_string(),
+            serde_yaml::from_str::<OpenApiSchemaObject>(
+                "type: object\nproperties:\n  nodes:\n    type: string\n",
+            )
+            .unwrap(),
+        );
+        let params = flatten_body_params(&schema, &components, 0);
+
+        let workflow = &params["workflow"];
+        assert!(
+            !workflow.required,
+            "the shorthand flag must stay optional so leaf flags can satisfy it",
+        );
+        assert!(
+            workflow.required_by_spec,
+            "but the contract must still advertise it as required",
+        );
+        assert!(!params["optional_thing"].required_by_spec);
     }
 
     #[test]
@@ -6854,6 +7696,345 @@ paths:
         assert_eq!(
             doc.groups["my-group"].summary.as_deref(),
             Some("Pretty Label"),
+        );
+    }
+
+    /// `--help` elaborates on `-h`; it does not restate it. A description
+    /// that only paraphrases the summary in the same breath earns no long
+    /// slot, or the two tiers read like different commands.
+    #[test]
+    fn test_paraphrasing_description_is_not_promoted_to_long_help() {
+        let yaml = r#"
+openapi: 3.0.2
+info:
+  title: t
+  version: "1"
+paths:
+  /groups:
+    get:
+      x-fern-sdk-group-name: [groups]
+      x-fern-sdk-method-name: list
+      operationId: groups_list
+      summary: List workspace groups
+      description: Get all groups in the workspace
+      responses:
+        "200":
+          description: ok
+  /things:
+    get:
+      x-fern-sdk-group-name: [things]
+      x-fern-sdk-method-name: list
+      operationId: things_list
+      summary: Audio isolation
+      description: Removes background noise from audio. Returns the isolated speech track.
+      responses:
+        "200":
+          description: ok
+"#;
+        let doc = load_openapi_spec(yaml, "test").unwrap();
+        // Same length, different words — a paraphrase, so no long form.
+        let groups = first_method(&doc, "groups", "list");
+        assert_eq!(groups.description.as_deref(), Some("List workspace groups"));
+        assert_eq!(groups.long_description, None);
+        // A second sentence is real elaboration and is kept.
+        let things = first_method(&doc, "things", "list");
+        assert_eq!(things.description.as_deref(), Some("Audio isolation"));
+        assert_eq!(
+            things.long_description.as_deref(),
+            Some("Removes background noise from audio. Returns the isolated speech track."),
+        );
+    }
+
+    #[test]
+    fn test_operation_summary_and_description_are_kept_separately() {
+        let yaml = r#"
+openapi: 3.0.2
+info:
+  title: t
+  version: "1"
+paths:
+  /things:
+    get:
+      x-fern-sdk-group-name: [things]
+      x-fern-sdk-method-name: list
+      operationId: things_list
+      summary: List things
+      description: Returns every thing visible to the caller, newest first.
+      responses:
+        "200":
+          description: ok
+  /others:
+    get:
+      x-fern-sdk-group-name: [others]
+      x-fern-sdk-method-name: list
+      operationId: others_list
+      description: Only prose, no summary.
+      responses:
+        "200":
+          description: ok
+"#;
+        let doc = load_openapi_spec(yaml, "test").unwrap();
+        let things = first_method(&doc, "things", "list");
+        assert_eq!(things.description.as_deref(), Some("List things"));
+        assert_eq!(
+            things.long_description.as_deref(),
+            Some("Returns every thing visible to the caller, newest first."),
+        );
+        // With no summary the prose already is the description, so keeping a
+        // second copy would only duplicate the line in help output.
+        let others = first_method(&doc, "others", "list");
+        assert_eq!(others.description.as_deref(), Some("Only prose, no summary."));
+        assert_eq!(others.long_description, None);
+    }
+
+    #[test]
+    fn test_root_tag_descriptions_are_indexed_by_kebab_case() {
+        let yaml = r#"
+openapi: 3.0.2
+info:
+  title: t
+  version: "1"
+tags:
+  - name: myGroup
+    description: Description for the group.
+  - name: no-description
+    x-displayName: Display label only
+paths: {}
+"#;
+        let doc = load_openapi_spec(yaml, "test").unwrap();
+        assert_eq!(
+            doc.tag_descriptions.get("my-group").map(String::as_str),
+            Some("Description for the group."),
+        );
+        assert!(!doc.tag_descriptions.contains_key("no-description"));
+    }
+
+    #[test]
+    fn test_root_tag_description_normalization_collision_keeps_first() {
+        let yaml = r#"
+openapi: 3.0.2
+info:
+  title: t
+  version: "1"
+tags:
+  - name: myGroup
+    description: First description.
+  - name: my-group
+    description: Second description.
+paths: {}
+"#;
+        let doc = load_openapi_spec(yaml, "test").unwrap();
+        assert_eq!(
+            doc.tag_descriptions.get("my-group").map(String::as_str),
+            Some("First description."),
+        );
+    }
+
+    #[test]
+    fn test_string_array_tags_are_skipped() {
+        let yaml = r#"
+openapi: 3.0.2
+info:
+  title: t
+  version: "1"
+tags: [customers, orders]
+paths: {}
+"#;
+        let doc = load_openapi_spec(yaml, "test").unwrap();
+        assert!(doc.tag_descriptions.is_empty());
+    }
+
+    #[test]
+    fn test_group_descriptions_follow_operation_tags_when_names_differ() {
+        let yaml = r#"
+openapi: 3.0.2
+info:
+  title: t
+  version: "1"
+tags:
+  - name: speech-history
+    description: Speech history description.
+  - name: music-generation
+    description: Music generation description.
+  - name: Pronunciation Dictionary
+    description: Pronunciation dictionary description.
+  - name: Conversational AI
+    description: Conversational AI description.
+paths:
+  /history:
+    get:
+      tags: [speech-history]
+      x-fern-sdk-group-name: [history]
+      operationId: history_list
+      responses:
+        "200":
+          description: ok
+  /music:
+    get:
+      tags: [music-generation]
+      x-fern-sdk-group-name: [music]
+      operationId: music_list
+      responses:
+        "200":
+          description: ok
+  /pronunciation-dictionaries:
+    get:
+      tags: [Pronunciation Dictionary]
+      x-fern-sdk-group-name: [pronunciation-dictionaries]
+      operationId: pronunciation_list
+      responses:
+        "200":
+          description: ok
+  /conversational-ai:
+    get:
+      tags: [Conversational AI]
+      x-fern-sdk-group-name: [conversational-ai]
+      operationId: conversational_list
+      responses:
+        "200":
+          description: ok
+"#;
+        let doc = load_openapi_spec(yaml, "test").unwrap();
+        let resource_names: std::collections::BTreeSet<String> =
+            doc.resources.keys().cloned().collect();
+        assert_eq!(
+            resource_names,
+            [
+                "conversational-ai",
+                "history",
+                "music",
+                "pronunciation-dictionaries",
+            ]
+            .into_iter()
+            .map(String::from)
+            .collect()
+        );
+        assert_eq!(
+            doc.group_tag_names.get("history"),
+            Some(&vec!["speech-history".to_string()])
+        );
+        assert_eq!(
+            doc.group_tag_names.get("music"),
+            Some(&vec!["music-generation".to_string()])
+        );
+        assert_eq!(
+            doc.group_tag_names.get("pronunciation-dictionaries"),
+            Some(&vec!["Pronunciation Dictionary".to_string()])
+        );
+        assert_eq!(
+            doc.group_tag_names.get("conversational-ai"),
+            Some(&vec!["Conversational AI".to_string()])
+        );
+        assert_eq!(
+            doc.group_operation_counts.get("history"),
+            Some(&1),
+        );
+        assert_eq!(
+            doc.group_tag_operation_counts
+                .get("history")
+                .and_then(|counts| counts.get("speechhistory")),
+            Some(&1),
+        );
+
+        let cli = crate::openapi::commands::build_cli(&doc);
+        for (group, description) in [
+            ("history", "Speech history description."),
+            ("music", "Music generation description."),
+            (
+                "pronunciation-dictionaries",
+                "Pronunciation dictionary description.",
+            ),
+            ("conversational-ai", "Conversational AI description."),
+        ] {
+            assert_eq!(
+                cli.find_subcommand(group)
+                    .and_then(|command| command.get_about())
+                    .map(ToString::to_string)
+                    .as_deref(),
+                Some(description)
+            );
+        }
+    }
+
+    #[test]
+    fn test_shared_tags_are_rejected_but_group_name_tags_win() {
+        let yaml = r#"
+openapi: 3.0.2
+info:
+  title: t
+  version: "1"
+tags:
+  - name: shared
+    description: Shared description.
+  - name: Named Group
+    description: Named group description.
+paths:
+  /first:
+    get:
+      tags: [shared]
+      x-fern-sdk-group-name: [first]
+      operationId: first_list
+      responses:
+        "200":
+          description: ok
+  /second:
+    get:
+      tags: [shared]
+      x-fern-sdk-group-name: [second]
+      operationId: second_list
+      responses:
+        "200":
+          description: ok
+  /named-group:
+    get:
+      tags: [shared, Named Group]
+      x-fern-sdk-group-name: [named-group]
+      operationId: named_group_list
+      responses:
+        "200":
+          description: ok
+"#;
+        let doc = load_openapi_spec(yaml, "test").unwrap();
+        let shared_groups = doc
+            .tag_group_names
+            .get("shared")
+            .cloned()
+            .unwrap_or_default()
+            .into_iter()
+            .collect::<std::collections::BTreeSet<_>>();
+        assert_eq!(
+            shared_groups,
+            ["first", "second", "named-group"]
+                .into_iter()
+                .map(String::from)
+                .collect()
+        );
+        assert_eq!(
+            doc.tag_group_names.get("namedgroup"),
+            Some(&vec!["named-group".to_string()])
+        );
+
+        let cli = crate::openapi::commands::build_cli(&doc);
+        assert_eq!(
+            cli.find_subcommand("first")
+                .and_then(|command| command.get_about())
+                .map(ToString::to_string)
+                .as_deref(),
+            Some("Operations on 'first'")
+        );
+        assert_eq!(
+            cli.find_subcommand("second")
+                .and_then(|command| command.get_about())
+                .map(ToString::to_string)
+                .as_deref(),
+            Some("Operations on 'second'")
+        );
+        assert_eq!(
+            cli.find_subcommand("named-group")
+                .and_then(|command| command.get_about())
+                .map(ToString::to_string)
+                .as_deref(),
+            Some("Named group description.")
         );
     }
 
@@ -10832,13 +12013,287 @@ paths:
     }
 
     #[test]
-    fn test_const_numeric_default_keeps_wire_type() {
-        // A numeric const lands on the wire as a JSON number, not a string —
-        // critical for body fields whose const is meaningful as a literal
-        // type rather than a label.
+    fn test_optional_const_is_documentation_only() {
+        // The bug: a `const` on an *optional* property became a real clap
+        // default and was materialized into every request body, and a nested
+        // const leaf additionally collided with its own parent's
+        // object-shorthand flag. Optional consts are now help-text only.
         let schema: OpenApiSchemaObject = serde_yaml::from_str(
             r#"
             type: object
+            properties:
+              platform_settings:
+                type: object
+                properties:
+                  guardrails:
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                        const: "1"
+            "#,
+        )
+        .unwrap();
+        let params = flatten_body_params(&schema, &HashMap::new(), 0);
+        let version = params
+            .get("platform_settings.guardrails.version")
+            .expect("nested const leaf should still get a flag");
+        assert_eq!(
+            version.default_value, None,
+            "an optional const must not be injected into the body",
+        );
+        assert_eq!(
+            version.documentation_default_value,
+            Some(serde_json::Value::String("1".into())),
+            "the const should still be advertised in --help",
+        );
+        assert_eq!(
+            version.enum_values.as_deref(),
+            Some(&["1".to_string()][..]),
+            "the const should still constrain accepted values",
+        );
+    }
+
+    #[test]
+    fn test_nullable_composite_object_keeps_leaf_flag_parity() {
+        // `Model` and `Optional[Model]` must expose the same flag surface.
+        // ADR-0010's promotion typed the parent correctly but stopped there,
+        // so the dot-notation leaves — the CLI's primary body surface —
+        // existed for `$ref: Model` and vanished for `anyOf: [$ref, null]`,
+        // which is what pydantic emits for every optional model field.
+        let settings: OpenApiSchemaObject = serde_yaml::from_str(
+            r#"
+            type: object
+            properties:
+              stability:
+                type: number
+              use_speaker_boost:
+                type: boolean
+            "#,
+        )
+        .unwrap();
+        let mut component_schemas = HashMap::new();
+        component_schemas.insert("VoiceSettings".to_string(), settings);
+
+        let bare: OpenApiSchemaObject = serde_yaml::from_str(
+            r#"
+            type: object
+            properties:
+              voice_settings:
+                $ref: '#/components/schemas/VoiceSettings'
+            "#,
+        )
+        .unwrap();
+        let nullable: OpenApiSchemaObject = serde_yaml::from_str(
+            r#"
+            type: object
+            properties:
+              voice_settings:
+                anyOf:
+                  - $ref: '#/components/schemas/VoiceSettings'
+                  - type: 'null'
+            "#,
+        )
+        .unwrap();
+
+        let mut bare_keys: Vec<String> = flatten_body_params(&bare, &component_schemas, 0)
+            .into_keys()
+            .collect();
+        bare_keys.sort();
+        let nullable_params = flatten_body_params(&nullable, &component_schemas, 0);
+        let mut nullable_keys: Vec<String> = nullable_params.keys().cloned().collect();
+        nullable_keys.sort();
+
+        assert_eq!(
+            bare_keys, nullable_keys,
+            "Optional[Model] must expose the same flags as Model",
+        );
+        assert_eq!(
+            nullable_params["voice_settings.stability"].param_type.as_deref(),
+            Some("number"),
+            "leaf flags must keep the branch's own types",
+        );
+        // The parent keeps both the shorthand type and the null sentinel, so
+        // `--voice-settings '{...}'` and `--voice-settings null` both work.
+        let parent = &nullable_params["voice_settings"];
+        assert_eq!(parent.param_type.as_deref(), Some("object"));
+        assert!(
+            parent.nullable,
+            "recursing must not drop the parent's null sentinel",
+        );
+    }
+
+    #[test]
+    fn test_nullable_composite_array_is_not_recursed_into() {
+        // Guard the `!is_array` condition: an array branch lowers to a
+        // repeated flag, exactly like a plain `type: array` property, and
+        // must not sprout object leaf flags.
+        let schema: OpenApiSchemaObject = serde_yaml::from_str(
+            r#"
+            type: object
+            properties:
+              tags:
+                anyOf:
+                  - type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                  - type: 'null'
+            "#,
+        )
+        .unwrap();
+        let params = flatten_body_params(&schema, &HashMap::new(), 0);
+        let keys: Vec<&String> = params.keys().collect();
+        assert_eq!(keys, vec!["tags"], "array branch must stay a single flag");
+        assert!(params["tags"].repeated);
+    }
+
+    #[test]
+    fn test_nullable_composite_ref_promotes_to_object() {
+        // `anyOf: [$ref, null]` — pydantic's `Optional[Model]`. Without
+        // promotion the flag was typeless, so the executor sent the user's
+        // JSON as an escaped string ("voice_settings": "{\"stability\":0.5}").
+        let schema: OpenApiSchemaObject = serde_yaml::from_str(
+            r#"
+            type: object
+            properties:
+              voice_settings:
+                anyOf:
+                  - $ref: '#/components/schemas/VoiceSettings'
+                  - type: 'null'
+            "#,
+        )
+        .unwrap();
+        let settings: OpenApiSchemaObject = serde_yaml::from_str(
+            r#"
+            type: object
+            properties:
+              stability:
+                type: number
+            "#,
+        )
+        .unwrap();
+        let mut component_schemas = HashMap::new();
+        component_schemas.insert("VoiceSettings".to_string(), settings);
+        let params = flatten_body_params(&schema, &component_schemas, 0);
+        let settings_param = params
+            .get("voice_settings")
+            .expect("voice_settings flag should be emitted");
+        assert_eq!(settings_param.param_type.as_deref(), Some("object"));
+        assert!(
+            settings_param.nullable,
+            "the null branch must stay expressible via the sentinel",
+        );
+    }
+
+    #[test]
+    fn test_nullable_composite_array_promotes_to_repeated_flag() {
+        // Same shape wrapping an array (`Optional[list[T]]`): the flag must
+        // become repeatable rather than a typeless single value.
+        let schema: OpenApiSchemaObject = serde_yaml::from_str(
+            r#"
+            type: object
+            properties:
+              tags:
+                anyOf:
+                  - type: array
+                    items:
+                      type: string
+                  - type: 'null'
+            "#,
+        )
+        .unwrap();
+        let params = flatten_body_params(&schema, &HashMap::new(), 0);
+        let tags = params.get("tags").expect("tags flag should be emitted");
+        // Repeated flags carry the element type, matching plain `type: array`.
+        assert_eq!(tags.param_type.as_deref(), Some("string"));
+        assert!(tags.repeated, "nullable array must be a repeated flag");
+        assert!(tags.nullable);
+    }
+
+    #[test]
+    fn test_true_union_of_objects_is_not_promoted() {
+        // Two non-null branches have no single shape to promote to, so the
+        // property stays opaque exactly as before.
+        let schema: OpenApiSchemaObject = serde_yaml::from_str(
+            r#"
+            type: object
+            properties:
+              payload:
+                anyOf:
+                  - type: object
+                    properties:
+                      a:
+                        type: string
+                  - type: object
+                    properties:
+                      b:
+                        type: string
+                  - type: 'null'
+            "#,
+        )
+        .unwrap();
+        let params = flatten_body_params(&schema, &HashMap::new(), 0);
+        let payload = params
+            .get("payload")
+            .expect("payload flag should be emitted");
+        assert_eq!(payload.param_type, None, "a true union must stay opaque");
+    }
+
+    #[test]
+    fn test_multipart_array_field_is_marked_repeated() {
+        // An array-typed multipart field must be repeatable, whether declared
+        // inline or wrapped in pydantic's nullable composition.
+        let schema: OpenApiSchemaObject = serde_yaml::from_str(
+            r#"
+            type: object
+            properties:
+              files:
+                type: array
+                items:
+                  type: string
+                  format: binary
+              labels:
+                anyOf:
+                  - type: array
+                    items:
+                      type: string
+                  - type: 'null'
+              name:
+                type: string
+            "#,
+        )
+        .unwrap();
+        let fields = extract_multipart_fields(
+            Some(&schema),
+            &HashMap::new(),
+            &HashMap::new(),
+            "uploadFiles",
+        );
+        let by_name = |wire: &str| {
+            fields
+                .iter()
+                .find(|f| f.wire_name == wire)
+                .unwrap_or_else(|| panic!("{wire} field missing"))
+                .repeated
+        };
+        assert!(by_name("files"), "array file field must be repeatable");
+        assert!(by_name("labels"), "nullable array field must be repeatable");
+        assert!(!by_name("name"), "scalar field must stay single-valued");
+    }
+
+    #[test]
+    fn test_const_numeric_default_keeps_wire_type() {
+        // A numeric const lands on the wire as a JSON number, not a string —
+        // critical for body fields whose const is meaningful as a literal
+        // type rather than a label. Required, so the const is injected
+        // rather than left documentation-only.
+        let schema: OpenApiSchemaObject = serde_yaml::from_str(
+            r#"
+            type: object
+            required: [version]
             properties:
               version:
                 type: integer

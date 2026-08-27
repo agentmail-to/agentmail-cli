@@ -26,7 +26,7 @@ use std::pin::Pin;
 use reqwest::{Client, Request, Response};
 
 use crate::auth::{DynAuthProvider, EndpointAuthMetadata};
-use crate::error::CliError;
+use crate::error::{api_error_from_body, CliError};
 use crate::http::HttpConfig;
 use crate::openapi::discovery::RetriesConfig;
 use crate::openapi::executor::{decide_retry, RetryOutcome};
@@ -148,6 +148,18 @@ impl CliExecutor {
 
         let http_method_str = method.as_str().to_uppercase();
 
+        // Retry-safety for a non-idempotent verb hinges on the request
+        // actually carrying an `Idempotency-Key`, not on it being an SDK
+        // request. This used to pass a hardcoded `true`, which made every
+        // custom-command POST retry as if it were idempotent — a 5xx on a
+        // create could duplicate the resource. The header is the only signal
+        // available here (the executor is handed a built `Request` and knows
+        // nothing about the operation), and it is the right one: a key that
+        // is present is a key the caller intends the server to dedupe on.
+        let carries_idempotency_key = headers
+            .keys()
+            .any(|name| name.as_str().eq_ignore_ascii_case("idempotency-key"));
+
         // Borrowed views for the debug dump; `Vec<String>` -> `&[&str]`.
         let sensitive: Vec<&str> = self.sensitive_headers.iter().map(String::as_str).collect();
 
@@ -201,7 +213,7 @@ impl CliExecutor {
                         &outcome,
                         &self.retries,
                         &http_method_str,
-                        true, // SDK requests are treated as idempotent
+                        carries_idempotency_key,
                         false,
                     ) {
                         retry_attempt += 1;
@@ -220,7 +232,7 @@ impl CliExecutor {
                         &outcome,
                         &self.retries,
                         &http_method_str,
-                        true,
+                        carries_idempotency_key,
                         false,
                     ) {
                         retry_attempt += 1;
@@ -376,17 +388,11 @@ impl SdkError {
     /// Convert into the CLI's native error type.
     pub fn into_cli_error(self) -> CliError {
         match self {
-            Self::Http { status, body } => CliError::Api {
-                code: status,
-                message: body,
-                reason: http_status_reason(status).to_string(),
-            },
-            Self::Network(msg) => {
-                CliError::Other(anyhow::anyhow!("SDK network error: {msg}"))
-            }
-            Self::Timeout(msg) => {
-                CliError::Other(anyhow::anyhow!("SDK request timeout: {msg}"))
-            }
+            Self::Http { status, body } => api_error_from_body(status, &body),
+            // Neither reached a server, so neither has an HTTP status. The
+            // OpenAPI path reports these as `networkError`; SDK mode must agree.
+            Self::Network(msg) => CliError::Network(format!("SDK network error: {msg}")),
+            Self::Timeout(msg) => CliError::Network(format!("SDK request timeout: {msg}")),
             Self::Auth(msg) => CliError::Auth(msg),
             Self::Other(msg) => {
                 CliError::Other(anyhow::anyhow!("SDK error: {msg}"))
@@ -425,27 +431,6 @@ impl From<reqwest::Error> for SdkError {
         }
     }
 }
-
-/// Map an HTTP status code to a short reason string for [`CliError::Api`].
-fn http_status_reason(status: u16) -> &'static str {
-    match status {
-        400 => "badRequest",
-        401 => "unauthorized",
-        403 => "forbidden",
-        404 => "notFound",
-        408 => "requestTimeout",
-        409 => "conflict",
-        422 => "unprocessableEntity",
-        429 => "rateLimited",
-        500 => "internalServerError",
-        502 => "badGateway",
-        503 => "serviceUnavailable",
-        504 => "gatewayTimeout",
-        _ => "httpError",
-    }
-}
-
-
 
 #[cfg(test)]
 mod tests {
@@ -500,7 +485,12 @@ mod tests {
         };
         let cli_err = err.into_cli_error();
         match cli_err {
-            CliError::Api { code, message, reason } => {
+            CliError::Api {
+                code,
+                message,
+                reason,
+                ..
+            } => {
                 assert_eq!(code, 404);
                 assert_eq!(message, "not found");
                 assert_eq!(reason, "notFound");
@@ -510,19 +500,23 @@ mod tests {
     }
 
     #[test]
-    fn sdk_error_network_maps_to_cli_other() {
-        let err = SdkError::Network("connection refused".into());
-        let cli_err = err.into_cli_error();
-        assert!(matches!(cli_err, CliError::Other(_)));
-        assert!(cli_err.to_string().contains("network error"));
-    }
-
-    #[test]
-    fn sdk_error_timeout_maps_to_cli_other() {
-        let err = SdkError::Timeout("timed out after 30s".into());
-        let cli_err = err.into_cli_error();
-        assert!(matches!(cli_err, CliError::Other(_)));
-        assert!(cli_err.to_string().contains("timeout"));
+    fn sdk_error_network_and_timeout_carry_no_http_status() {
+        // Neither reached a server. Reporting `code: 500` told an agent the API
+        // had failed and invited a retry against a host never contacted.
+        for (err, needle) in [
+            (SdkError::Network("connection refused".into()), "network error"),
+            (SdkError::Timeout("timed out after 30s".into()), "timeout"),
+        ] {
+            let cli_err = err.into_cli_error();
+            assert!(matches!(cli_err, CliError::Network(_)), "got: {cli_err:?}");
+            assert!(cli_err.to_string().contains(needle), "got: {cli_err}");
+            let json = cli_err.to_json();
+            assert_eq!(json["error"]["reason"], "networkError");
+            assert!(json["error"].get("code").is_none(), "got: {json:#}");
+            // Still `other` at the process boundary — a sixth exit code would
+            // change the documented table every consumer branches on.
+            assert_eq!(cli_err.exit_code(), CliError::EXIT_CODE_OTHER);
+        }
     }
 
     #[test]
@@ -559,11 +553,26 @@ mod tests {
     }
 
     #[test]
-    fn http_status_reason_known_codes() {
-        assert_eq!(http_status_reason(401), "unauthorized");
-        assert_eq!(http_status_reason(429), "rateLimited");
-        assert_eq!(http_status_reason(503), "serviceUnavailable");
-        assert_eq!(http_status_reason(999), "httpError");
+    fn sdk_error_http_json_body_becomes_structured_details() {
+        // The generated-SDK path shares the parser with the OpenAPI path, so a
+        // JSON body must not land in `message` as an escaped document here either.
+        let err = SdkError::Http {
+            status: 500,
+            body: r#"{"status":"internal_server_error","message":"Server blew up"}"#.into(),
+        };
+        match err.into_cli_error() {
+            CliError::Api {
+                message,
+                reason,
+                details,
+                ..
+            } => {
+                assert_eq!(message, "Server blew up");
+                assert_eq!(reason, "internalServerError");
+                assert_eq!(details.unwrap()["status"], "internal_server_error");
+            }
+            other => panic!("expected CliError::Api, got: {other:?}"),
+        }
     }
 
     #[test]

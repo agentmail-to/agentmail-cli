@@ -713,9 +713,11 @@ fn parse_and_validate_inputs(
             }
             Some("body") => {
                 raw_body_flag_keys.push(key.clone());
+                let param_def = method.parameters.get(key);
                 let coerced = coerce_body_param_value(
                     value,
-                    method.parameters.get(key).and_then(|p| p.param_type.as_deref()),
+                    param_def.and_then(|p| p.param_type.as_deref()),
+                    param_def.is_some_and(|p| p.nullable),
                 )?;
                 set_nested_value(&mut body_from_flags, key, coerced);
             }
@@ -2238,24 +2240,54 @@ pub async fn execute_method(
                 Some(method.retries.as_ref().unwrap_or(&default_retries))
             };
 
-        // Auto Idempotency-Key: generate once before the retry loop so
-        // the same key is sent on every attempt. Only for POST/PUT/PATCH
-        // unless opted out via `x-fern-cli-idempotency: false`, or when
-        // the operation already has an explicit idempotency-header
-        // mechanism (x-fern-idempotent: true provides --idempotency-key).
-        let user_provides_idempotency = method.idempotent
-            || input
-                .header_params
-                .iter()
-                .any(|(k, _)| k.eq_ignore_ascii_case("idempotency-key"));
+        // Auto Idempotency-Key: generate once before the retry loop so the
+        // same key is sent on every attempt. Only for POST/PUT/PATCH, and
+        // only when the caller didn't already supply one, unless opted out
+        // via `x-fern-cli-idempotency: false`.
+        //
+        // The suppression condition deliberately does NOT include
+        // `method.idempotent`. `x-fern-idempotent: true` only means the
+        // operation *exposes* `--idempotency-key` — it is not a promise that
+        // the user passed it. Treating the marker as "the caller provides a
+        // key" inverted the safety property it exists for: the marker also
+        // makes the operation retry-eligible (`method_allows_retry`), so a
+        // marked POST that the user invoked without the flag retried with no
+        // key at all, while the same POST *without* the marker got an
+        // auto-generated key. A 5xx on a marked send could therefore deliver
+        // twice. Only a key actually present on this invocation suppresses
+        // generation.
+        let user_supplied_key = input
+            .header_params
+            .iter()
+            .any(|(k, _)| k.eq_ignore_ascii_case("idempotency-key"));
         let idempotency_key = if !method.no_auto_idempotency_key
-            && !user_provides_idempotency
+            && !user_supplied_key
             && crate::http::needs_idempotency_key(&method.http_method)
         {
             Some(crate::http::generate_idempotency_key())
         } else {
             None
         };
+
+        // Retry-safety for POST/PATCH requires a key the *server* is known to
+        // honor, which a key we invented does not establish. This used to read
+        // `method.idempotent || idempotency_key.is_some()`, and since the auto
+        // key is generated for every POST/PUT/PATCH, that made every
+        // non-idempotent operation retry-eligible — a 5xx on a create retried
+        // ~4x against an endpoint with no idempotency support at all and could
+        // duplicate the resource.
+        //
+        // Two things do establish it:
+        //   * `x-fern-idempotent: true` — the spec declares the operation
+        //     supports an idempotency key, and the block above now guarantees
+        //     one is actually sent;
+        //   * an explicit `--idempotency-key` — the caller asserting the
+        //     server dedupes on it. This also removes the surprise that
+        //     supplying a key made the CLI *less* willing to retry.
+        //
+        // An auto-generated key is still sent (it is what makes a retry safe
+        // on an endpoint that does consume it) but no longer licenses one.
+        let retry_safe = method.idempotent || user_supplied_key;
 
         let mut retry_attempt: u32 = 0;
         let response = loop {
@@ -2279,7 +2311,15 @@ pub async fn execute_method(
             }
 
             let built = request.build().map_err(|e| {
-                CliError::Other(anyhow::Error::from(e).context("Failed to build HTTP request"))
+                // `Validation`, not `Other`: `build()` fails on a malformed URL
+                // or header value, which comes from `--base-url` or a flag the
+                // user typed. Reporting it as `code: 500` claimed a server
+                // status for a request that was never sent, and buried a
+                // fixable input error under an internal-error exit code.
+                CliError::Validation(format!(
+                    "Failed to build HTTP request: {}",
+                    crate::error::error_chain(&e)
+                ))
             })?;
             if debug {
                 crate::debug::dump_request(
@@ -2309,7 +2349,7 @@ pub async fn execute_method(
                             &outcome,
                             cfg,
                             &method.http_method,
-                            method.idempotent || idempotency_key.is_some(),
+                            retry_safe,
                             no_retry,
                         ) {
                             tracing::warn!(
@@ -2350,7 +2390,7 @@ pub async fn execute_method(
                             &outcome,
                             cfg,
                             &method.http_method,
-                            method.idempotent || idempotency_key.is_some(),
+                            retry_safe,
                             no_retry,
                         ) {
                             tracing::warn!(
@@ -2371,7 +2411,14 @@ pub async fn execute_method(
                     // behind corporate proxies / interception tools. The hint is
                     // a side effect; the error then propagates up like any other.
                     crate::http::maybe_emit_tls_hint(http_config, &e);
-                    return Err(anyhow::Error::from(e).context("HTTP request failed").into());
+                    // `Network`, not `Other`: nothing answered, so there is no
+                    // HTTP status to put in `error.code`. The chain is walked
+                    // because reqwest's own Display stops at "error sending
+                    // request" — "Connection refused" is the actionable part.
+                    return Err(CliError::Network(format!(
+                        "HTTP request failed: {}",
+                        crate::error::error_chain(&e)
+                    )));
                 }
             }
         };
@@ -3940,7 +3987,17 @@ fn value_to_form_str(val: &Value) -> String {
 /// supplied via `--params` are already typed by `serde_json` and pass through
 /// unchanged. `object` and `array` types are JSON-decoded so callers can pass
 /// nested structures via individual flags (e.g. `--addresses '[{"city":"SF"}]'`).
-fn coerce_body_param_value(value: &Value, param_type: Option<&str>) -> Result<Value, CliError> {
+fn coerce_body_param_value(
+    value: &Value,
+    param_type: Option<&str>,
+    nullable: bool,
+) -> Result<Value, CliError> {
+    // An explicit `null` on a nullable field is the user asking to send
+    // JSON null (ADR-0003's sentinel, resolved in `collect_params_from_flags`),
+    // not a malformed object/array. Pass it through untouched.
+    if nullable && value.is_null() {
+        return Ok(Value::Null);
+    }
     // For object-shorthand body flags, validate shape regardless of whether
     // the value arrives here as a raw String (legacy / direct unit-test entry)
     // or as a pre-decoded Value. `collect_params_from_flags` eagerly
@@ -4021,6 +4078,56 @@ fn validate_body_against_schema(
     Ok(())
 }
 
+/// Maximum `$ref` chain length the validator will follow (`A: {$ref: B}`,
+/// `B: {$ref: C}`). Resolved iteratively rather than recursively so a cyclic
+/// chain fails closed — unlike the value-driven recursion elsewhere in this
+/// module, a ref chain consumes no input and would not terminate on its own.
+const MAX_SCHEMA_REF_CHAIN: u8 = 8;
+
+/// Resolve a component schema name to its terminal schema, following any
+/// chain of bare `$ref` components. Returns `None` when a link is missing or
+/// the chain exceeds [`MAX_SCHEMA_REF_CHAIN`].
+fn resolve_schema_chain<'a>(
+    name: &str,
+    doc: &'a RestDescription,
+) -> Option<&'a crate::openapi::discovery::JsonSchema> {
+    let mut current = doc.schemas.get(name)?;
+    for _ in 0..MAX_SCHEMA_REF_CHAIN {
+        match current.schema_ref.as_deref() {
+            Some(next) => current = doc.schemas.get(next)?,
+            None => return Some(current),
+        }
+    }
+    tracing::warn!("$ref chain for '{name}' exceeded {MAX_SCHEMA_REF_CHAIN} levels; likely cyclic");
+    None
+}
+
+/// Check `value` against a JSON-Schema `type` keyword, pushing a diagnostic
+/// and returning `false` on mismatch.
+///
+/// Shared by [`validate_property`] (inline-typed properties) and
+/// [`validate_value`] (`$ref`-resolved components) so the two cannot drift —
+/// they did, and the component path had no type check at all.
+fn check_json_type(value: &Value, expected_type: &str, path: &str, errors: &mut Vec<String>) -> bool {
+    let matches = match (expected_type, value) {
+        ("string", Value::String(_)) => true,
+        ("integer", Value::Number(n)) => n.is_i64() || n.is_u64(),
+        ("number", Value::Number(_)) => true,
+        ("boolean", Value::Bool(_)) => true,
+        ("array", Value::Array(_)) => true,
+        ("object", Value::Object(_)) => true,
+        ("any", _) => true,
+        _ => false,
+    };
+    if !matches {
+        errors.push(format!(
+            "{path}: Expected type '{expected_type}', found {}",
+            get_value_type(value)
+        ));
+    }
+    matches
+}
+
 fn validate_value(
     value: &Value,
     schema_ref_name: &str,
@@ -4028,7 +4135,7 @@ fn validate_value(
     path: &str,
     errors: &mut Vec<String>,
 ) {
-    let schema = match doc.schemas.get(schema_ref_name) {
+    let schema = match resolve_schema_chain(schema_ref_name, doc) {
         Some(s) => s,
         None => {
             errors.push(format!("{path}: Schema '{schema_ref_name}' not found"));
@@ -4066,6 +4173,29 @@ fn validate_value(
             }
         } else {
             errors.push(format!("{path}: Expected object"));
+        }
+        return;
+    }
+
+    // Non-object component — `Username: {type: string}`,
+    // `Labels: {type: array, items: {type: string}}`. These used to fall off
+    // the end of this function entirely, so *every* `$ref`-typed property and
+    // parameter was accepted whatever its value: `--dry-run` exited 0 on a
+    // body whose fields were all the wrong type, which reads as confirmation
+    // to an agent. Only inline-typed properties were ever checked.
+    let Some(expected_type) = schema.schema_type.as_deref() else {
+        // No `type` keyword, no properties, no `allOf` — a free-form or
+        // pure-union component. Nothing to assert.
+        return;
+    };
+    if !check_json_type(value, expected_type, path, errors) {
+        return;
+    }
+    if expected_type == "array" {
+        if let (Some(items), Value::Array(arr)) = (&schema.items, value) {
+            for (index, item) in arr.iter().enumerate() {
+                validate_property(item, items, doc, &format!("{path}[{index}]"), errors);
+            }
         }
     }
 }
@@ -4274,23 +4404,9 @@ fn validate_property(
 
     // 2. Type checking
     if let Some(expected_type) = &prop_schema.prop_type {
-        let type_matches = match (expected_type.as_str(), value) {
-            ("string", Value::String(_)) => true,
-            ("integer", Value::Number(n)) => n.is_i64() || n.is_u64(),
-            ("number", Value::Number(_)) => true,
-            ("boolean", Value::Bool(_)) => true,
-            ("array", Value::Array(_)) => true,
-            ("object", Value::Object(_)) => true,
-            ("any", _) => true,
-            _ => false,
-        };
-
-        if !type_matches {
-            errors.push(format!(
-                "{path}: Expected type '{expected_type}', found {}",
-                get_value_type(value)
-            ));
-            return; // Stop further validation for this property if the type is wrong
+        if !check_json_type(value, expected_type, path, errors) {
+            // Stop further validation for this property if the type is wrong.
+            return;
         }
     }
 
@@ -5984,29 +6100,30 @@ mod tests {
     fn test_coerce_body_param_value_scalar_types() {
         // CLI flags arrive as Value::String; coerce them per the schema's type.
         assert_eq!(
-            coerce_body_param_value(&Value::String("42".into()), Some("integer")).unwrap(),
+            coerce_body_param_value(&Value::String("42".into()), Some("integer"), false).unwrap(),
             json!(42)
         );
         assert_eq!(
-            coerce_body_param_value(&Value::String("2.5".into()), Some("number")).unwrap(),
+            coerce_body_param_value(&Value::String("2.5".into()), Some("number"), false).unwrap(),
             json!(2.5)
         );
         assert_eq!(
-            coerce_body_param_value(&Value::String("true".into()), Some("boolean")).unwrap(),
+            coerce_body_param_value(&Value::String("true".into()), Some("boolean"), false).unwrap(),
             Value::Bool(true)
         );
         assert_eq!(
-            coerce_body_param_value(&Value::String("false".into()), Some("boolean")).unwrap(),
+            coerce_body_param_value(&Value::String("false".into()), Some("boolean"), false)
+                .unwrap(),
             Value::Bool(false)
         );
         // String type passes through unchanged.
         assert_eq!(
-            coerce_body_param_value(&Value::String("hello".into()), Some("string")).unwrap(),
+            coerce_body_param_value(&Value::String("hello".into()), Some("string"), false).unwrap(),
             json!("hello")
         );
         // Already-typed values from `--params` JSON pass through.
         assert_eq!(
-            coerce_body_param_value(&json!(99), Some("integer")).unwrap(),
+            coerce_body_param_value(&json!(99), Some("integer"), false).unwrap(),
             json!(99)
         );
     }
@@ -6017,6 +6134,7 @@ mod tests {
         let arr = coerce_body_param_value(
             &Value::String(r#"["a","b"]"#.into()),
             Some("array"),
+            false,
         )
         .unwrap();
         assert_eq!(arr, json!(["a", "b"]));
@@ -6024,6 +6142,7 @@ mod tests {
         let obj = coerce_body_param_value(
             &Value::String(r#"{"city":"SF"}"#.into()),
             Some("object"),
+            false,
         )
         .unwrap();
         assert_eq!(obj, json!({ "city": "SF" }));
@@ -6041,7 +6160,7 @@ mod tests {
             ("true", "boolean"),
             ("null", "null"),
         ] {
-            let err = coerce_body_param_value(&Value::String(bad.0.into()), Some("object"))
+            let err = coerce_body_param_value(&Value::String(bad.0.into()), Some("object"), false)
                 .unwrap_err();
             match err {
                 CliError::Validation(msg) => assert!(
@@ -6058,7 +6177,8 @@ mod tests {
         // shape check and reports "got string" — consistent with the
         // already-decoded `"hi"` case from collect_params_from_flags.
         let err =
-            coerce_body_param_value(&Value::String("{not json}".into()), Some("object")).unwrap_err();
+            coerce_body_param_value(&Value::String("{not json}".into()), Some("object"), false)
+                .unwrap_err();
         match err {
             CliError::Validation(msg) => assert!(
                 msg.contains("must be a JSON object") && msg.contains("string"),
@@ -6076,7 +6196,7 @@ mod tests {
             (json!(true), "boolean"),
             (Value::Null, "null"),
         ] {
-            let err = coerce_body_param_value(&pre_parsed, Some("object")).unwrap_err();
+            let err = coerce_body_param_value(&pre_parsed, Some("object"), false).unwrap_err();
             match err {
                 CliError::Validation(msg) => assert!(
                     msg.contains("must be a JSON object") && msg.contains(kind),
@@ -6088,10 +6208,24 @@ mod tests {
     }
 
     #[test]
+    fn test_coerce_body_param_value_passes_null_on_nullable_composite() {
+        // A promoted `anyOf: [$ref, null]` field is typed `object` *and*
+        // nullable, so the sentinel's resolved `null` must survive the shape
+        // check instead of being rejected as "must be a JSON object".
+        assert_eq!(
+            coerce_body_param_value(&Value::Null, Some("object"), true).unwrap(),
+            Value::Null
+        );
+        // Non-nullable object fields still reject null.
+        assert!(coerce_body_param_value(&Value::Null, Some("object"), false).is_err());
+    }
+
+    #[test]
     fn test_coerce_body_param_value_rejects_bad_input() {
         let err = coerce_body_param_value(
             &Value::String("not-an-int".into()),
             Some("integer"),
+            false,
         )
         .unwrap_err();
         match err {
@@ -6102,6 +6236,7 @@ mod tests {
         let err = coerce_body_param_value(
             &Value::String("yes".into()),
             Some("boolean"),
+            false,
         )
         .unwrap_err();
         match err {
@@ -6821,6 +6956,101 @@ mod tests {
 
         let body = json!({ "name": "My File" });
         assert!(validate_body_against_schema(&body, "File", &doc).is_ok());
+    }
+
+    /// Build a doc whose body schema references scalar and array components,
+    /// the shape that made validation a no-op for most real specs.
+    fn ref_schema_doc() -> RestDescription {
+        use crate::openapi::discovery::{JsonSchema, JsonSchemaProperty};
+        let mut schemas = HashMap::new();
+        schemas.insert(
+            "Url".to_string(),
+            JsonSchema {
+                schema_type: Some("string".to_string()),
+                ..Default::default()
+            },
+        );
+        schemas.insert(
+            "Labels".to_string(),
+            JsonSchema {
+                schema_type: Some("array".to_string()),
+                items: Some(Box::new(JsonSchemaProperty {
+                    prop_type: Some("string".to_string()),
+                    ..Default::default()
+                })),
+                ..Default::default()
+            },
+        );
+        // `Alias: {$ref: Url}` — a bare-ref component, previously unfollowed.
+        schemas.insert(
+            "Alias".to_string(),
+            JsonSchema {
+                schema_ref: Some("Url".to_string()),
+                ..Default::default()
+            },
+        );
+        let mut properties = HashMap::new();
+        for (name, target) in [("url", "Url"), ("labels", "Labels"), ("alias", "Alias")] {
+            properties.insert(
+                name.to_string(),
+                JsonSchemaProperty {
+                    schema_ref: Some(target.to_string()),
+                    ..Default::default()
+                },
+            );
+        }
+        schemas.insert(
+            "Body".to_string(),
+            JsonSchema {
+                schema_type: Some("object".to_string()),
+                properties,
+                ..Default::default()
+            },
+        );
+        RestDescription {
+            schemas,
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn test_validate_body_rejects_wrong_type_behind_a_ref() {
+        // `validate_value` only had an object branch, so a `$ref` to a scalar
+        // or array component fell off the end unchecked and ANY value was
+        // accepted. `--dry-run` then exited 0 on a garbage body, which reads
+        // as confirmation to an agent.
+        let doc = ref_schema_doc();
+
+        let err = validate_body_against_schema(&json!({ "url": 123 }), "Body", &doc)
+            .expect_err("integer for a $ref'd string must be rejected");
+        let msg = format!("{err}");
+        assert!(msg.contains("Expected type 'string'"), "got: {msg}");
+
+        let err = validate_body_against_schema(&json!({ "labels": "a" }), "Body", &doc)
+            .expect_err("string for a $ref'd array must be rejected");
+        assert!(format!("{err}").contains("Expected type 'array'"));
+
+        // Element types behind the ref are checked too.
+        let err = validate_body_against_schema(&json!({ "labels": [1] }), "Body", &doc)
+            .expect_err("wrong element type must be rejected");
+        assert!(format!("{err}").contains("Expected type 'string'"));
+
+        // A chain of bare-ref components resolves to the terminal schema.
+        let err = validate_body_against_schema(&json!({ "alias": 7 }), "Body", &doc)
+            .expect_err("$ref chain must resolve and still type-check");
+        assert!(format!("{err}").contains("Expected type 'string'"));
+    }
+
+    #[test]
+    fn test_validate_body_still_accepts_correct_types_behind_a_ref() {
+        // Guard the other direction: the new checks must not reject valid input.
+        let doc = ref_schema_doc();
+        validate_body_against_schema(
+            &json!({ "url": "https://example.com", "labels": ["a", "b"], "alias": "x" }),
+            "Body",
+            &doc,
+        )
+        .expect("well-typed body must validate");
     }
 
     #[test]

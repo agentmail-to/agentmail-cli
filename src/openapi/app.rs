@@ -138,6 +138,150 @@ fn apply_server_var_substitutions(
     }
 }
 
+/// Collect every server variable declared in the spec's `servers:` blocks
+/// (top-level first, then per-operation overrides sorted by name so the
+/// flag order is stable across runs). First declaration wins on name
+/// collisions — a variable of a given name is one CLI flag, however many
+/// servers reference it.
+fn collect_spec_server_variables(
+    doc: &crate::openapi::discovery::RestDescription,
+) -> Vec<crate::openapi::discovery::ServerVariable> {
+    use crate::openapi::discovery::{RestResource, Server, ServerVariable};
+
+    fn collect(
+        servers: &[Server],
+        seen: &mut std::collections::HashSet<String>,
+        out: &mut Vec<ServerVariable>,
+    ) {
+        for server in servers {
+            for var in &server.variables {
+                if seen.insert(var.name.clone()) {
+                    out.push(var.clone());
+                }
+            }
+        }
+    }
+
+    fn walk(
+        res: &RestResource,
+        seen: &mut std::collections::HashSet<String>,
+        out: &mut std::collections::BTreeMap<String, ServerVariable>,
+    ) {
+        for method in res.methods.values() {
+            let mut per_op = Vec::new();
+            collect(&method.servers, seen, &mut per_op);
+            for var in per_op {
+                out.insert(var.name.clone(), var);
+            }
+        }
+        for sub in res.resources.values() {
+            walk(sub, seen, out);
+        }
+    }
+
+    let mut seen = std::collections::HashSet::new();
+    let mut out = Vec::new();
+    collect(&doc.servers, &mut seen, &mut out);
+
+    // Resources are stored in a `HashMap`, so per-operation variables are
+    // gathered into a `BTreeMap` first to keep the emitted order stable.
+    let mut per_op = std::collections::BTreeMap::new();
+    for res in doc.resources.values() {
+        walk(res, &mut seen, &mut per_op);
+    }
+    out.extend(per_op.into_values());
+    out
+}
+
+/// Whether a spec declares anything for server-variable resolution to
+/// act on: `servers[].variables` or `x-fern-default-url`, at the document
+/// root or on an operation.
+fn spec_declares_server_urls_to_resolve(
+    doc: &crate::openapi::discovery::RestDescription,
+) -> bool {
+    use crate::openapi::discovery::{RestResource, Server};
+
+    fn any_server(servers: &[Server]) -> bool {
+        servers
+            .iter()
+            .any(|s| !s.variables.is_empty() || s.default_url.is_some())
+    }
+
+    fn walk(res: &RestResource) -> bool {
+        res.methods.values().any(|m| any_server(&m.servers)) || res.resources.values().any(walk)
+    }
+
+    any_server(&doc.servers) || doc.resources.values().any(walk)
+}
+
+/// Swap every templated server URL for its `x-fern-default-url`.
+///
+/// The extension declares the concrete URL to use when the caller pins
+/// none of the server's template variables — e.g. Twilio's
+/// `https://api.{region}.twilio.com` defaults to `https://api.twilio.com`
+/// rather than to the `region` variable's default substituted in. Only
+/// called when no variable value was supplied (see
+/// [`CliApp::apply_server_vars`]); otherwise the template wins so the
+/// caller's value still routes the request.
+fn apply_default_server_urls(doc: &mut crate::openapi::discovery::RestDescription) {
+    use crate::openapi::discovery::{RestResource, Server};
+
+    /// `url` -> `default_url` for every server that declares one, so a
+    /// `root_url` copied from a server entry (the parser's fallback for
+    /// operations without their own `servers:` block) is rewritten too.
+    fn index(servers: &[Server], out: &mut HashMap<String, String>) {
+        for server in servers {
+            if let Some(default_url) = &server.default_url {
+                out.insert(server.url.clone(), default_url.clone());
+            }
+        }
+    }
+
+    fn index_walk(res: &RestResource, out: &mut HashMap<String, String>) {
+        for method in res.methods.values() {
+            index(&method.servers, out);
+        }
+        for sub in res.resources.values() {
+            index_walk(sub, out);
+        }
+    }
+
+    let mut defaults_by_url = HashMap::new();
+    index(&doc.servers, &mut defaults_by_url);
+    for res in doc.resources.values() {
+        index_walk(res, &mut defaults_by_url);
+    }
+    if defaults_by_url.is_empty() {
+        return;
+    }
+
+    fn rewrite(url: &mut String, defaults_by_url: &HashMap<String, String>) {
+        if let Some(default_url) = defaults_by_url.get(url.as_str()) {
+            *url = default_url.clone();
+        }
+    }
+
+    fn rewrite_walk(res: &mut RestResource, defaults_by_url: &HashMap<String, String>) {
+        for method in res.methods.values_mut() {
+            rewrite(&mut method.root_url, defaults_by_url);
+            for server in &mut method.servers {
+                rewrite(&mut server.url, defaults_by_url);
+            }
+        }
+        for sub in res.resources.values_mut() {
+            rewrite_walk(sub, defaults_by_url);
+        }
+    }
+
+    rewrite(&mut doc.root_url, &defaults_by_url);
+    for server in &mut doc.servers {
+        rewrite(&mut server.url, &defaults_by_url);
+    }
+    for res in doc.resources.values_mut() {
+        rewrite_walk(res, &defaults_by_url);
+    }
+}
+
 /// Apply generator-supplied env-var overrides to every idempotent
 /// operation's synthetic idempotency-header parameter. The parser
 /// already populated `MethodParameter.env_var` from each
@@ -230,6 +374,80 @@ fn merge_security_schemes(
 ) {
     for (key, scheme) in incoming {
         acc.entry(key).or_insert(scheme);
+    }
+}
+
+/// Merge document-root OpenAPI tag descriptions across specs. First write
+/// wins on normalized-name collisions, preserving deterministic metadata when
+/// multiple specs declare the same tag.
+fn merge_tag_descriptions(
+    acc: &mut HashMap<String, String>,
+    incoming: HashMap<String, String>,
+) {
+    for (name, description) in incoming {
+        acc.entry(name).or_insert(description);
+    }
+}
+
+fn merge_group_tag_names(
+    acc: &mut HashMap<String, Vec<String>>,
+    incoming: HashMap<String, Vec<String>>,
+) {
+    for (group, tags) in incoming {
+        let existing = acc.entry(group).or_default();
+        for tag in tags {
+            if !existing.iter().any(|existing_tag| existing_tag == &tag) {
+                existing.push(tag);
+            }
+        }
+    }
+}
+
+fn merge_group_tag_operation_counts(
+    acc: &mut HashMap<String, HashMap<String, usize>>,
+    incoming: HashMap<String, HashMap<String, usize>>,
+) {
+    for (group, tags) in incoming {
+        let existing = acc.entry(group).or_default();
+        for (tag, count) in tags {
+            *existing.entry(tag).or_default() += count;
+        }
+    }
+}
+
+fn merge_group_operation_counts(
+    acc: &mut HashMap<String, usize>,
+    incoming: HashMap<String, usize>,
+) {
+    for (group, count) in incoming {
+        *acc.entry(group).or_default() += count;
+    }
+}
+
+fn merge_tag_description_order(acc: &mut Vec<String>, incoming: Vec<String>) {
+    for tag in incoming {
+        if !acc.iter().any(|existing| existing == &tag) {
+            acc.push(tag);
+        }
+    }
+}
+
+/// Merge `servers:` declarations across specs, deduplicated by URL and
+/// keeping the first write. Only the first spec's `servers` (and the
+/// `root_url` derived from them) survive as the document's defaults; the
+/// rest are carried over so their template `variables` and
+/// `x-fern-default-url` still reach URL resolution — a multi-spec CLI
+/// otherwise sends the second spec's templated URL verbatim.
+fn merge_servers(
+    acc: &mut Vec<crate::openapi::discovery::Server>,
+    incoming: Vec<crate::openapi::discovery::Server>,
+) {
+    use std::collections::HashSet;
+    let existing: HashSet<String> = acc.iter().map(|s| s.url.clone()).collect();
+    for server in incoming {
+        if !existing.contains(&server.url) {
+            acc.push(server);
+        }
     }
 }
 
@@ -339,13 +557,46 @@ pub(crate) fn resolve_global_parameter_value(
     p: &crate::openapi::discovery::GlobalParameter,
 ) -> Option<String> {
     let arg_id = global_parameter_arg_id(p);
-    matches
-        .try_get_one::<String>(&arg_id)
-        .ok()
-        .flatten()
-        .map(|s| s.trim())
+    match matches.try_get_one::<String>(&arg_id) {
+        Ok(resolved) => normalize_global_value(resolved.map(String::as_str)),
+        Err(_) => resolve_unregistered_global(p.env.as_deref(), p.default.as_deref()),
+    }
+}
+
+/// Trim a resolved global header/parameter value and drop it when the result
+/// is empty or whitespace-only — callers shouldn't stamp a bare
+/// `X-API-Stage:` on the wire. That's almost always a user mistake worth
+/// surfacing as a required-value error, and it matches the env-var-handling
+/// convention elsewhere.
+fn normalize_global_value(value: Option<&str>) -> Option<String> {
+    value
+        .map(str::trim)
         .filter(|s| !s.is_empty())
-        .map(|s| s.to_string())
+        .map(str::to_string)
+}
+
+/// Resolve a global header/parameter on a command where its flag was never
+/// registered, so clap has no `.env()` / `.default_value()` binding to read
+/// through.
+///
+/// Two ways to land here, and both still have to honor `env` and `default`:
+///
+///   * the flag's long name collided with a per-operation parameter, so it
+///     was attached to individual leaves instead of the root as
+///     `global(true)` (`register_global_header_on_nonconflicting_leaves`);
+///   * the command is a **custom command**, which is grafted after that
+///     registration and whose context resolves globals from the *root*
+///     `ArgMatches` (`build_binding_entry`).
+///
+/// Without this fallback a colliding global was stamped on built-in commands
+/// but silently dropped on custom ones — the header reached the wire on
+/// spec-derived requests and vanished on hand-written ones. Only the CLI flag
+/// is missing here, and it's missing for the user too (the arg was never
+/// registered, so there is nothing to type), so `env > default` is the whole
+/// chain that was ever reachable on such a command.
+fn resolve_unregistered_global(env: Option<&str>, default: Option<&str>) -> Option<String> {
+    let from_env = env.and_then(|name| std::env::var(name).ok());
+    normalize_global_value(from_env.as_deref().or(default))
 }
 
 /// Stable clap arg ID for a global header. Anchored to the wire header
@@ -446,19 +697,17 @@ fn register_global_header_on_nonconflicting_leaves(
 /// collides with a per-operation parameter, the flag is dropped from
 /// that operation's command (the per-op parameter wins — see
 /// `register_global_header_on_nonconflicting_leaves`). On such a command
-/// the arg id is unknown and `get_one` would panic; `try_get_one`
-/// returns `Err`, which we map to `None`.
+/// the arg id is unknown and `get_one` would panic. `try_get_one` returns
+/// `Err` instead, and we fall back to reading `env` / `default` directly —
+/// see [`resolve_unregistered_global`] for why that fallback exists.
 pub(crate) fn resolve_global_header_value(
     matched_args: &clap::ArgMatches,
     h: &crate::openapi::discovery::GlobalHeader,
 ) -> Option<String> {
-    matched_args
-        .try_get_one::<String>(&global_header_arg_id(h))
-        .ok()
-        .flatten()
-        .map(|s| s.trim())
-        .filter(|s| !s.is_empty())
-        .map(|s| s.to_string())
+    match matched_args.try_get_one::<String>(&global_header_arg_id(h)) {
+        Ok(resolved) => normalize_global_value(resolved.map(String::as_str)),
+        Err(_) => resolve_unregistered_global(h.env.as_deref(), h.default.as_deref()),
+    }
 }
 
 /// True when an operation declares a `header`-located parameter with
@@ -1189,6 +1438,22 @@ impl CliApp {
                     merge_into_path(&mut acc.resources, &entry.prefix_path, spec_doc.resources)?;
                     merge_schemas(&mut acc.schemas, spec_doc.schemas)?;
                     merge_security_schemes(&mut acc.security_schemes, spec_doc.security_schemes);
+                    merge_tag_descriptions(&mut acc.tag_descriptions, spec_doc.tag_descriptions);
+                    merge_group_tag_names(&mut acc.group_tag_names, spec_doc.group_tag_names);
+                    merge_group_tag_operation_counts(
+                        &mut acc.group_tag_operation_counts,
+                        spec_doc.group_tag_operation_counts,
+                    );
+                    merge_group_operation_counts(
+                        &mut acc.group_operation_counts,
+                        spec_doc.group_operation_counts,
+                    );
+                    merge_group_tag_names(&mut acc.tag_group_names, spec_doc.tag_group_names);
+                    merge_tag_description_order(
+                        &mut acc.tag_description_order,
+                        spec_doc.tag_description_order,
+                    );
+                    merge_servers(&mut acc.servers, spec_doc.servers);
                     merge_sdk_variables(&mut acc.sdk_variables, spec_doc.sdk_variables);
                     merge_global_headers(&mut acc.global_headers, spec_doc.global_headers);
                     merge_global_parameters(&mut acc.global_parameters, spec_doc.global_parameters);
@@ -1542,6 +1807,80 @@ impl CliApp {
             cli = cli.arg(arg);
         }
 
+        // Server-variable flags declared in the spec itself
+        // (`servers[].variables`). Generator-registered variables above win
+        // on name collisions — they carry env-var wiring the spec can't
+        // express, and so do the SDK-variable flags registered below.
+        //
+        // A flag is only skipped, never force-registered: an unregistered
+        // variable still resolves to its declared `default` in
+        // [`CliApp::apply_server_vars`], so the URL stays valid — whereas
+        // handing clap two args with the same long name makes it reject the
+        // whole command tree ("Long option names must be unique").
+        let generator_server_vars: std::collections::HashSet<&str> =
+            self.server_vars.iter().map(|v| v.name.as_str()).collect();
+        let mut reserved_longs: std::collections::HashSet<String> = self
+            .server_vars
+            .iter()
+            .map(|v| crate::text::to_kebab_flag(&v.name))
+            .chain(
+                doc.sdk_variables
+                    .iter()
+                    .map(|v| crate::text::to_kebab_flag(&v.name)),
+            )
+            .collect();
+        for var in collect_spec_server_variables(doc) {
+            if generator_server_vars.contains(var.name.as_str()) {
+                continue;
+            }
+            let kebab = crate::text::to_kebab_flag(&var.name);
+            if sdk_variable_collides_with_builtin(&kebab) {
+                tracing::warn!(
+                    variable = %var.name,
+                    flag = %kebab,
+                    "Server variable flag collides with built-in; skipping"
+                );
+                continue;
+            }
+            if !reserved_longs.insert(kebab.clone()) {
+                tracing::warn!(
+                    variable = %var.name,
+                    flag = %kebab,
+                    "Server variable flag duplicates another global flag; skipping"
+                );
+                continue;
+            }
+            // Same clap constraint the global-header loop handles below: a
+            // `global(true)` long name that a per-operation parameter also
+            // uses is fatal. The per-op parameter wins; the variable falls
+            // back to its declared default.
+            if global_header_long_collides_with_param(&cli, &kebab) {
+                tracing::warn!(
+                    variable = %var.name,
+                    flag = %kebab,
+                    "Server variable flag collides with a per-operation parameter; \
+                     skipping — the variable resolves to its declared default"
+                );
+                continue;
+            }
+            let mut arg = clap::Arg::new(var.name.clone())
+                .long(kebab)
+                .global(true)
+                .value_name(crate::text::to_screaming_snake(&var.name))
+                .help(var.description.clone().unwrap_or_else(|| {
+                    format!("Value for the {{{}}} URL template variable", var.name)
+                }));
+            if let Some(default) = &var.default {
+                arg = arg.default_value(default.clone());
+            }
+            if !var.enum_values.is_empty() {
+                arg = arg.value_parser(clap::builder::PossibleValuesParser::new(
+                    var.enum_values.clone(),
+                ));
+            }
+            cli = cli.arg(arg);
+        }
+
         // SDK-variable flags (`x-fern-sdk-variables`).
         for var in &doc.sdk_variables {
             let kebab = crate::text::to_kebab_flag(&var.name);
@@ -1754,7 +2093,10 @@ impl CliApp {
             Some(format!("Global parameters:\n{}", rows.join("\n")))
         };
         let env_footer = super::commands::after_help_footer(&doc.name);
+        // `build_cli` already sets the env-var footer, so appending it
+        // unconditionally renders the block twice on the root `--help`.
         let base_footer = match existing_after_help {
+            Some(ref s) if s.contains(&env_footer) => s.clone(),
             Some(ref s) if !s.is_empty() => format!("{s}\n{env_footer}"),
             _ => env_footer,
         };
@@ -1770,16 +2112,66 @@ impl CliApp {
 
     /// Resolve server variable values from clap matches and substitute
     /// them into the doc's URLs.
+    ///
+    /// Values come from generator-registered variables
+    /// ([`server_var`](Self::server_var)) and from the spec's own
+    /// `servers[].variables` block, whose flags carry the variable's
+    /// `default` — so a templated URL resolves to a sendable one even when
+    /// the caller passes nothing. When the caller pins no variable at all
+    /// and the server declares `x-fern-default-url`, that URL wins over
+    /// substituting the defaults.
+    /// Whether [`apply_server_vars`](Self::apply_server_vars) has anything
+    /// to do for `doc` — generator-registered variables, or a spec that
+    /// declares `servers[].variables` / `x-fern-default-url`. Callers use
+    /// it to skip cloning the doc when there is nothing to resolve.
+    pub(crate) fn needs_server_var_resolution(&self, doc: &RestDescription) -> bool {
+        !self.server_vars.is_empty() || spec_declares_server_urls_to_resolve(doc)
+    }
+
     pub(crate) fn apply_server_vars(
         &self,
         doc: &mut RestDescription,
         matches: &clap::ArgMatches,
     ) {
+        let spec_vars = collect_spec_server_variables(doc);
+        let names = self
+            .server_vars
+            .iter()
+            .map(|v| &v.name)
+            .chain(spec_vars.iter().map(|v| &v.name));
+
         let mut subs = std::collections::HashMap::new();
-        for var in &self.server_vars {
-            if let Some(val) = matches.get_one::<String>(&var.name) {
-                subs.insert(var.name.clone(), val.clone());
+        let mut caller_pinned_any = false;
+        for name in names {
+            if subs.contains_key(name) {
+                continue;
             }
+            // `try_get_one` rather than `get_one`: a variable whose flag was
+            // skipped (built-in collision) is not a registered arg id, and
+            // `get_one` panics on unknown ids.
+            if let Ok(Some(value)) = matches.try_get_one::<String>(name) {
+                if matches.value_source(name) != Some(clap::parser::ValueSource::DefaultValue) {
+                    caller_pinned_any = true;
+                }
+                subs.insert(name.clone(), value.clone());
+            }
+        }
+
+        // A spec variable whose flag was skipped (built-in or per-operation
+        // parameter collision) has no arg to read, so fall back to the
+        // `default` the spec declares for it — an unsubstituted `{var}` would
+        // otherwise reach the request builder as a literal.
+        for var in &spec_vars {
+            if subs.contains_key(&var.name) {
+                continue;
+            }
+            if let Some(default) = &var.default {
+                subs.insert(var.name.clone(), default.clone());
+            }
+        }
+
+        if !caller_pinned_any {
+            apply_default_server_urls(doc);
         }
         apply_server_var_substitutions(doc, &subs);
     }
@@ -1795,7 +2187,7 @@ impl CliApp {
         let resolved = crate::validate::validate_safe_output_dir(&out_dir)?;
 
         let files =
-            crate::openapi::skill_emitter::generate_skills(doc, &self.name, &self.auth_bindings);
+            crate::openapi::skill_emitter::generate_skills(doc, &self.name, &self.auth_bindings, self.auth_strategy);
 
         for (rel_path, content) in &files {
             let full_path = resolved.join(rel_path);
@@ -2279,6 +2671,41 @@ impl AppContext {
         self.base_url_override.as_deref()
     }
 
+    /// The base URL requests from this context go to, resolved the same way
+    /// the built-in command path resolves it: `--base-url` / `{NAME}_BASE_URL`
+    /// override first, then the spec's explicit `base_url`, then the server
+    /// root plus any Discovery `service_path`.
+    ///
+    /// Exposed for the generated custom-command SDK bridge, which has to seed
+    /// the co-generated SDK's `ClientConfig.base_url`. `ClientConfig::default()`
+    /// is not a usable substitute: the Rust SDK generator emits
+    /// `base_url: String::new()` for an API that declares no environment, so a
+    /// bridge built on the default produced a client with no host and every
+    /// custom command failed before the injected executor could help. The
+    /// executor's own `resolve_url` only rewrites the host when `--base-url`
+    /// was passed, so it cannot recover an empty base either.
+    pub fn effective_base_url(&self) -> String {
+        if let Some(override_url) = self.base_url_override.as_deref() {
+            return override_url.trim_end_matches('/').to_string();
+        }
+        let doc = &self.entries[0].doc;
+        if let Some(base) = &doc.base_url {
+            return base.clone();
+        }
+        // A spec can declare its server per-operation rather than at the root
+        // (`paths./x.get.servers`), which the built-in path handles via
+        // `effective_root_url(method, doc)`. There is no operation in scope
+        // here, so fall back to the first operation that declares one, walked
+        // in sorted order for determinism. Without this the bridge produced an
+        // empty base for exactly the specs the fix was meant to serve.
+        let root_url = if doc.root_url.is_empty() {
+            first_method_root_url(&doc.resources).unwrap_or_default()
+        } else {
+            doc.root_url.clone()
+        };
+        format!("{}{}", root_url, doc.service_path)
+    }
+
     /// Build a [`CliExecutor`] wired to this context's HTTP/auth/retry stack.
     ///
     /// The executor is constructed from the first binding entry's config
@@ -2307,6 +2734,31 @@ impl AppContext {
     }
 }
 
+
+/// First non-empty per-operation `root_url` in the resource tree, visiting
+/// resources and methods in sorted-name order so the answer is stable across
+/// runs (the trees are `HashMap`s).
+fn first_method_root_url(
+    resources: &std::collections::HashMap<String, RestResource>,
+) -> Option<String> {
+    let mut resource_names: Vec<&String> = resources.keys().collect();
+    resource_names.sort();
+    for name in resource_names {
+        let resource = &resources[name];
+        let mut method_names: Vec<&String> = resource.methods.keys().collect();
+        method_names.sort();
+        for method_name in method_names {
+            let root_url = &resource.methods[method_name].root_url;
+            if !root_url.is_empty() {
+                return Some(root_url.clone());
+            }
+        }
+        if let Some(found) = first_method_root_url(&resource.resources) {
+            return Some(found);
+        }
+    }
+    None
+}
 
 /// Recursively check whether any method in the resource tree is the
 /// same object (pointer-equal) as `target`. Used by
@@ -2453,6 +2905,24 @@ pub(crate) fn collect_params_from_flags(
     let is_body_param = |param_def: &crate::openapi::discovery::MethodParameter| {
         param_def.location.as_deref() == Some("body")
     };
+    // A defaulted nested leaf (`platform_settings.guardrails.version`) must
+    // also stand down when the user typed an *ancestor* object-shorthand
+    // flag (`--platform-settings.guardrails '{...}'`): the executor refuses
+    // to combine an object flag with a leaf flag underneath it, so an
+    // injected leaf would make its own parent's flag unusable.
+    let ancestor_flag_typed = |param_name: &str| -> bool {
+        let mut rest = param_name;
+        while let Some((prefix, _)) = rest.rsplit_once('.') {
+            let ancestor_id = crate::openapi::commands::param_clap_arg_id(prefix);
+            if matched_args.value_source(&ancestor_id)
+                == Some(clap::parser::ValueSource::CommandLine)
+            {
+                return true;
+            }
+            rest = prefix;
+        }
+        false
+    };
 
     let mut missing_variable_bound: Vec<(String, String)> = Vec::new();
     for (param_name, param_def) in &method.parameters {
@@ -2479,8 +2949,8 @@ pub(crate) fn collect_params_from_flags(
         if param_def.repeated {
             if matched_args.value_source(&arg_id)
                 == Some(clap::parser::ValueSource::DefaultValue)
-                && body_json_supplied
                 && is_body_param(param_def)
+                && (body_json_supplied || ancestor_flag_typed(param_name))
             {
                 continue;
             }
@@ -2490,11 +2960,39 @@ pub(crate) fn collect_params_from_flags(
                 // else — including non-array JSON like "123" — stays a
                 // literal string.
                 let mut arr: Vec<serde_json::Value> = Vec::new();
+                let mut explicit_null = false;
                 for v in values {
-                    match serde_json::from_str(v) {
+                    // Null sentinel (ADR-0003): on a nullable list, a lone
+                    // `null` is the user asking to send JSON null rather
+                    // than a one-element list containing "null".
+                    if param_def.nullable && v == "null" {
+                        explicit_null = true;
+                        continue;
+                    }
+                    match serde_json::from_str::<serde_json::Value>(v) {
                         Ok(serde_json::Value::Array(elems)) => arr.extend(elems),
+                        // A non-string element type means each occurrence is
+                        // itself JSON — `--inputs '{"text":"hi"}'` is one
+                        // object, not the literal text of one. Keeping it a
+                        // string made an array-of-objects flag impossible to
+                        // use one element at a time, while `--schema` now
+                        // advertises `items: {type: object}`.
+                        Ok(decoded)
+                            if param_def
+                                .item_type
+                                .as_deref()
+                                .is_some_and(|t| t != "string") =>
+                        {
+                            arr.push(decoded)
+                        }
+                        // Anything else — including non-array JSON like "123"
+                        // on a string-element flag — stays a literal string.
                         _ => arr.push(serde_json::Value::String(v.clone())),
                     }
+                }
+                if explicit_null && arr.is_empty() {
+                    params.insert(param_name.clone(), serde_json::Value::Null);
+                    continue;
                 }
                 // For oneOf [string, array<string>] unions, a single scalar
                 // value stays a plain string — only multiple values (or an
@@ -2514,7 +3012,10 @@ pub(crate) fn collect_params_from_flags(
         };
         let from_default = matched_args.value_source(&arg_id)
             == Some(clap::parser::ValueSource::DefaultValue);
-        if from_default && body_json_supplied && is_body_param(param_def) {
+        if from_default
+            && is_body_param(param_def)
+            && (body_json_supplied || ancestor_flag_typed(param_name))
+        {
             continue;
         }
         let json_value = match (from_default, &param_def.default_value) {
@@ -2588,9 +3089,21 @@ pub(crate) fn collect_params_from_flags(
 /// when the operation has no multipart fields. File-typed fields reject
 /// control characters (matching `binary_body_path` validation) but allow
 /// absolute paths since users may upload files from anywhere on disk.
+///
+/// Array-typed fields are repeatable (`--files a.mp3 --files b.mp3`) and
+/// contribute one part per occurrence, all carrying the same `name` — the
+/// multipart encoding of a list.
+///
+/// `params` carries the `--params` JSON. Multipart fields live in
+/// `method.multipart_fields` rather than `method.parameters`, so the
+/// executor has no `location: body` to route them by and would send them as
+/// query parameters. Any key naming a multipart field is therefore *moved*
+/// out of `params` into the form body here, keeping `--params` equivalent to
+/// the individual flags (which it overrides, as everywhere else).
 pub(crate) fn collect_multipart_parts(
     method: &RestMethod,
     matches: &clap::ArgMatches,
+    params: &mut serde_json::Map<String, serde_json::Value>,
 ) -> Result<Option<Vec<executor::MultipartPart>>, crate::error::CliError> {
     if method.multipart_fields.is_empty() {
         return Ok(None);
@@ -2605,62 +3118,25 @@ pub(crate) fn collect_multipart_parts(
             continue;
         }
 
-        let value = matches
-            .try_get_one::<String>(&field.wire_name)
-            .ok()
-            .flatten();
-        let Some(value) = value else {
-            continue;
+        let values: Vec<String> = match params.remove(&field.wire_name) {
+            Some(from_params) => multipart_values_from_params(&from_params, field.repeated),
+            None if field.repeated => matches
+                .try_get_many::<String>(&field.wire_name)
+                .ok()
+                .flatten()
+                .map(|vals| vals.cloned().collect())
+                .unwrap_or_default(),
+            None => matches
+                .try_get_one::<String>(&field.wire_name)
+                .ok()
+                .flatten()
+                .cloned()
+                .into_iter()
+                .collect(),
         };
 
-        if field.is_file {
-            let raw = value.as_str();
-            // `\@literal` — escape syntax for sending a literal `@`-prefixed
-            // value on a file-typed field (FER-10436). The value is sent as a
-            // plain text part; no file read is attempted, and the path-safety
-            // validators that normally guard file inputs are skipped because
-            // there is no path to validate.
-            if executor::is_escaped_literal(raw) {
-                let literal = executor::strip_or_escape_at(raw).into_owned();
-                parts.push(executor::MultipartPart::Text {
-                    name: field.wire_name.clone(),
-                    value: literal,
-                    content_type: field.content_type.clone(),
-                });
-                continue;
-            }
-            // Validate the inner filesystem path — the same string the executor
-            // will eventually pass to `tokio::fs::read`. `parse_at_ref` strips
-            // the `@`, `@file://`, or `@data://` prefix so an adversarial
-            // `@file://evil\x00path` is rejected before disk I/O regardless of
-            // which encoding mode was requested (FER-10532). Stdin is only the
-            // `Auto`-mode `-` sentinel; an explicit-scheme `-` is a literal
-            // filename and still gets validated.
-            let (inner, mode) = match executor::parse_at_ref(raw) {
-                executor::AtRef::File { path, mode } => (path, mode),
-                executor::AtRef::Plain(s) => (std::borrow::Cow::Borrowed(s), executor::AtMode::Auto),
-                // `\@literal` was handled above; reachable only as a defensive
-                // fallback if the escape branch is ever skipped.
-                executor::AtRef::Escaped(_) => continue,
-            };
-            let is_stdin = mode == executor::AtMode::Auto && inner.as_ref() == "-";
-            if !is_stdin {
-                crate::output::reject_dangerous_chars(
-                    inner.as_ref(),
-                    &format!("--{}", crate::text::to_kebab_flag(&field.wire_name)),
-                )?;
-            }
-            parts.push(executor::MultipartPart::File {
-                name: field.wire_name.clone(),
-                path: raw.to_string(),
-                content_type: field.content_type.clone(),
-            });
-        } else {
-            parts.push(executor::MultipartPart::Text {
-                name: field.wire_name.clone(),
-                value: value.clone(),
-                content_type: field.content_type.clone(),
-            });
+        for value in values {
+            push_multipart_part(field, &value, &mut parts)?;
         }
     }
 
@@ -2671,19 +3147,112 @@ pub(crate) fn collect_multipart_parts(
     }
 }
 
+/// Lower a `--params` value for a multipart field into the part values it
+/// stands for. A JSON array on a repeated field splices out element by
+/// element (`{"files": ["a", "b"]}` ≡ `--files a --files b`); everything
+/// else becomes a single value, with non-strings re-encoded as compact JSON
+/// so structured parts keep their shape.
+fn multipart_values_from_params(value: &serde_json::Value, repeated: bool) -> Vec<String> {
+    match value {
+        serde_json::Value::Array(elems) if repeated => {
+            elems.iter().map(multipart_scalar_to_string).collect()
+        }
+        other => vec![multipart_scalar_to_string(other)],
+    }
+}
+
+fn multipart_scalar_to_string(value: &serde_json::Value) -> String {
+    match value {
+        serde_json::Value::String(s) => s.clone(),
+        other => other.to_string(),
+    }
+}
+
+/// Append the part(s) for one occurrence of a multipart field's flag.
+fn push_multipart_part(
+    field: &crate::openapi::discovery::MultipartField,
+    value: &str,
+    parts: &mut Vec<executor::MultipartPart>,
+) -> Result<(), crate::error::CliError> {
+    if field.is_file {
+        let raw = value;
+        // `\@literal` — escape syntax for sending a literal `@`-prefixed
+        // value on a file-typed field (FER-10436). The value is sent as a
+        // plain text part; no file read is attempted, and the path-safety
+        // validators that normally guard file inputs are skipped because
+        // there is no path to validate.
+        if executor::is_escaped_literal(raw) {
+            let literal = executor::strip_or_escape_at(raw).into_owned();
+            parts.push(executor::MultipartPart::Text {
+                name: field.wire_name.clone(),
+                value: literal,
+                content_type: field.content_type.clone(),
+            });
+            return Ok(());
+        }
+        // Validate the inner filesystem path — the same string the executor
+        // will eventually pass to `tokio::fs::read`. `parse_at_ref` strips
+        // the `@`, `@file://`, or `@data://` prefix so an adversarial
+        // `@file://evil\x00path` is rejected before disk I/O regardless of
+        // which encoding mode was requested (FER-10532). Stdin is only the
+        // `Auto`-mode `-` sentinel; an explicit-scheme `-` is a literal
+        // filename and still gets validated.
+        let (inner, mode) = match executor::parse_at_ref(raw) {
+            executor::AtRef::File { path, mode } => (path, mode),
+            executor::AtRef::Plain(s) => (std::borrow::Cow::Borrowed(s), executor::AtMode::Auto),
+            // `\@literal` was handled above; reachable only as a defensive
+            // fallback if the escape branch is ever skipped.
+            executor::AtRef::Escaped(_) => return Ok(()),
+        };
+        let is_stdin = mode == executor::AtMode::Auto && inner.as_ref() == "-";
+        if !is_stdin {
+            crate::output::reject_dangerous_chars(
+                inner.as_ref(),
+                &format!("--{}", crate::text::to_kebab_flag(&field.wire_name)),
+            )?;
+        }
+        parts.push(executor::MultipartPart::File {
+            name: field.wire_name.clone(),
+            path: raw.to_string(),
+            content_type: field.content_type.clone(),
+        });
+    } else {
+        parts.push(executor::MultipartPart::Text {
+            name: field.wire_name.clone(),
+            value: value.to_string(),
+            content_type: field.content_type.clone(),
+        });
+    }
+
+    Ok(())
+}
+
 pub(crate) fn build_pagination_config(
     matches: &clap::ArgMatches,
     doc: &RestDescription,
     cli_name: &str,
 ) -> executor::PaginationConfig {
+    // `try_*` rather than `get_*`: the pagination flags are only registered
+    // on operations the spec describes how to page (see
+    // `commands::method_has_pagination`). On every other operation the arg id
+    // is unknown and `get_flag` panics, so absence has to read as "off".
     executor::PaginationConfig {
-        page_all: matches.get_flag("page-all"),
+        page_all: matches
+            .try_get_one::<bool>("page-all")
+            .ok()
+            .flatten()
+            .copied()
+            .unwrap_or(false),
         page_limit: matches
-            .get_one::<u32>("page-limit")
+            .try_get_one::<u32>("page-limit")
+            .ok()
+            .flatten()
             .copied()
             .unwrap_or(10),
         page_delay_ms: matches
-            .get_one::<u64>("page-delay")
+            .try_get_one::<u64>("page-delay")
+            .ok()
+            .flatten()
             .copied()
             .unwrap_or(100),
         token_query_param: doc
@@ -2694,7 +3263,12 @@ pub(crate) fn build_pagination_config(
             .pagination_token_response_path
             .clone()
             .unwrap_or_else(|| "nextPageToken".to_string()),
-        no_pager: matches.get_flag("no-pager"),
+        no_pager: matches
+            .try_get_one::<bool>("no-pager")
+            .ok()
+            .flatten()
+            .copied()
+            .unwrap_or(false),
         cli_name: cli_name.to_string(),
     }
 }
@@ -2745,6 +3319,102 @@ mod tests {
             default: None,
         };
         assert_eq!(global_header_arg_id(&h), "__global_header::X-API-Stage");
+    }
+
+    #[test]
+    fn test_effective_base_url_falls_back_to_per_operation_server() {
+        // A spec can declare its server per-operation (`paths./x.get.servers`)
+        // and carry no root-level one. The built-in path handles that via
+        // `effective_root_url(method, doc)`; the SDK bridge has no operation in
+        // scope, so without a fallback it produced an empty base and every
+        // custom command failed on a relative URL — on exactly the specs this
+        // accessor exists to serve.
+        let mut methods = std::collections::HashMap::new();
+        methods.insert(
+            "list".to_string(),
+            RestMethod {
+                root_url: "https://api.example.com".to_string(),
+                ..Default::default()
+            },
+        );
+        let mut resources = std::collections::HashMap::new();
+        resources.insert(
+            "things".to_string(),
+            RestResource {
+                methods,
+                ..Default::default()
+            },
+        );
+        assert_eq!(
+            first_method_root_url(&resources).as_deref(),
+            Some("https://api.example.com"),
+        );
+        // No operation declares one either — nothing to invent.
+        assert_eq!(first_method_root_url(&std::collections::HashMap::new()), None);
+    }
+
+    /// A global header/parameter whose flag was never registered on the
+    /// command still resolves from `env` and `default`.
+    ///
+    /// Regression: colliding globals are attached per-leaf rather than
+    /// `global(true)`, and the custom-command path reads the *root*
+    /// `ArgMatches` — so `try_get_one` returned `Err` and the header was
+    /// silently dropped. The result was a global stamped on spec-derived
+    /// requests and missing on custom-command ones.
+    #[test]
+    fn test_unregistered_global_falls_back_to_env_then_default() {
+        // Matches on a command that declares no global-header arg at all,
+        // standing in for both the colliding-leaf and custom-command cases.
+        let matches = clap::Command::new("test").get_matches_from(["test"]);
+
+        let with_default = crate::openapi::discovery::GlobalHeader {
+            header: "X-Source".to_string(),
+            optional: true,
+            default: Some("cli".to_string()),
+            ..Default::default()
+        };
+        assert_eq!(
+            resolve_global_header_value(&matches, &with_default),
+            Some("cli".to_string()),
+            "an unregistered global must still honor its default",
+        );
+
+        // env wins over default, mirroring clap's own precedence.
+        let env_var = "FERN_TEST_UNREGISTERED_GLOBAL_HEADER";
+        // SAFETY: single-threaded test-local mutation; removed below.
+        unsafe { std::env::set_var(env_var, "  from-env  ") };
+        let with_env = crate::openapi::discovery::GlobalHeader {
+            header: "X-Source".to_string(),
+            optional: true,
+            env: Some(env_var.to_string()),
+            default: Some("cli".to_string()),
+            ..Default::default()
+        };
+        assert_eq!(
+            resolve_global_header_value(&matches, &with_env),
+            Some("from-env".to_string()),
+            "env must win over default, and the value must be trimmed",
+        );
+
+        // A whitespace-only resolution is dropped, not stamped as an empty
+        // header — same rule the registered path applies.
+        unsafe { std::env::set_var(env_var, "   ") };
+        let blank = crate::openapi::discovery::GlobalHeader {
+            header: "X-Source".to_string(),
+            optional: true,
+            env: Some(env_var.to_string()),
+            ..Default::default()
+        };
+        assert_eq!(resolve_global_header_value(&matches, &blank), None);
+        unsafe { std::env::remove_var(env_var) };
+
+        // Nothing declared anywhere still resolves to nothing.
+        let bare = crate::openapi::discovery::GlobalHeader {
+            header: "X-Source".to_string(),
+            optional: true,
+            ..Default::default()
+        };
+        assert_eq!(resolve_global_header_value(&matches, &bare), None);
     }
 
     /// `build_global_header_overrides` errors with a message naming the
@@ -3423,6 +4093,25 @@ mod tests {
         );
     }
 
+    /// `build_cli` sets the env-var footer and `decorate_command` used to
+    /// append it again, so the root `--help` printed the section twice.
+    #[test]
+    fn test_root_help_renders_env_footer_once() {
+        let doc = RestDescription {
+            name: "channel3".into(),
+            ..Default::default()
+        };
+        let cli = crate::openapi::commands::build_cli(&doc);
+        let cli = CliApp::new("channel3").decorate_command(&doc, cli);
+
+        let after_help = cli.get_after_help().expect("footer").to_string();
+        assert_eq!(
+            after_help.matches("Environment variables:").count(),
+            1,
+            "env-var footer should appear once, got:\n{after_help}",
+        );
+    }
+
     #[test]
     fn test_app_context_spec_accessor() {
         let doc = RestDescription {
@@ -3599,6 +4288,160 @@ mod tests {
         let result = collect_params_from_flags(&matches, &method, None).unwrap();
         assert_eq!(result.get("type").unwrap().as_str().unwrap(), "new");
         assert_eq!(result.get("name").unwrap().as_str().unwrap(), "n");
+    }
+
+    #[test]
+    fn test_defaulted_leaf_is_dropped_when_ancestor_object_flag_is_typed() {
+        // A `const` leaf under a nested object (`platform_settings.guardrails
+        // .version`) used to be materialized from its clap default even when
+        // the user typed the parent's object-shorthand flag, and the executor
+        // then refused the combination — making `--platform-settings
+        // .guardrails` unusable on any const-bearing nested schema.
+        let mut params = std::collections::HashMap::new();
+        for key in [
+            "platform_settings.guardrails",
+            "platform_settings.guardrails.version",
+        ] {
+            params.insert(
+                key.to_string(),
+                crate::openapi::discovery::MethodParameter {
+                    param_type: Some("string".to_string()),
+                    location: Some("body".to_string()),
+                    ..Default::default()
+                },
+            );
+        }
+        let method = crate::openapi::discovery::RestMethod {
+            parameters: params,
+            ..Default::default()
+        };
+        let matches = clap::Command::new("test")
+            .arg(
+                clap::Arg::new("platform_settings.guardrails").long("platform-settings.guardrails"),
+            )
+            .arg(
+                clap::Arg::new("platform_settings.guardrails.version")
+                    .long("platform-settings.guardrails.version")
+                    .default_value("1"),
+            )
+            .arg(clap::Arg::new("json").long("json"))
+            .arg(clap::Arg::new("params").long("params"))
+            .get_matches_from(vec![
+                "test",
+                "--platform-settings.guardrails",
+                r#"{"enabled":true}"#,
+            ]);
+        let result = collect_params_from_flags(&matches, &method, None).unwrap();
+        assert!(
+            !result.contains_key("platform_settings.guardrails.version"),
+            "a defaulted leaf must stand down under a typed ancestor flag, got: {result:?}",
+        );
+    }
+
+    /// Multipart method with one repeatable (array) file field, one plain
+    /// text field, and one repeatable text field.
+    fn multipart_method() -> crate::openapi::discovery::RestMethod {
+        use crate::openapi::discovery::MultipartField;
+        crate::openapi::discovery::RestMethod {
+            multipart_fields: vec![
+                MultipartField {
+                    wire_name: "files".to_string(),
+                    is_file: true,
+                    description: None,
+                    required: false,
+                    content_type: None,
+                    repeated: true,
+                },
+                MultipartField {
+                    wire_name: "name".to_string(),
+                    is_file: false,
+                    description: None,
+                    required: false,
+                    content_type: None,
+                    repeated: false,
+                },
+                MultipartField {
+                    wire_name: "tags".to_string(),
+                    is_file: false,
+                    description: None,
+                    required: false,
+                    content_type: None,
+                    repeated: true,
+                },
+            ],
+            ..Default::default()
+        }
+    }
+
+    fn multipart_command() -> clap::Command {
+        clap::Command::new("test")
+            .arg(
+                clap::Arg::new("files")
+                    .long("files")
+                    .action(clap::ArgAction::Append),
+            )
+            .arg(clap::Arg::new("name").long("name"))
+            .arg(
+                clap::Arg::new("tags")
+                    .long("tags")
+                    .action(clap::ArgAction::Append),
+            )
+    }
+
+    #[test]
+    fn test_multipart_array_field_emits_one_part_per_occurrence() {
+        // The bug: an array-typed multipart field was a single-value flag, so
+        // multi-sample uploads (`--files a --files b`) were rejected outright
+        // and no alternative input path existed.
+        let method = multipart_method();
+        let matches = multipart_command().get_matches_from(vec![
+            "test", "--name", "V", "--files", "a.mp3", "--files", "b.mp3",
+        ]);
+        let mut params = serde_json::Map::new();
+        let parts = collect_multipart_parts(&method, &matches, &mut params)
+            .unwrap()
+            .expect("multipart parts");
+        let files: Vec<&str> = parts
+            .iter()
+            .filter_map(|p| match p {
+                executor::MultipartPart::File { name, path, .. } if name == "files" => {
+                    Some(path.as_str())
+                }
+                _ => None,
+            })
+            .collect();
+        assert_eq!(files, vec!["a.mp3", "b.mp3"]);
+        assert!(parts.iter().any(|p| matches!(
+            p,
+            executor::MultipartPart::Text { name, value, .. } if name == "name" && value == "V"
+        )));
+    }
+
+    #[test]
+    fn test_multipart_fields_are_moved_out_of_params() {
+        // Multipart fields live in `multipart_fields`, not `parameters`, so a
+        // `--params` key naming one had no `location: body` to route on and
+        // was appended to the query string instead of the form body.
+        let method = multipart_method();
+        let matches = multipart_command().get_matches_from(vec!["test"]);
+        let mut params = serde_json::Map::new();
+        params.insert("tags".to_string(), serde_json::json!(["a", "b"]));
+        params.insert("unrelated".to_string(), serde_json::json!("keep"));
+        let parts = collect_multipart_parts(&method, &matches, &mut params)
+            .unwrap()
+            .expect("multipart parts");
+        let tags: Vec<&str> = parts
+            .iter()
+            .filter_map(|p| match p {
+                executor::MultipartPart::Text { name, value, .. } if name == "tags" => {
+                    Some(value.as_str())
+                }
+                _ => None,
+            })
+            .collect();
+        assert_eq!(tags, vec!["a", "b"]);
+        assert!(!params.contains_key("tags"), "left in params: {params:?}");
+        assert!(params.contains_key("unrelated"), "dropped: {params:?}");
     }
 
     #[test]
@@ -4299,6 +5142,9 @@ openapi: "3.0.0"
 info:
   title: "API A"
   version: "1.0"
+tags:
+  - name: users
+    description: User operations.
 servers:
   - url: "https://api-a.example.com"
 paths:
@@ -4315,6 +5161,9 @@ openapi: "3.0.0"
 info:
   title: "API B"
   version: "1.0"
+tags:
+  - name: orders
+    description: Order operations.
 servers:
   - url: "https://api-b.example.com"
 paths:
@@ -4330,6 +5179,53 @@ paths:
         let doc = app.build_doc().unwrap();
         assert!(doc.resources.contains_key("users"));
         assert!(doc.resources.contains_key("orders"));
+        assert_eq!(
+            doc.tag_descriptions.get("users").map(String::as_str),
+            Some("User operations."),
+        );
+        assert_eq!(
+            doc.tag_descriptions.get("orders").map(String::as_str),
+            Some("Order operations."),
+        );
+    }
+
+    #[test]
+    fn test_multi_spec_tag_descriptions_first_write_wins() {
+        let spec_a = r#"
+openapi: "3.0.0"
+info: { title: "API A", version: "1.0" }
+tags:
+  - name: shared
+    description: First description.
+paths:
+  /users:
+    get:
+      x-fern-sdk-group-name: ["users"]
+      x-fern-sdk-method-name: list
+      responses: { "200": { description: ok } }
+"#;
+        let spec_b = r#"
+openapi: "3.0.0"
+info: { title: "API B", version: "1.0" }
+tags:
+  - name: shared
+    description: Second description.
+paths:
+  /orders:
+    get:
+      x-fern-sdk-group-name: ["orders"]
+      x-fern-sdk-method-name: list
+      responses: { "200": { description: ok } }
+"#;
+        let doc = CliApp::new("test")
+            .spec(spec_a)
+            .spec(spec_b)
+            .build_doc()
+            .unwrap();
+        assert_eq!(
+            doc.tag_descriptions.get("shared").map(String::as_str),
+            Some("First description."),
+        );
     }
 
     #[test]
@@ -4760,6 +5656,264 @@ paths:
             create.servers[0].url,
             "https://upload.example.com/stores/abc123/v3",
         );
+    }
+
+    /// Twilio's spec shape: a templated server URL plus the concrete
+    /// `x-fern-default-url` to fall back to.
+    const TWILIO_SHAPED_SPEC: &str = r#"
+openapi: "3.0.0"
+info: { title: "T", version: "1.0" }
+servers:
+  - url: "https://api.{region}.twilio.com"
+    x-fern-server-name: Production
+    x-fern-default-url: "https://api.twilio.com"
+    variables:
+      region:
+        default: us1
+        description: The Twilio region
+        enum: [us1, ie1, au1]
+paths:
+  /Messages:
+    get:
+      x-fern-sdk-group-name: ["messages"]
+      x-fern-sdk-method-name: list-message
+      responses: { "200": { description: ok } }
+"#;
+
+    #[test]
+    fn test_spec_server_variables_survive_parsing() {
+        let doc = CliApp::new("t").spec(TWILIO_SHAPED_SPEC).build_doc().unwrap();
+        assert_eq!(doc.servers.len(), 1);
+        let server = &doc.servers[0];
+        assert_eq!(server.default_url.as_deref(), Some("https://api.twilio.com"));
+        assert_eq!(server.variables.len(), 1);
+        assert_eq!(server.variables[0].name, "region");
+        assert_eq!(server.variables[0].default.as_deref(), Some("us1"));
+        assert_eq!(server.variables[0].description.as_deref(), Some("The Twilio region"));
+        assert_eq!(server.variables[0].enum_values, vec!["us1", "ie1", "au1"]);
+
+        // Same metadata reachable through the collector the CLI layer uses.
+        let collected = collect_spec_server_variables(&doc);
+        assert_eq!(collected.len(), 1);
+        assert_eq!(collected[0].name, "region");
+    }
+
+    #[test]
+    fn test_multi_spec_preserves_later_spec_server_metadata() {
+        // Twilio's shape: dozens of `spec_under` entries, with the
+        // templated server declared by one that is not the first.
+        let app = CliApp::new("t")
+            .spec_under(
+                "accounts",
+                r#"
+openapi: "3.0.0"
+info: { title: "A", version: "1.0" }
+servers: [{ url: "https://accounts.twilio.com" }]
+paths:
+  /Accounts:
+    get:
+      x-fern-sdk-group-name: ["accounts"]
+      x-fern-sdk-method-name: list
+      responses: { "200": { description: ok } }
+"#,
+            )
+            .spec_under("core", TWILIO_SHAPED_SPEC);
+        let mut doc = app.build_doc().unwrap();
+
+        let collected = collect_spec_server_variables(&doc);
+        assert_eq!(collected.len(), 1, "later spec's `variables` must survive the merge");
+        assert_eq!(collected[0].name, "region");
+        assert!(app.needs_server_var_resolution(&doc));
+
+        let cli = app.decorate_command(&doc, crate::openapi::commands::build_cli(&doc));
+        let matches = cli
+            .try_get_matches_from(["t", "core", "messages", "list-message"])
+            .expect("parses with no flags");
+        app.apply_server_vars(&mut doc, &matches);
+
+        let list = doc.resources["core"].resources["messages"]
+            .methods
+            .get("list-message")
+            .unwrap();
+        assert_eq!(list.root_url, "https://api.twilio.com");
+    }
+
+    #[test]
+    fn test_spec_server_variable_flag_colliding_with_operation_param_falls_back_to_default() {
+        // A `global(true)` long name that a per-operation parameter also uses
+        // makes clap reject the whole command tree, so the flag is skipped —
+        // and the variable resolves to its declared `default` instead, which
+        // still yields a sendable URL.
+        let app = CliApp::new("t").spec(
+            r#"
+openapi: "3.0.0"
+info: { title: "T", version: "1.0" }
+servers:
+  - url: "https://api.{region}.example.com"
+    variables:
+      region: { default: us1 }
+paths:
+  /things:
+    get:
+      x-fern-sdk-group-name: ["things"]
+      x-fern-sdk-method-name: list
+      parameters:
+        - { name: region, in: query, schema: { type: string } }
+      responses: { "200": { description: ok } }
+"#,
+        );
+        let mut doc = app.build_doc().unwrap();
+        let cli = app.decorate_command(&doc, crate::openapi::commands::build_cli(&doc));
+        let matches = cli
+            .try_get_matches_from(["t", "things", "list"])
+            .expect("command tree must still build and parse");
+        app.apply_server_vars(&mut doc, &matches);
+
+        assert_eq!(doc.root_url, "https://api.us1.example.com");
+        let list = doc.resources["things"].methods.get("list").unwrap();
+        assert_eq!(list.root_url, "https://api.us1.example.com");
+    }
+
+    #[test]
+    fn test_needs_server_var_resolution_for_spec_declared_variables() {
+        // The resolution pass must run for specs that declare their own
+        // `servers[].variables` / `x-fern-default-url`, even when the
+        // generator registered no `.server_var()` of its own.
+        let app = CliApp::new("t").spec(TWILIO_SHAPED_SPEC);
+        assert!(app.needs_server_var_resolution(&app.build_doc().unwrap()));
+
+        let plain = CliApp::new("t").spec(
+            r#"
+openapi: "3.0.0"
+info: { title: "T", version: "1.0" }
+servers: [{ url: "https://api.example.com" }]
+paths:
+  /things:
+    get:
+      x-fern-sdk-group-name: ["things"]
+      x-fern-sdk-method-name: list
+      responses: { "200": { description: ok } }
+"#,
+        );
+        assert!(!plain.needs_server_var_resolution(&plain.build_doc().unwrap()));
+    }
+
+    #[test]
+    fn test_apply_server_vars_uses_default_url_when_caller_pins_nothing() {
+        // `./cli messages list-message` with no flags: the templated URL is
+        // not a valid URI, so `x-fern-default-url` must take over.
+        let app = CliApp::new("t").spec(TWILIO_SHAPED_SPEC);
+        let mut doc = app.build_doc().unwrap();
+        let cli = app.decorate_command(&doc, crate::openapi::commands::build_cli(&doc));
+        let matches = cli
+            .try_get_matches_from(["t", "messages", "list-message"])
+            .expect("parses with no flags");
+        app.apply_server_vars(&mut doc, &matches);
+
+        assert_eq!(doc.root_url, "https://api.twilio.com");
+        assert_eq!(doc.servers[0].url, "https://api.twilio.com");
+        let list = doc.resources["messages"].methods.get("list-message").unwrap();
+        assert_eq!(list.root_url, "https://api.twilio.com");
+    }
+
+    #[test]
+    fn test_apply_server_vars_caller_value_beats_default_url() {
+        // An explicit `--region` must route the request, not be discarded in
+        // favour of `x-fern-default-url`.
+        let app = CliApp::new("t").spec(TWILIO_SHAPED_SPEC);
+        let mut doc = app.build_doc().unwrap();
+        let cli = app.decorate_command(&doc, crate::openapi::commands::build_cli(&doc));
+        let matches = cli
+            .try_get_matches_from(["t", "--region", "ie1", "messages", "list-message"])
+            .expect("parses --region from the spec's server variables");
+        app.apply_server_vars(&mut doc, &matches);
+
+        assert_eq!(doc.root_url, "https://api.ie1.twilio.com");
+        let list = doc.resources["messages"].methods.get("list-message").unwrap();
+        assert_eq!(list.root_url, "https://api.ie1.twilio.com");
+    }
+
+    #[test]
+    fn test_spec_server_variable_flag_rejects_off_enum_value() {
+        let app = CliApp::new("t").spec(TWILIO_SHAPED_SPEC);
+        let doc = app.build_doc().unwrap();
+        let cli = app.decorate_command(&doc, crate::openapi::commands::build_cli(&doc));
+        cli.clone().debug_assert();
+        assert!(
+            cli.try_get_matches_from(["t", "--region", "mars1", "messages", "list-message"])
+                .is_err(),
+            "spec `enum` must constrain the generated flag",
+        );
+    }
+
+    #[test]
+    fn test_apply_server_vars_substitutes_variable_default_without_default_url() {
+        // No `x-fern-default-url`: the variable's own `default` resolves the
+        // template so the URL is still sendable.
+        let spec = r#"
+openapi: "3.0.0"
+info: { title: "T", version: "1.0" }
+servers:
+  - url: "https://api.{region}.example.com"
+    variables:
+      region: { default: us-east-1 }
+paths:
+  /things:
+    get:
+      x-fern-sdk-group-name: ["things"]
+      x-fern-sdk-method-name: list
+      responses: { "200": { description: ok } }
+"#;
+        let app = CliApp::new("t").spec(spec);
+        let mut doc = app.build_doc().unwrap();
+        let cli = app.decorate_command(&doc, crate::openapi::commands::build_cli(&doc));
+        let matches = cli.try_get_matches_from(["t", "things", "list"]).unwrap();
+        app.apply_server_vars(&mut doc, &matches);
+
+        assert_eq!(doc.root_url, "https://api.us-east-1.example.com");
+    }
+
+    #[test]
+    fn test_apply_server_vars_handles_per_operation_server_variables() {
+        let spec = r#"
+openapi: "3.0.0"
+info: { title: "T", version: "1.0" }
+servers:
+  - url: "https://api.example.com"
+paths:
+  /uploads:
+    post:
+      x-fern-sdk-group-name: ["uploads"]
+      x-fern-sdk-method-name: create
+      servers:
+        - url: "https://upload.{region}.example.com"
+          x-fern-default-url: "https://upload.example.com"
+          variables:
+            region: { default: us1 }
+      responses: { "200": { description: ok } }
+"#;
+        let app = CliApp::new("t").spec(spec);
+        let doc = app.build_doc().unwrap();
+        let cli = app.decorate_command(&doc, crate::openapi::commands::build_cli(&doc));
+
+        // No caller value: the per-operation server falls back to its default URL.
+        let mut doc_default = doc.clone();
+        let matches = cli
+            .clone()
+            .try_get_matches_from(["t", "uploads", "create"])
+            .unwrap();
+        app.apply_server_vars(&mut doc_default, &matches);
+        let create = doc_default.resources["uploads"].methods.get("create").unwrap();
+        assert_eq!(create.servers[0].url, "https://upload.example.com");
+
+        // Caller value: substituted into the per-operation server.
+        let mut doc_pinned = doc;
+        let matches = cli
+            .try_get_matches_from(["t", "--region", "ie1", "uploads", "create"])
+            .unwrap();
+        app.apply_server_vars(&mut doc_pinned, &matches);
+        let create = doc_pinned.resources["uploads"].methods.get("create").unwrap();
+        assert_eq!(create.servers[0].url, "https://upload.ie1.example.com");
     }
 
     #[test]

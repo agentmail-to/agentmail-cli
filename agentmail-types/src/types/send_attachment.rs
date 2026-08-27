@@ -2,6 +2,7 @@ pub use crate::prelude::*;
 #[allow(unused_imports)]
 use super::*;
 
+/// Provide either `content` or `url` for each attachment.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq, Hash)]
 pub struct SendAttachment {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -12,10 +13,12 @@ pub struct SendAttachment {
     pub content_disposition: Option<AttachmentContentDisposition>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub content_id: Option<AttachmentContentId>,
-    /// Base64 encoded content of attachment.
+    /// Base64 encoded content of the attachment. The entire request, including the message body and all attachments, is limited to 6 MB.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub content: Option<String>,
-    /// URL to the attachment.
+    /// URL that AgentMail can download without custom authentication headers or cookies.
+    /// Redirects and pre-signed URLs are supported, and the final response must be a
+    /// successful 2xx response. Keep URL-backed attachments around 30 MB total per message.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub url: Option<String>,
 }
