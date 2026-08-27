@@ -10,6 +10,3 @@ SECURITY.md
 # Hand-authored custom command bindings. The scaffold and its docs say
 # this file is protected; without this entry a regeneration overwrites it.
 cli/agentmail/custom.rs
-.fern/replay.lock
-.fern/replay.yml
-.gitattributes

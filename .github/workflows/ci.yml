@@ -112,9 +112,6 @@ jobs:
           - rust-target: aarch64-apple-darwin
             runner: macos-latest
             npm-platform-suffix: darwin-arm64
-          - rust-target: x86_64-pc-windows-msvc
-            runner: windows-latest
-            npm-platform-suffix: win32-x64
     steps:
       - name: Checkout repo
         uses: actions/checkout@v6
@@ -257,8 +254,7 @@ jobs:
           OPTIONAL_DEPS="${OPTIONAL_DEPS}\"agentmail-cli-linux-x64\": \"${VERSION}\","
           OPTIONAL_DEPS="${OPTIONAL_DEPS}\"agentmail-cli-linux-arm64\": \"${VERSION}\","
           OPTIONAL_DEPS="${OPTIONAL_DEPS}\"agentmail-cli-darwin-x64\": \"${VERSION}\","
-          OPTIONAL_DEPS="${OPTIONAL_DEPS}\"agentmail-cli-darwin-arm64\": \"${VERSION}\","
-          OPTIONAL_DEPS="${OPTIONAL_DEPS}\"agentmail-cli-win32-x64\": \"${VERSION}\""
+          OPTIONAL_DEPS="${OPTIONAL_DEPS}\"agentmail-cli-darwin-arm64\": \"${VERSION}\""
 
           cat > "${PKG_DIR}/package.json" <<PKGJSON
           {
@@ -293,7 +289,6 @@ jobs:
             "linux-arm64": "agentmail-cli-linux-arm64",
             "darwin-x64": "agentmail-cli-darwin-x64",
             "darwin-arm64": "agentmail-cli-darwin-arm64",
-            "win32-x64": "agentmail-cli-win32-x64",
           };
 
           const platformKey = os.platform() + "-" + os.arch();
