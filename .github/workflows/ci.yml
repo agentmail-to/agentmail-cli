@@ -189,10 +189,18 @@ jobs:
           # release tag like v1.0.0 for a package whose version string
           # happens to contain "alpha"/"beta" as a substring isn't
           # mis-tagged on npm.
-          if [[ "${VERSION}" == *-alpha* ]]; then
-            npm publish --access public --tag alpha
-          elif [[ "${VERSION}" == *-beta* ]]; then
-            npm publish --access public --tag beta
+          # Any SemVer prerelease (identifier after the first "-") publishes
+          # under its own dist-tag, never "latest": alpha/beta/rc/next/... A
+          # tag like v1.1.0-rc.1 previously fell through to a bare publish and
+          # would have moved "latest" to a prerelease.
+          PRERELEASE="${VERSION#*-}"
+          if [[ "${PRERELEASE}" != "${VERSION}" ]]; then
+            DIST_TAG="${PRERELEASE%%.*}"        # 1.0.0-rc.1  -> rc
+            DIST_TAG="${DIST_TAG%%+*}"          # strip build metadata
+            DIST_TAG="$(printf '%s' "${DIST_TAG}" | tr -cd '[:alnum:]-')"
+            [[ -z "${DIST_TAG}" ]] && DIST_TAG="prerelease"
+            echo "Publishing prerelease ${VERSION} with --tag ${DIST_TAG}"
+            npm publish --access public --tag "${DIST_TAG}"
           else
             PKG_NAME=$(node -p "require('./package.json').name")
             PKG_VERSION=$(node -p "require('./package.json').version")
@@ -312,10 +320,18 @@ jobs:
           # release tag like v1.0.0 for a package whose version string
           # happens to contain "alpha"/"beta" as a substring isn't
           # mis-tagged on npm.
-          if [[ "${VERSION}" == *-alpha* ]]; then
-            npm publish --access public --tag alpha
-          elif [[ "${VERSION}" == *-beta* ]]; then
-            npm publish --access public --tag beta
+          # Any SemVer prerelease (identifier after the first "-") publishes
+          # under its own dist-tag, never "latest": alpha/beta/rc/next/... A
+          # tag like v1.1.0-rc.1 previously fell through to a bare publish and
+          # would have moved "latest" to a prerelease.
+          PRERELEASE="${VERSION#*-}"
+          if [[ "${PRERELEASE}" != "${VERSION}" ]]; then
+            DIST_TAG="${PRERELEASE%%.*}"        # 1.0.0-rc.1  -> rc
+            DIST_TAG="${DIST_TAG%%+*}"          # strip build metadata
+            DIST_TAG="$(printf '%s' "${DIST_TAG}" | tr -cd '[:alnum:]-')"
+            [[ -z "${DIST_TAG}" ]] && DIST_TAG="prerelease"
+            echo "Publishing prerelease ${VERSION} with --tag ${DIST_TAG}"
+            npm publish --access public --tag "${DIST_TAG}"
           else
             PKG_NAME=$(node -p "require('./package.json').name")
             PKG_VERSION=$(node -p "require('./package.json').version")
