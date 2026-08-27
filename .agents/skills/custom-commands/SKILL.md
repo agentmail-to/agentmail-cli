@@ -67,6 +67,7 @@ with the following sub-clients:
 |-------|------|-------------|
 | `client.inboxes` | `agentmail_sdk::api::InboxesClient` | inboxes operations |
 | `client.api_keys` | `agentmail_sdk::api::ApiKeysClient2` | api_keys operations |
+| `client.browser_credentials` | `agentmail_sdk::api::BrowserCredentialsClient` | browser_credentials operations |
 | `client.drafts` | `agentmail_sdk::api::DraftsClient2` | drafts operations |
 | `client.events` | `agentmail_sdk::api::EventsClient` | events operations |
 | `client.lists` | `agentmail_sdk::api::ListsClient2` | lists operations |

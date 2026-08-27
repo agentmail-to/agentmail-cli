@@ -11,6 +11,7 @@ Full command reference for `agentmail`.
 - [`agentmail drafts`](#agentmail-drafts)
 - [`agentmail inboxes`](#agentmail-inboxes)
 - [`agentmail inboxes api-keys`](#agentmail-inboxes-api-keys)
+- [`agentmail inboxes browser-credentials`](#agentmail-inboxes-browser-credentials)
 - [`agentmail inboxes drafts`](#agentmail-inboxes-drafts)
 - [`agentmail inboxes events`](#agentmail-inboxes-events)
 - [`agentmail inboxes lists`](#agentmail-inboxes-lists)
@@ -81,6 +82,16 @@ agentmail agent verify --otp-code 123456
 
 ### `agentmail api-keys`
 
+#### `agentmail api-keys cancel-browser-enrollment`
+
+Cancel one pending, unexpired browser enrollment intent. Requires `api_key_delete`.
+
+`DELETE /v0/api-keys/browser-credentials/enrollments/{enrollment_id}`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--enrollment-id` | `string (uuid)` | Yes |  |
+
 #### `agentmail api-keys create`
 
 **CLI:**
@@ -120,6 +131,26 @@ agentmail api-keys delete --api-key-id <api_key_id>
 |------|------|----------|-------------|
 | `--api-key-id` | `ApiKeyId` | Yes |  |
 
+#### `agentmail api-keys delete-browser-consent`
+
+Revoke one remembered AgentID client approval. Requires `api_key_delete`.
+
+`DELETE /v0/api-keys/browser-consents/{consent_id}`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--consent-id` | `string` | Yes |  |
+
+#### `agentmail api-keys delete-browser-credential`
+
+Permanently revoke one active browser credential. Requires `api_key_delete`.
+
+`DELETE /v0/api-keys/browser-credentials/{credential_id}`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--credential-id` | `string (uuid)` | Yes |  |
+
 #### `agentmail api-keys list`
 
 **CLI:**
@@ -134,6 +165,40 @@ agentmail api-keys list
 | `--limit` | `Limit` | No |  |
 | `--page-token` | `PageToken` | No |  |
 | `--ascending` | `Ascending` | No |  |
+
+#### `agentmail api-keys list-browser-consents`
+
+List remembered AgentID client approvals for one live inbox. Requires `api_key_read`.
+
+`GET /v0/api-keys/browser-consents`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--inbox-id` | `string (email)` | Yes |  |
+| `--limit` | `BrowserAuthorizationListLimit` | No |  |
+| `--page-token` | `PageToken` | No |  |
+
+#### `agentmail api-keys list-browser-credential-events`
+
+List owner-facing browser credential and consent lifecycle events. Requires `api_key_read`.
+
+`GET /v0/api-keys/browser-credentials/events`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--limit` | `BrowserAuthorizationListLimit` | No |  |
+| `--page-token` | `PageToken` | No |  |
+
+#### `agentmail api-keys list-browser-credentials`
+
+List active browser credentials visible to the caller's scope. Requires `api_key_read`.
+
+`GET /v0/api-keys/browser-credentials`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--limit` | `BrowserAuthorizationListLimit` | No |  |
+| `--page-token` | `PageToken` | No |  |
 
 #### `agentmail api-keys list-public-keys`
 
@@ -471,6 +536,45 @@ agentmail inboxes api-keys list --inbox-id <inbox_id>
 | `--inbox-id` | `inboxesInboxId` | Yes |  |
 | `--limit` | `Limit` | No |  |
 | `--page-token` | `PageToken` | No |  |
+
+---
+
+### `agentmail inboxes browser-credentials`
+
+#### `agentmail inboxes browser-credentials create-enrollment`
+
+Attach a browser enrollment intent to the inbox. Requires
+`api_key_create`. Before submitting `transaction_jti`, independently
+verify that the browser page's final origin is exactly
+`https://auth.agentid.com`.
+
+This endpoint is available to every organization using US production.
+It is not available in EU production.
+
+Select `inbox_id` from trusted AgentMail configuration. An AgentID
+`login_hint` is not authoritative for selecting the inbox; when the
+transaction includes one, it must match the path inbox.
+
+**AgentMail API keys are sent only to `https://api.agentmail.to`; AgentID never requests them.**
+
+A new intent returns `202`; an idempotent retry for the same pending
+transaction, inbox, and bearer key returns `200` with the same receipt.
+An intent lasts at most five minutes. An activated credential lasts at
+most 30 days and cannot outlive its authorizing bearer API key.
+
+Creation is limited to 20 intents per bearer API key per hour, 100 per
+organization per hour, and five live unused intents per bearer API key.
+Browser activation is separately limited to 20 activations per
+authorizing bearer API key per UTC day. Either kind of limit can return
+`429`; honor the `Retry-After` header. Cancelling an enrollment releases
+its live-intent slot but does not reset the daily activation counter.
+
+`POST /v0/inboxes/{inbox_id}/browser-credentials/enrollments`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--inbox-id` | `inboxesInboxId` | Yes |  |
+| `--json` | `JSON` | Yes | Request body as JSON (or use individual body-field flags) |
 
 ---
 

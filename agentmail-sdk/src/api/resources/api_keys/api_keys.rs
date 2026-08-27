@@ -435,4 +435,298 @@ impl ApiKeysClient {
             )
             .await
     }
+
+    /// List active browser credentials visible to the caller's scope. Requires `api_key_read`.
+    ///
+    /// # Arguments
+    ///
+    /// * `options` - Additional request options such as headers, timeout, etc.
+    ///
+    /// # Returns
+    ///
+    /// JSON response from the API
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use agentmail_sdk::prelude::*;
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let config = ClientConfig {
+    ///         token: Some("<token>".to_string()),
+    ///         ..Default::default()
+    ///     };
+    ///     let client = AgentmailClient::new(config).expect("Failed to build client");
+    ///     client
+    ///         .api_keys
+    ///         .list_browser_credentials(
+    ///             &ListBrowserCredentialsQueryRequest {
+    ///                 ..Default::default()
+    ///             },
+    ///             None,
+    ///         )
+    ///         .await;
+    /// }
+    /// ```
+    pub async fn list_browser_credentials(
+        &self,
+        request: &ListBrowserCredentialsQueryRequest,
+        options: Option<RequestOptions>,
+    ) -> Result<ListBrowserCredentialsResponse, ApiError> {
+        self.http_client
+            .execute_request(
+                Method::GET,
+                "v0/api-keys/browser-credentials",
+                None,
+                QueryBuilder::new()
+                    .serialize("limit", request.limit.clone())
+                    .serialize("page_token", request.page_token.clone())
+                    .build(),
+                options,
+            )
+            .await
+    }
+
+    /// List owner-facing browser credential and consent lifecycle events. Requires `api_key_read`.
+    ///
+    /// # Arguments
+    ///
+    /// * `options` - Additional request options such as headers, timeout, etc.
+    ///
+    /// # Returns
+    ///
+    /// JSON response from the API
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use agentmail_sdk::prelude::*;
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let config = ClientConfig {
+    ///         token: Some("<token>".to_string()),
+    ///         ..Default::default()
+    ///     };
+    ///     let client = AgentmailClient::new(config).expect("Failed to build client");
+    ///     client
+    ///         .api_keys
+    ///         .list_browser_credential_events(
+    ///             &ListBrowserCredentialEventsQueryRequest {
+    ///                 ..Default::default()
+    ///             },
+    ///             None,
+    ///         )
+    ///         .await;
+    /// }
+    /// ```
+    pub async fn list_browser_credential_events(
+        &self,
+        request: &ListBrowserCredentialEventsQueryRequest,
+        options: Option<RequestOptions>,
+    ) -> Result<ListBrowserLifecycleEventsResponse, ApiError> {
+        self.http_client
+            .execute_request(
+                Method::GET,
+                "v0/api-keys/browser-credentials/events",
+                None,
+                QueryBuilder::new()
+                    .serialize("limit", request.limit.clone())
+                    .serialize("page_token", request.page_token.clone())
+                    .build(),
+                options,
+            )
+            .await
+    }
+
+    /// Permanently revoke one active browser credential. Requires `api_key_delete`.
+    ///
+    /// # Arguments
+    ///
+    /// * `options` - Additional request options such as headers, timeout, etc.
+    ///
+    /// # Returns
+    ///
+    /// Empty response
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use agentmail_sdk::prelude::*;
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let config = ClientConfig {
+    ///         token: Some("<token>".to_string()),
+    ///         ..Default::default()
+    ///     };
+    ///     let client = AgentmailClient::new(config).expect("Failed to build client");
+    ///     client
+    ///         .api_keys
+    ///         .delete_browser_credential(&"credential_id".to_string(), None)
+    ///         .await;
+    /// }
+    /// ```
+    pub async fn delete_browser_credential(
+        &self,
+        credential_id: &str,
+        options: Option<RequestOptions>,
+    ) -> Result<(), ApiError> {
+        self.http_client
+            .execute_request(
+                Method::DELETE,
+                &format!("v0/api-keys/browser-credentials/{}", credential_id),
+                None,
+                None,
+                options,
+            )
+            .await
+    }
+
+    /// Cancel one pending, unexpired browser enrollment intent. Requires `api_key_delete`.
+    ///
+    /// # Arguments
+    ///
+    /// * `options` - Additional request options such as headers, timeout, etc.
+    ///
+    /// # Returns
+    ///
+    /// Empty response
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use agentmail_sdk::prelude::*;
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let config = ClientConfig {
+    ///         token: Some("<token>".to_string()),
+    ///         ..Default::default()
+    ///     };
+    ///     let client = AgentmailClient::new(config).expect("Failed to build client");
+    ///     client
+    ///         .api_keys
+    ///         .cancel_browser_enrollment(&"enrollment_id".to_string(), None)
+    ///         .await;
+    /// }
+    /// ```
+    pub async fn cancel_browser_enrollment(
+        &self,
+        enrollment_id: &str,
+        options: Option<RequestOptions>,
+    ) -> Result<(), ApiError> {
+        self.http_client
+            .execute_request(
+                Method::DELETE,
+                &format!(
+                    "v0/api-keys/browser-credentials/enrollments/{}",
+                    enrollment_id
+                ),
+                None,
+                None,
+                options,
+            )
+            .await
+    }
+
+    /// List remembered AgentID client approvals for one live inbox. Requires `api_key_read`.
+    ///
+    /// # Arguments
+    ///
+    /// * `options` - Additional request options such as headers, timeout, etc.
+    ///
+    /// # Returns
+    ///
+    /// JSON response from the API
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use agentmail_sdk::prelude::*;
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let config = ClientConfig {
+    ///         token: Some("<token>".to_string()),
+    ///         ..Default::default()
+    ///     };
+    ///     let client = AgentmailClient::new(config).expect("Failed to build client");
+    ///     client
+    ///         .api_keys
+    ///         .list_browser_consents(
+    ///             &ListBrowserConsentsQueryRequest {
+    ///                 inbox_id: "inbox_id".to_string(),
+    ///                 limit: None,
+    ///                 page_token: None,
+    ///             },
+    ///             None,
+    ///         )
+    ///         .await;
+    /// }
+    /// ```
+    pub async fn list_browser_consents(
+        &self,
+        request: &ListBrowserConsentsQueryRequest,
+        options: Option<RequestOptions>,
+    ) -> Result<ListBrowserConsentsResponse, ApiError> {
+        self.http_client
+            .execute_request(
+                Method::GET,
+                "v0/api-keys/browser-consents",
+                None,
+                QueryBuilder::new()
+                    .string("inbox_id", request.inbox_id.clone())
+                    .serialize("limit", request.limit.clone())
+                    .serialize("page_token", request.page_token.clone())
+                    .build(),
+                options,
+            )
+            .await
+    }
+
+    /// Revoke one remembered AgentID client approval. Requires `api_key_delete`.
+    ///
+    /// # Arguments
+    ///
+    /// * `options` - Additional request options such as headers, timeout, etc.
+    ///
+    /// # Returns
+    ///
+    /// Empty response
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use agentmail_sdk::prelude::*;
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let config = ClientConfig {
+    ///         token: Some("<token>".to_string()),
+    ///         ..Default::default()
+    ///     };
+    ///     let client = AgentmailClient::new(config).expect("Failed to build client");
+    ///     client
+    ///         .api_keys
+    ///         .delete_browser_consent(&"consent_id".to_string(), None)
+    ///         .await;
+    /// }
+    /// ```
+    pub async fn delete_browser_consent(
+        &self,
+        consent_id: &str,
+        options: Option<RequestOptions>,
+    ) -> Result<(), ApiError> {
+        self.http_client
+            .execute_request(
+                Method::DELETE,
+                &format!("v0/api-keys/browser-consents/{}", consent_id),
+                None,
+                None,
+                options,
+            )
+            .await
+    }
 }
