@@ -10,7 +10,7 @@ checksum = "320119579fcad9c21884f5c4861d16174d0e06250625266f50fe6898340abefa"
 
 [[package]]
 name = "agentmail-cli"
-version = "1.1.0"
+version = "1.1.1"
 dependencies = [
  "agentmail_sdk",
  "anyhow",
@@ -566,54 +566,6 @@ name = "fastrand"
 version = "2.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9f1f227452a390804cdb637b74a86990f2a7d7ba4b7d5693aac9b4dd6defd8d6"
-
-[[package]]
-name = "agentmail-cli"
-version = "1.1.1"
-dependencies = [
- "agentmail_sdk",
- "anyhow",
- "base64",
- "bytes",
- "chrono",
- "clap_complete",
- "clap_mangen",
- "clap",
- "dotenvy",
- "form_urlencoded",
- "futures-util",
- "hmac",
- "httpdate",
- "jmespath",
- "keyring",
- "libc",
- "num-bigint",
- "ordered-float",
- "percent-encoding",
- "pin-project",
- "rand 0.8.6",
- "reqwest-sse",
- "reqwest",
- "secrecy",
- "serde_json_path",
- "serde_json",
- "serde_qs",
- "serde_yaml",
- "serde",
- "serial_test",
- "sha2",
- "tempfile",
- "thiserror 2.0.18",
- "tokio-tungstenite",
- "tokio-util",
- "tokio",
- "tracing-appender",
- "tracing-subscriber",
- "tracing",
- "unicode-normalization",
- "webbrowser",
- "wiremock",
-]
 
 [[package]]
 name = "find-msvc-tools"

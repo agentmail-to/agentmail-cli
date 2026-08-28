@@ -260,7 +260,10 @@ jobs:
           {
             "name": "agentmail-cli",
             "version": "${VERSION}",
-            "description": "CLI for agentmail",
+            "description": "Command-line interface for the AgentMail API. Send, receive, reply, and manage threaded email conversations from your terminal.",
+            "license": "MIT",
+            "keywords": ["email", "api", "cli", "agent", "agentmail"],
+            "homepage": "https://agentmail.to",
             "repository": {
               "type": "git",
               "url": "https://github.com/agentmail-to/agentmail-cli"
@@ -271,7 +274,7 @@ jobs:
             "optionalDependencies": {
               ${OPTIONAL_DEPS}
             },
-            "files": ["bin/"]
+            "files": ["bin/", "README.md"]
           }
           PKGJSON
 
@@ -319,6 +322,7 @@ jobs:
           }
           LAUNCHER
 
+          cp README.md "${PKG_DIR}/README.md"
           cd "${PKG_DIR}"
           # Pre-release detection. ANY SemVer pre-release (a "-" after the
           # version core) must get a non-latest dist-tag: matching only
