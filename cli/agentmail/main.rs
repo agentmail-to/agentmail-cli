@@ -11,7 +11,6 @@ use fern_cli_sdk::auth::{BearerAuth};
 fn main() {
     let app = CliApp::new("agentmail")
         .auth(BearerAuth::new("BearerAuth").env("AGENTMAIL_API_KEY"))
-        .auth(BearerAuth::new("TokenAuth").env("AGENTMAIL_TOKEN"))
         .binding(
             OpenApiBinding::new()
                 .spec(include_str!("openapi0.json"))

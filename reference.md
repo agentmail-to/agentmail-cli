@@ -314,6 +314,16 @@ agentmail domains get --domain-id <domain_id>
 |------|------|----------|-------------|
 | `--domain-id` | `DomainId` | Yes |  |
 
+#### `agentmail domains get-setup-link`
+
+Build a one-click DNS setup link for the domain via the Domain Connect standard. When the domain's DNS provider supports Domain Connect and carries the AgentMail template, the response contains a signed URL: opening it lets the domain owner approve the required DNS records at their provider, which writes them automatically — no copy-paste. When the provider does not support it, `supported` is `false` and the domain's `records` should be added manually instead.
+
+`GET /v0/domains/{domain_id}/setup-link`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--domain-id` | `DomainId` | Yes |  |
+
 #### `agentmail domains get-zone-file`
 
 **CLI:**

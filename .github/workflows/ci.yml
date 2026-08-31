@@ -262,8 +262,9 @@ jobs:
             "version": "${VERSION}",
             "description": "Command-line interface for the AgentMail API. Send, receive, reply, and manage threaded email conversations from your terminal.",
             "license": "MIT",
-            "keywords": ["email", "api", "cli", "agent", "agentmail"],
+            "keywords": ["email","api","cli","agent","agentmail"],
             "homepage": "https://agentmail.to",
+            "author": "AgentMail <support@agentmail.cc>",
             "repository": {
               "type": "git",
               "url": "https://github.com/agentmail-to/agentmail-cli"

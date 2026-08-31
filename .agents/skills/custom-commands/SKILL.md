@@ -120,7 +120,6 @@ Custom commands automatically inherit the CLI's authentication.
 The following auth schemes are configured:
 
 - **BearerAuth** (bearer): env `AGENTMAIL_API_KEY`
-- **TokenAuth** (bearer): env `AGENTMAIL_TOKEN`
 
 No manual auth wiring is needed in custom command handlers.
 

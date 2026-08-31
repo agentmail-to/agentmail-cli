@@ -17,6 +17,9 @@ pub struct VerificationRecord {
     /// The priority of the MX record.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub priority: Option<i64>,
+    /// Why the record is INVALID, when known. `duplicate_records` means the expected value is present but extra records coexist at the same name; `value_mismatch` means a record exists but does not match the expected value.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reason: Option<String>,
 }
 
 impl VerificationRecord {
@@ -33,6 +36,7 @@ pub struct VerificationRecordBuilder {
     value: Option<String>,
     status: Option<RecordStatus>,
     priority: Option<i64>,
+    reason: Option<String>,
 }
 
 impl VerificationRecordBuilder {
@@ -61,6 +65,11 @@ impl VerificationRecordBuilder {
         self
     }
 
+    pub fn reason(mut self, value: impl Into<String>) -> Self {
+        self.reason = Some(value.into());
+        self
+    }
+
     /// Consumes the builder and constructs a [`VerificationRecord`].
     /// This method will fail if any of the following fields are not set:
     /// - [`r#type`](VerificationRecordBuilder::r#type)
@@ -74,6 +83,7 @@ impl VerificationRecordBuilder {
             value: self.value.ok_or_else(|| BuildError::missing_field("value"))?,
             status: self.status.ok_or_else(|| BuildError::missing_field("status"))?,
             priority: self.priority,
+            reason: self.reason,
         })
     }
 }

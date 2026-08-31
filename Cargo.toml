@@ -1,6 +1,6 @@
 [package]
 name = "agentmail-cli"
-version = "1.1.1"
+version = "1.2.0"
 edition = "2021"
 description = "Command-line interface for the AgentMail API. Send, receive, reply, and manage threaded email conversations from your terminal."
 license = "MIT"
