@@ -363,4 +363,48 @@ impl DomainsClient {
             )
             .await
     }
+
+    /// Build a one-click DNS setup link for the domain via the Domain Connect standard. When the domain's DNS provider supports Domain Connect and carries the AgentMail template, the response contains a signed URL: opening it lets the domain owner approve the required DNS records at their provider, which writes them automatically — no copy-paste. When the provider does not support it, `supported` is `false` and the domain's `records` should be added manually instead.
+    ///
+    /// # Arguments
+    ///
+    /// * `options` - Additional request options such as headers, timeout, etc.
+    ///
+    /// # Returns
+    ///
+    /// JSON response from the API
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use agentmail_sdk::prelude::*;
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let config = ClientConfig {
+    ///         token: Some("<token>".to_string()),
+    ///         ..Default::default()
+    ///     };
+    ///     let client = AgentmailClient::new(config).expect("Failed to build client");
+    ///     client
+    ///         .domains
+    ///         .get_setup_link(&DomainID("domain_id".to_string()), None)
+    ///         .await;
+    /// }
+    /// ```
+    pub async fn get_setup_link(
+        &self,
+        domain_id: &DomainId,
+        options: Option<RequestOptions>,
+    ) -> Result<GetSetupLinkResponse, ApiError> {
+        self.http_client
+            .execute_request(
+                Method::GET,
+                &format!("v0/domains/{}/setup-link", domain_id.0),
+                None,
+                None,
+                options,
+            )
+            .await
+    }
 }

@@ -112,6 +112,9 @@ jobs:
           - rust-target: aarch64-apple-darwin
             runner: macos-latest
             npm-platform-suffix: darwin-arm64
+          - rust-target: x86_64-pc-windows-msvc
+            runner: windows-latest
+            npm-platform-suffix: win32-x64
     steps:
       - name: Checkout repo
         uses: actions/checkout@v6
@@ -254,7 +257,8 @@ jobs:
           OPTIONAL_DEPS="${OPTIONAL_DEPS}\"agentmail-cli-linux-x64\": \"${VERSION}\","
           OPTIONAL_DEPS="${OPTIONAL_DEPS}\"agentmail-cli-linux-arm64\": \"${VERSION}\","
           OPTIONAL_DEPS="${OPTIONAL_DEPS}\"agentmail-cli-darwin-x64\": \"${VERSION}\","
-          OPTIONAL_DEPS="${OPTIONAL_DEPS}\"agentmail-cli-darwin-arm64\": \"${VERSION}\""
+          OPTIONAL_DEPS="${OPTIONAL_DEPS}\"agentmail-cli-darwin-arm64\": \"${VERSION}\","
+          OPTIONAL_DEPS="${OPTIONAL_DEPS}\"agentmail-cli-win32-x64\": \"${VERSION}\""
 
           cat > "${PKG_DIR}/package.json" <<PKGJSON
           {
@@ -262,8 +266,9 @@ jobs:
             "version": "${VERSION}",
             "description": "Command-line interface for the AgentMail API. Send, receive, reply, and manage threaded email conversations from your terminal.",
             "license": "MIT",
-            "keywords": ["email", "api", "cli", "agent", "agentmail"],
+            "keywords": ["email","api","cli","agent","agentmail"],
             "homepage": "https://agentmail.to",
+            "author": "AgentMail <support@agentmail.cc>",
             "repository": {
               "type": "git",
               "url": "https://github.com/agentmail-to/agentmail-cli"
@@ -274,7 +279,7 @@ jobs:
             "optionalDependencies": {
               ${OPTIONAL_DEPS}
             },
-            "files": ["bin/", "README.md"]
+            "files": ["bin/"]
           }
           PKGJSON
 
@@ -292,6 +297,7 @@ jobs:
             "linux-arm64": "agentmail-cli-linux-arm64",
             "darwin-x64": "agentmail-cli-darwin-x64",
             "darwin-arm64": "agentmail-cli-darwin-arm64",
+            "win32-x64": "agentmail-cli-win32-x64",
           };
 
           const platformKey = os.platform() + "-" + os.arch();
@@ -322,7 +328,6 @@ jobs:
           }
           LAUNCHER
 
-          cp README.md "${PKG_DIR}/README.md"
           cd "${PKG_DIR}"
           # Pre-release detection. ANY SemVer pre-release (a "-" after the
           # version core) must get a non-latest dist-tag: matching only

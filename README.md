@@ -60,7 +60,6 @@ Set the following environment variable(s) before using the CLI:
 
 ```bash
 export AGENTMAIL_API_KEY="<your token>"
-export AGENTMAIL_TOKEN="<your token>"
 ```
 
 A `.env` file in the working directory is also supported — the CLI auto-loads it on startup.

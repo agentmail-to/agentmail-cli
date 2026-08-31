@@ -5,7 +5,7 @@
 //!
 //! ## Type Categories
 //!
-//! - **Request/Response Types**: 97 types for API operations
+//! - **Request/Response Types**: 98 types for API operations
 //! - **Model Types**: 245 types for data representation
 
 pub mod limit;
@@ -138,6 +138,7 @@ pub mod client_id;
 pub mod domain;
 pub mod domain_item;
 pub mod list_domains_response;
+pub mod get_setup_link_response;
 pub mod create_domain_request;
 pub mod update_domain_request;
 pub mod draft_id;
@@ -481,6 +482,7 @@ pub use client_id::ClientId;
 pub use domain::Domain;
 pub use domain_item::DomainItem;
 pub use list_domains_response::ListDomainsResponse;
+pub use get_setup_link_response::GetSetupLinkResponse;
 pub use create_domain_request::CreateDomainRequest;
 pub use update_domain_request::UpdateDomainRequest;
 pub use draft_id::DraftId;
