@@ -86,6 +86,7 @@ pub fn client(ctx: &AppContext) -> agentmail_sdk::api::ApiClient {
             webhooks: agentmail_sdk::api::resources::pods::WebhooksClient3 { http_client: http_client.clone() },
         },
         webhooks: agentmail_sdk::api::WebhooksClient { http_client: http_client.clone() },
+        accounts: agentmail_sdk::api::AccountsClient { http_client: http_client.clone() },
         agent: agentmail_sdk::api::AgentClient { http_client: http_client.clone() },
         api_keys: agentmail_sdk::api::ApiKeysClient { http_client: http_client.clone() },
         auth: agentmail_sdk::api::AuthClient { http_client: http_client.clone() },
@@ -94,6 +95,7 @@ pub fn client(ctx: &AppContext) -> agentmail_sdk::api::ApiClient {
         lists: agentmail_sdk::api::ListsClient { http_client: http_client.clone() },
         metrics: agentmail_sdk::api::MetricsClient { http_client: http_client.clone() },
         organizations: agentmail_sdk::api::OrganizationsClient { http_client: http_client.clone() },
+        providers: agentmail_sdk::api::ProvidersClient { http_client: http_client.clone() },
         threads: agentmail_sdk::api::ThreadsClient { http_client: http_client.clone() },
     }
 }

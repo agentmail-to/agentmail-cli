@@ -7,6 +7,7 @@
 CHANGELOG.md
 SECURITY.md
 
-# Hand-authored custom command bindings. The scaffold and its docs say
-# this file is protected; without this entry a regeneration overwrites it.
+# Hand-authored custom command bindings. Generator 0.38.10 emits this
+# entry itself; it is repeated here because this patch replaces the whole
+# file, and dropping the line would remove protection the generator added.
 cli/agentmail/custom.rs

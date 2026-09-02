@@ -10,8 +10,9 @@
 pub mod resources;
 
 pub use resources::{
-    AgentClient, ApiClient, ApiKeysClient, AuthClient, DomainsClient, DraftsClient, InboxesClient,
-    ListsClient, MetricsClient, OrganizationsClient, PodsClient, ThreadsClient, WebhooksClient,
+    AccountsClient, AgentClient, ApiClient, ApiKeysClient, AuthClient, DomainsClient, DraftsClient,
+    InboxesClient, ListsClient, MetricsClient, OrganizationsClient, PodsClient, ProvidersClient,
+    ThreadsClient, WebhooksClient,
 };
 
 pub use agentmail_types::*;
