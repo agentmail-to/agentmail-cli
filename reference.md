@@ -4,6 +4,7 @@ Full command reference for `agentmail`.
 
 ## Commands
 
+- [`agentmail accounts`](#agentmail-accounts)
 - [`agentmail agent`](#agentmail-agent)
 - [`agentmail api-keys`](#agentmail-api-keys)
 - [`agentmail auth`](#agentmail-auth)
@@ -31,8 +32,35 @@ Full command reference for `agentmail`.
 - [`agentmail pods metrics`](#agentmail-pods-metrics)
 - [`agentmail pods threads`](#agentmail-pods-threads)
 - [`agentmail pods webhooks`](#agentmail-pods-webhooks)
+- [`agentmail providers`](#agentmail-providers)
 - [`agentmail threads`](#agentmail-threads)
 - [`agentmail webhooks`](#agentmail-webhooks)
+
+---
+
+### `agentmail accounts`
+
+#### `agentmail accounts get`
+
+Get Account
+
+`GET /v0/accounts/{account_id}`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--account-id` | `AccountId` | Yes |  |
+
+#### `agentmail accounts list`
+
+Lists accounts across all providers.
+
+`GET /v0/accounts`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--limit` | `Limit` | No |  |
+| `--page-token` | `PageToken` | No |  |
+| `--ascending` | `Ascending` | No |  |
 
 ---
 
@@ -2092,6 +2120,68 @@ pod-scoped webhook. Header values remain write-only.
 | `--pod-id` | `podsPodId` | Yes |  |
 | `--webhook-id` | `webhooksWebhookId` | Yes |  |
 | `--json` | `JSON` | Yes | Request body as JSON (or use individual body-field flags) |
+
+---
+
+### `agentmail providers`
+
+#### `agentmail providers connect`
+
+Starts signing an inbox in to a provider. Returns a `magic_url` valid
+for five minutes; open it in the browser that will hold the sign-in.
+Requires `api_key_create` and an `Idempotency-Key` header.
+
+`POST /v0/providers/{provider_id}/connect`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--provider-id` | `ProviderId` | Yes |  |
+| `--idempotency-key` | `string` | No | Unique key that makes the connect idempotent. The endpoint requires one; the CLI generates a UUID when the flag is omitted and reuses it across retries, so a transient failure cannot start a second sign-in. Pass a value to make a manual re-run resolve to the same attempt. |
+| `--json` | `JSON` | No | Request body as JSON (or use individual body-field flags) |
+
+#### `agentmail providers get`
+
+Get Provider
+
+`GET /v0/providers/{provider_id}`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--provider-id` | `ProviderId` | Yes |  |
+
+#### `agentmail providers list`
+
+Lists providers, most popular first.
+
+`GET /v0/providers`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--limit` | `Limit` | No |  |
+| `--page-token` | `PageToken` | No |  |
+
+#### `agentmail providers list-accounts`
+
+Lists accounts at one provider, most recent sign-in first.
+
+`GET /v0/providers/{provider_id}/accounts`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--provider-id` | `ProviderId` | Yes |  |
+| `--limit` | `Limit` | No |  |
+| `--page-token` | `PageToken` | No |  |
+
+#### `agentmail providers search`
+
+Searches providers by name prefix.
+
+`GET /v0/providers/search`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--q` | `string` | Yes | Name prefix to search for. |
+| `--limit` | `Limit` | No |  |
 
 ---
 
