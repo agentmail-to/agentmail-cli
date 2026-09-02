@@ -85,6 +85,7 @@ with the following sub-clients:
 | `client.threads` | `agentmail_sdk::api::ThreadsClient3` | threads operations |
 | `client.webhooks` | `agentmail_sdk::api::WebhooksClient3` | webhooks operations |
 | `client.webhooks` | `agentmail_sdk::api::WebhooksClient` | webhooks operations |
+| `client.accounts` | `agentmail_sdk::api::AccountsClient` | accounts operations |
 | `client.agent` | `agentmail_sdk::api::AgentClient` | agent operations |
 | `client.api_keys` | `agentmail_sdk::api::ApiKeysClient` | api_keys operations |
 | `client.auth` | `agentmail_sdk::api::AuthClient` | auth operations |
@@ -93,6 +94,7 @@ with the following sub-clients:
 | `client.lists` | `agentmail_sdk::api::ListsClient` | lists operations |
 | `client.metrics` | `agentmail_sdk::api::MetricsClient` | metrics operations |
 | `client.organizations` | `agentmail_sdk::api::OrganizationsClient` | organizations operations |
+| `client.providers` | `agentmail_sdk::api::ProvidersClient` | providers operations |
 | `client.threads` | `agentmail_sdk::api::ThreadsClient` | threads operations |
 
 ### 3. Key Patterns
