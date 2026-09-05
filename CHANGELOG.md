@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.7.15 (2026-09-05)
+
+Full Changelog: [v0.7.14...v0.7.15](https://github.com/agentmail-to/agentmail-cli/compare/v0.7.14...v0.7.15)
+
+### Features
+
+* **api:** api update ([0f5bcda](https://github.com/agentmail-to/agentmail-cli/commit/0f5bcdae166959475843019517fd59e60c329b74))
+* **api:** api update ([aea6040](https://github.com/agentmail-to/agentmail-cli/commit/aea604003c05ba9fa8ca3ca93832299f9a579035))
+* **api:** api update ([4caffbe](https://github.com/agentmail-to/agentmail-cli/commit/4caffbe2625d6ca8b66f0f6a6248b99eadbdcd55))
+* **api:** api update ([6a66ceb](https://github.com/agentmail-to/agentmail-cli/commit/6a66ceb8d3b60367e956818d0dbccafa002b29e6))
+* **stlc:** configurable CI runner and private-production-repo support in workflow templates ([a44ee71](https://github.com/agentmail-to/agentmail-cli/commit/a44ee7111feed59c088b880782f02c50f897ca83))
+
 ## 0.7.14 (2026-07-15)
 
 Full Changelog: [v0.7.13...v0.7.14](https://github.com/agentmail-to/agentmail-cli/compare/v0.7.13...v0.7.14)
