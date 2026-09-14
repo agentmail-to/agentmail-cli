@@ -101,9 +101,11 @@ impl ApiKeysClient2 {
     ///         .api_keys
     ///         .create(
     ///             &InboxesInboxID("inbox_id".to_string()),
-    ///             &CreateAPIKeyRequest {
-    ///                 ..Default::default()
-    ///             },
+    ///             &CreateAPIKeyRequest::CreateBearerAPIKeyRequest(CreateBearerAPIKeyRequest(
+    ///                 APIKeyMutableFields {
+    ///                     ..Default::default()
+    ///                 },
+    ///             )),
     ///             None,
     ///         )
     ///         .await;
@@ -114,7 +116,7 @@ impl ApiKeysClient2 {
         inbox_id: &InboxesInboxId,
         request: &CreateApiKeyRequest,
         options: Option<RequestOptions>,
-    ) -> Result<CreateApiKeyResponse, ApiError> {
+    ) -> Result<CreateApiKeyResult, ApiError> {
         self.http_client
             .execute_request(
                 Method::POST,
@@ -173,6 +175,63 @@ impl ApiKeysClient2 {
                 Method::DELETE,
                 &format!("v0/inboxes/{}/api-keys/{}", inbox_id.0, api_key_id.0),
                 None,
+                None,
+                options,
+            )
+            .await
+    }
+
+    /// **CLI:**
+    /// ```bash
+    /// agentmail inboxes api-keys update --inbox-id <inbox_id> --api-key-id <api_key_id> --name "Renamed"
+    /// ```
+    ///
+    /// # Arguments
+    ///
+    /// * `options` - Additional request options such as headers, timeout, etc.
+    ///
+    /// # Returns
+    ///
+    /// JSON response from the API
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use agentmail_sdk::prelude::*;
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let config = ClientConfig {
+    ///         token: Some("<token>".to_string()),
+    ///         ..Default::default()
+    ///     };
+    ///     let client = AgentmailClient::new(config).expect("Failed to build client");
+    ///     client
+    ///         .inboxes
+    ///         .api_keys
+    ///         .update(
+    ///             &InboxesInboxID("inbox_id".to_string()),
+    ///             &APIKeyID("api_key_id".to_string()),
+    ///             &UpdateAPIKeyRequest(APIKeyMutableFields {
+    ///                 ..Default::default()
+    ///             }),
+    ///             None,
+    ///         )
+    ///         .await;
+    /// }
+    /// ```
+    pub async fn update(
+        &self,
+        inbox_id: &InboxesInboxId,
+        api_key_id: &ApiKeyId,
+        request: &UpdateApiKeyRequest,
+        options: Option<RequestOptions>,
+    ) -> Result<ApiKey, ApiError> {
+        self.http_client
+            .execute_request(
+                Method::PATCH,
+                &format!("v0/inboxes/{}/api-keys/{}", inbox_id.0, api_key_id.0),
+                Some(serde_json::to_value(request).map_err(ApiError::Serialization)?),
                 None,
                 options,
             )

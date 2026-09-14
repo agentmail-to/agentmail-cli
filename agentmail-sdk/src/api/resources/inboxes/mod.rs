@@ -4,8 +4,6 @@ use reqwest::Method;
 
 pub mod api_keys;
 pub use api_keys::ApiKeysClient2;
-pub mod browser_credentials;
-pub use browser_credentials::BrowserCredentialsClient;
 pub mod drafts;
 pub use drafts::DraftsClient2;
 pub mod events;
@@ -23,7 +21,6 @@ pub use webhooks::WebhooksClient2;
 pub struct InboxesClient {
     pub http_client: HttpClient,
     pub api_keys: ApiKeysClient2,
-    pub browser_credentials: BrowserCredentialsClient,
     pub drafts: DraftsClient2,
     pub events: EventsClient,
     pub lists: ListsClient2,
@@ -38,7 +35,6 @@ impl InboxesClient {
         Ok(Self {
             http_client: HttpClient::new(config.clone())?,
             api_keys: ApiKeysClient2::new(config.clone())?,
-            browser_credentials: BrowserCredentialsClient::new(config.clone())?,
             drafts: DraftsClient2::new(config.clone())?,
             events: EventsClient::new(config.clone())?,
             lists: ListsClient2::new(config.clone())?,
@@ -152,6 +148,67 @@ impl InboxesClient {
                 "v0/inboxes",
                 Some(serde_json::to_value(request).map_err(ApiError::Serialization)?),
                 None,
+                options,
+            )
+            .await
+    }
+
+    /// Searches inboxes in the organization by address or display name, ranked
+    /// by relevance. Each word in the query matches the start of a word in the
+    /// address or display name, so `sup` matches `support@example.com` but
+    /// `port` does not. An exact address match always ranks first. `limit`
+    /// cannot exceed 100. A page can be empty and still carry a
+    /// `next_page_token`; keep paging until the token is absent.
+    ///
+    /// # Arguments
+    ///
+    /// * `q` - Address or display name to search for. Matches word prefixes. Must be 2 to 256 characters.
+    /// * `options` - Additional request options such as headers, timeout, etc.
+    ///
+    /// # Returns
+    ///
+    /// JSON response from the API
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use agentmail_sdk::prelude::*;
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let config = ClientConfig {
+    ///         token: Some("<token>".to_string()),
+    ///         ..Default::default()
+    ///     };
+    ///     let client = AgentmailClient::new(config).expect("Failed to build client");
+    ///     client
+    ///         .inboxes
+    ///         .search(
+    ///             &InboxesSearchQueryRequest {
+    ///                 q: "q".to_string(),
+    ///                 limit: None,
+    ///                 page_token: None,
+    ///             },
+    ///             None,
+    ///         )
+    ///         .await;
+    /// }
+    /// ```
+    pub async fn search(
+        &self,
+        request: &InboxesSearchQueryRequest,
+        options: Option<RequestOptions>,
+    ) -> Result<InboxesSearchInboxesResponse, ApiError> {
+        self.http_client
+            .execute_request(
+                Method::GET,
+                "v0/inboxes/search",
+                None,
+                QueryBuilder::new()
+                    .string("q", request.q.clone())
+                    .serialize("limit", request.limit.clone())
+                    .serialize("page_token", request.page_token.clone())
+                    .build(),
                 options,
             )
             .await
@@ -298,6 +355,60 @@ impl InboxesClient {
             .execute_request(
                 Method::PATCH,
                 &format!("v0/inboxes/{}", inbox_id.0),
+                Some(serde_json::to_value(request).map_err(ApiError::Serialization)?),
+                None,
+                options,
+            )
+            .await
+    }
+
+    /// Authorizes the AgentID sign-in a client is already waiting in, for the
+    /// inbox in the path, and returns the pending public key it will activate. A
+    /// repeat for the same token, inbox, and bearer returns the same key.
+    ///
+    /// # Arguments
+    ///
+    /// * `options` - Additional request options such as headers, timeout, etc.
+    ///
+    /// # Returns
+    ///
+    /// JSON response from the API
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use agentmail_sdk::prelude::*;
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let config = ClientConfig {
+    ///         token: Some("<token>".to_string()),
+    ///         ..Default::default()
+    ///     };
+    ///     let client = AgentmailClient::new(config).expect("Failed to build client");
+    ///     client
+    ///         .inboxes
+    ///         .authorize(
+    ///             &InboxesInboxID("inbox_id".to_string()),
+    ///             &InboxesAuthorizeInboxRequest {
+    ///                 auth_token: AuthToken("auth_token".to_string()),
+    ///                 accept_disclosure: None,
+    ///             },
+    ///             None,
+    ///         )
+    ///         .await;
+    /// }
+    /// ```
+    pub async fn authorize(
+        &self,
+        inbox_id: &InboxesInboxId,
+        request: &InboxesAuthorizeInboxRequest,
+        options: Option<RequestOptions>,
+    ) -> Result<PublicKeyCredential, ApiError> {
+        self.http_client
+            .execute_request(
+                Method::POST,
+                &format!("v0/inboxes/{}/authorize", inbox_id.0),
                 Some(serde_json::to_value(request).map_err(ApiError::Serialization)?),
                 None,
                 options,

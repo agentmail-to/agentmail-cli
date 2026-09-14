@@ -177,6 +177,8 @@ impl ThreadsClient2 {
     ///
     /// # Arguments
     ///
+    /// * `limit` - Maximum number of messages to return. Cannot exceed 100.
+    /// * `page_token` - Token returned by the previous response for retrieving the next, older page.
     /// * `options` - Additional request options such as headers, timeout, etc.
     ///
     /// # Returns
@@ -201,6 +203,9 @@ impl ThreadsClient2 {
     ///         .get(
     ///             &InboxesInboxID("inbox_id".to_string()),
     ///             &ThreadID("thread_id".to_string()),
+    ///             &InboxesThreadsGetQueryRequest {
+    ///                 ..Default::default()
+    ///             },
     ///             None,
     ///         )
     ///         .await;
@@ -210,6 +215,7 @@ impl ThreadsClient2 {
         &self,
         inbox_id: &InboxesInboxId,
         thread_id: &ThreadId,
+        request: &InboxesThreadsGetQueryRequest,
         options: Option<RequestOptions>,
     ) -> Result<Thread, ApiError> {
         self.http_client
@@ -217,7 +223,10 @@ impl ThreadsClient2 {
                 Method::GET,
                 &format!("v0/inboxes/{}/threads/{}", inbox_id.0, thread_id.0),
                 None,
-                None,
+                QueryBuilder::new()
+                    .serialize("limit", request.limit.clone())
+                    .serialize("page_token", request.page_token.clone())
+                    .build(),
                 options,
             )
             .await

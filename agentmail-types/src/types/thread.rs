@@ -36,7 +36,16 @@ pub struct Thread {
     pub updated_at: ThreadUpdatedAt,
     #[serde(default)]
     pub created_at: ThreadCreatedAt,
-    /// Messages in thread. Ordered by `timestamp` ascending.
+    /// Number of messages in this response page.
+    #[serde(default)]
+    pub count: Count,
+    /// Maximum number of messages requested for this page.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub limit: Option<Limit>,
+    /// Token for the next, older page of messages. Omitted when this page completes the thread.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub next_page_token: Option<PageToken>,
+    /// Messages in this page, ordered by `timestamp` ascending. The first page contains the newest messages; follow `next_page_token` to retrieve older pages.
     #[serde(default)]
     pub messages: Vec<Message>,
 }
@@ -66,6 +75,9 @@ pub struct ThreadBuilder {
     size: Option<ThreadSize>,
     updated_at: Option<ThreadUpdatedAt>,
     created_at: Option<ThreadCreatedAt>,
+    count: Option<Count>,
+    limit: Option<Limit>,
+    next_page_token: Option<PageToken>,
     messages: Option<Vec<Message>>,
 }
 
@@ -150,6 +162,21 @@ impl ThreadBuilder {
         self
     }
 
+    pub fn count(mut self, value: Count) -> Self {
+        self.count = Some(value);
+        self
+    }
+
+    pub fn limit(mut self, value: Limit) -> Self {
+        self.limit = Some(value);
+        self
+    }
+
+    pub fn next_page_token(mut self, value: PageToken) -> Self {
+        self.next_page_token = Some(value);
+        self
+    }
+
     pub fn messages(mut self, value: Vec<Message>) -> Self {
         self.messages = Some(value);
         self
@@ -168,6 +195,7 @@ impl ThreadBuilder {
     /// - [`size`](ThreadBuilder::size)
     /// - [`updated_at`](ThreadBuilder::updated_at)
     /// - [`created_at`](ThreadBuilder::created_at)
+    /// - [`count`](ThreadBuilder::count)
     /// - [`messages`](ThreadBuilder::messages)
     pub fn build(self) -> Result<Thread, BuildError> {
         Ok(Thread {
@@ -187,6 +215,9 @@ impl ThreadBuilder {
             size: self.size.ok_or_else(|| BuildError::missing_field("size"))?,
             updated_at: self.updated_at.ok_or_else(|| BuildError::missing_field("updated_at"))?,
             created_at: self.created_at.ok_or_else(|| BuildError::missing_field("created_at"))?,
+            count: self.count.ok_or_else(|| BuildError::missing_field("count"))?,
+            limit: self.limit,
+            next_page_token: self.next_page_token,
             messages: self.messages.ok_or_else(|| BuildError::missing_field("messages"))?,
         })
     }

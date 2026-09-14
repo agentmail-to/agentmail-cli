@@ -2,13 +2,14 @@ pub use crate::prelude::*;
 #[allow(unused_imports)]
 use super::*;
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct ListApiKeysResponse {
     #[serde(default)]
     pub count: Count,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub next_page_token: Option<PageToken>,
-    /// Ordered by `created_at` descending.
+    /// Every credential family, ordered by `created_at`. `type` restricts
+    /// to one family.
     #[serde(default)]
     pub api_keys: Vec<ApiKey>,
 }

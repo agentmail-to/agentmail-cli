@@ -2,33 +2,41 @@ pub use crate::prelude::*;
 #[allow(unused_imports)]
 use super::*;
 
-/// An AgentID sign-in credential. `type` and `api_key_id` are server-owned;
-/// use `api_key_id` as the JWS `kid`. This response never contains a bearer
-/// secret or private key.
+/// An AgentID sign-in credential, scoped like a bearer key; `api_key_id` is
+/// the JWS `kid`. A sign-in key carries `status`, gains `public_key` once
+/// the client has proved it, expires 30 days after
+/// activation, and carries exactly `provider_connect` and
+/// `provider_share_owner`, snapshotted from the bearer key that created it
+/// and enforced from the key itself.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct PublicKeyCredential {
-    /// Server-generated credential ID. Store this value as the signing key's `kid`.
-    #[serde(default)]
-    pub api_key_id: String,
-    /// Server-owned credential discriminator. Callers cannot select or update it.
     pub r#type: PublicKeyCredentialType,
-    /// Human-readable credential name.
+    #[serde(default)]
+    pub api_key_id: ApiKeyId,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub client_id: Option<PublicKeyClientId>,
     #[serde(default)]
     pub name: Name,
-    pub public_key: PublicKeyMaterial,
-    pub scope: PublicKeyScope,
-    /// Immutable absolute expiry. Omitted when the credential does not expire.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub expires_at: Option<DateTime<FixedOffset>>,
-    /// Present when organization-wide revoke-all invalidated this credential generation.
+    pub public_key: Option<PublicKeyMaterial>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub revoked_at: Option<DateTime<FixedOffset>>,
+    pub pod_id: Option<PodScopeId>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub inbox_id: Option<InboxScopeId>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub status: Option<PublicKeyStatus>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub used_at: Option<UsedAt>,
     #[serde(default)]
-    #[serde(with = "crate::core::flexible_datetime::offset")]
-    pub created_at: DateTime<FixedOffset>,
+    pub permissions: ApiKeyPermissions,
     #[serde(default)]
-    #[serde(with = "crate::core::flexible_datetime::offset")]
-    pub updated_at: DateTime<FixedOffset>,
+    pub created_by: ApiKeyCreator,
+    #[serde(default)]
+    pub created_at: CreatedAt,
+    #[serde(default)]
+    pub updated_at: UpdatedAt,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expires_at: Option<ExpiresAt>,
 }
 
 impl PublicKeyCredential {
@@ -40,25 +48,35 @@ impl PublicKeyCredential {
 #[derive(Clone, PartialEq, Default, Debug)]
 #[non_exhaustive]
 pub struct PublicKeyCredentialBuilder {
-    api_key_id: Option<String>,
     r#type: Option<PublicKeyCredentialType>,
+    api_key_id: Option<ApiKeyId>,
+    client_id: Option<PublicKeyClientId>,
     name: Option<Name>,
     public_key: Option<PublicKeyMaterial>,
-    scope: Option<PublicKeyScope>,
-    expires_at: Option<DateTime<FixedOffset>>,
-    revoked_at: Option<DateTime<FixedOffset>>,
-    created_at: Option<DateTime<FixedOffset>>,
-    updated_at: Option<DateTime<FixedOffset>>,
+    pod_id: Option<PodScopeId>,
+    inbox_id: Option<InboxScopeId>,
+    status: Option<PublicKeyStatus>,
+    used_at: Option<UsedAt>,
+    permissions: Option<ApiKeyPermissions>,
+    created_by: Option<ApiKeyCreator>,
+    created_at: Option<CreatedAt>,
+    updated_at: Option<UpdatedAt>,
+    expires_at: Option<ExpiresAt>,
 }
 
 impl PublicKeyCredentialBuilder {
-    pub fn api_key_id(mut self, value: impl Into<String>) -> Self {
-        self.api_key_id = Some(value.into());
+    pub fn r#type(mut self, value: PublicKeyCredentialType) -> Self {
+        self.r#type = Some(value);
         self
     }
 
-    pub fn r#type(mut self, value: PublicKeyCredentialType) -> Self {
-        self.r#type = Some(value);
+    pub fn api_key_id(mut self, value: ApiKeyId) -> Self {
+        self.api_key_id = Some(value);
+        self
+    }
+
+    pub fn client_id(mut self, value: PublicKeyClientId) -> Self {
+        self.client_id = Some(value);
         self
     }
 
@@ -72,51 +90,76 @@ impl PublicKeyCredentialBuilder {
         self
     }
 
-    pub fn scope(mut self, value: PublicKeyScope) -> Self {
-        self.scope = Some(value);
+    pub fn pod_id(mut self, value: PodScopeId) -> Self {
+        self.pod_id = Some(value);
         self
     }
 
-    pub fn expires_at(mut self, value: DateTime<FixedOffset>) -> Self {
-        self.expires_at = Some(value);
+    pub fn inbox_id(mut self, value: InboxScopeId) -> Self {
+        self.inbox_id = Some(value);
         self
     }
 
-    pub fn revoked_at(mut self, value: DateTime<FixedOffset>) -> Self {
-        self.revoked_at = Some(value);
+    pub fn status(mut self, value: PublicKeyStatus) -> Self {
+        self.status = Some(value);
         self
     }
 
-    pub fn created_at(mut self, value: DateTime<FixedOffset>) -> Self {
+    pub fn used_at(mut self, value: UsedAt) -> Self {
+        self.used_at = Some(value);
+        self
+    }
+
+    pub fn permissions(mut self, value: ApiKeyPermissions) -> Self {
+        self.permissions = Some(value);
+        self
+    }
+
+    pub fn created_by(mut self, value: ApiKeyCreator) -> Self {
+        self.created_by = Some(value);
+        self
+    }
+
+    pub fn created_at(mut self, value: CreatedAt) -> Self {
         self.created_at = Some(value);
         self
     }
 
-    pub fn updated_at(mut self, value: DateTime<FixedOffset>) -> Self {
+    pub fn updated_at(mut self, value: UpdatedAt) -> Self {
         self.updated_at = Some(value);
+        self
+    }
+
+    pub fn expires_at(mut self, value: ExpiresAt) -> Self {
+        self.expires_at = Some(value);
         self
     }
 
     /// Consumes the builder and constructs a [`PublicKeyCredential`].
     /// This method will fail if any of the following fields are not set:
-    /// - [`api_key_id`](PublicKeyCredentialBuilder::api_key_id)
     /// - [`r#type`](PublicKeyCredentialBuilder::r#type)
+    /// - [`api_key_id`](PublicKeyCredentialBuilder::api_key_id)
     /// - [`name`](PublicKeyCredentialBuilder::name)
-    /// - [`public_key`](PublicKeyCredentialBuilder::public_key)
-    /// - [`scope`](PublicKeyCredentialBuilder::scope)
+    /// - [`permissions`](PublicKeyCredentialBuilder::permissions)
+    /// - [`created_by`](PublicKeyCredentialBuilder::created_by)
     /// - [`created_at`](PublicKeyCredentialBuilder::created_at)
     /// - [`updated_at`](PublicKeyCredentialBuilder::updated_at)
     pub fn build(self) -> Result<PublicKeyCredential, BuildError> {
         Ok(PublicKeyCredential {
-            api_key_id: self.api_key_id.ok_or_else(|| BuildError::missing_field("api_key_id"))?,
             r#type: self.r#type.ok_or_else(|| BuildError::missing_field("r#type"))?,
+            api_key_id: self.api_key_id.ok_or_else(|| BuildError::missing_field("api_key_id"))?,
+            client_id: self.client_id,
             name: self.name.ok_or_else(|| BuildError::missing_field("name"))?,
-            public_key: self.public_key.ok_or_else(|| BuildError::missing_field("public_key"))?,
-            scope: self.scope.ok_or_else(|| BuildError::missing_field("scope"))?,
-            expires_at: self.expires_at,
-            revoked_at: self.revoked_at,
+            public_key: self.public_key,
+            pod_id: self.pod_id,
+            inbox_id: self.inbox_id,
+            status: self.status,
+            used_at: self.used_at,
+            permissions: self.permissions.ok_or_else(|| BuildError::missing_field("permissions"))?,
+            created_by: self.created_by.ok_or_else(|| BuildError::missing_field("created_by"))?,
             created_at: self.created_at.ok_or_else(|| BuildError::missing_field("created_at"))?,
             updated_at: self.updated_at.ok_or_else(|| BuildError::missing_field("updated_at"))?,
+            expires_at: self.expires_at,
         })
     }
 }

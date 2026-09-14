@@ -104,6 +104,14 @@ pub struct ApiKeyPermissions {
     /// Delete API keys.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub api_key_delete: Option<bool>,
+    /// Sign in to providers as an inbox: connect a provider, authorize an inbox, and mint the
+    /// sign-in keys. Omitted on a new bearer key means false, whatever else the key holds.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub provider_connect: Option<bool>,
+    /// Share the organization owner's name and email with providers at sign-in. One permission
+    /// for both values.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub provider_share_owner: Option<bool>,
     /// Read pods.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pod_read: Option<bool>,
@@ -157,6 +165,8 @@ pub struct ApiKeyPermissionsBuilder {
     api_key_create: Option<bool>,
     api_key_update: Option<bool>,
     api_key_delete: Option<bool>,
+    provider_connect: Option<bool>,
+    provider_share_owner: Option<bool>,
     pod_read: Option<bool>,
     pod_create: Option<bool>,
     pod_delete: Option<bool>,
@@ -328,6 +338,16 @@ impl ApiKeyPermissionsBuilder {
         self
     }
 
+    pub fn provider_connect(mut self, value: bool) -> Self {
+        self.provider_connect = Some(value);
+        self
+    }
+
+    pub fn provider_share_owner(mut self, value: bool) -> Self {
+        self.provider_share_owner = Some(value);
+        self
+    }
+
     pub fn pod_read(mut self, value: bool) -> Self {
         self.pod_read = Some(value);
         self
@@ -379,6 +399,8 @@ impl ApiKeyPermissionsBuilder {
             api_key_create: self.api_key_create,
             api_key_update: self.api_key_update,
             api_key_delete: self.api_key_delete,
+            provider_connect: self.provider_connect,
+            provider_share_owner: self.provider_share_owner,
             pod_read: self.pod_read,
             pod_create: self.pod_create,
             pod_delete: self.pod_delete,
