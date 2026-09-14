@@ -2,20 +2,23 @@ pub use crate::prelude::*;
 #[allow(unused_imports)]
 use super::*;
 
+/// Registers a public P-256 JWK at the route's scope. `type` and
+/// `api_key_id` are server-owned. `name` defaults to
+/// `AgentID key {first eight fingerprint characters}`; `permissions`
+/// defaults to the registering key's, and only grants it holds may be
+/// true; `expires_at` defaults to the registering key's expiry and is
+/// independent of that key afterward.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct CreatePublicKeyRequest {
     pub public_key: PublicJwk,
-    /// Defaults to `AgentID key {first eight fingerprint characters}`.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
-    /// Omit to inherit the registering bearer key's exact scope. An explicit
-    /// scope must be the caller's scope or a live descendant.
+    pub client_id: Option<PublicKeyClientId>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub scope: Option<PublicKeyScope>,
-    /// Future absolute expiry. Omit to inherit the registering bearer key's
-    /// expiry. A child credential cannot outlive its creator.
+    pub name: Option<Name>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub expires_at: Option<DateTime<FixedOffset>>,
+    pub permissions: Option<ApiKeyPermissions>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expires_at: Option<ExpiresAt>,
 }
 
 impl CreatePublicKeyRequest {
@@ -28,9 +31,10 @@ impl CreatePublicKeyRequest {
 #[non_exhaustive]
 pub struct CreatePublicKeyRequestBuilder {
     public_key: Option<PublicJwk>,
-    name: Option<String>,
-    scope: Option<PublicKeyScope>,
-    expires_at: Option<DateTime<FixedOffset>>,
+    client_id: Option<PublicKeyClientId>,
+    name: Option<Name>,
+    permissions: Option<ApiKeyPermissions>,
+    expires_at: Option<ExpiresAt>,
 }
 
 impl CreatePublicKeyRequestBuilder {
@@ -39,17 +43,22 @@ impl CreatePublicKeyRequestBuilder {
         self
     }
 
-    pub fn name(mut self, value: impl Into<String>) -> Self {
-        self.name = Some(value.into());
+    pub fn client_id(mut self, value: PublicKeyClientId) -> Self {
+        self.client_id = Some(value);
         self
     }
 
-    pub fn scope(mut self, value: PublicKeyScope) -> Self {
-        self.scope = Some(value);
+    pub fn name(mut self, value: Name) -> Self {
+        self.name = Some(value);
         self
     }
 
-    pub fn expires_at(mut self, value: DateTime<FixedOffset>) -> Self {
+    pub fn permissions(mut self, value: ApiKeyPermissions) -> Self {
+        self.permissions = Some(value);
+        self
+    }
+
+    pub fn expires_at(mut self, value: ExpiresAt) -> Self {
         self.expires_at = Some(value);
         self
     }
@@ -60,10 +69,10 @@ impl CreatePublicKeyRequestBuilder {
     pub fn build(self) -> Result<CreatePublicKeyRequest, BuildError> {
         Ok(CreatePublicKeyRequest {
             public_key: self.public_key.ok_or_else(|| BuildError::missing_field("public_key"))?,
+            client_id: self.client_id,
             name: self.name,
-            scope: self.scope,
+            permissions: self.permissions,
             expires_at: self.expires_at,
         })
     }
 }
-

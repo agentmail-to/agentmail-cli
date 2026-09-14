@@ -177,6 +177,8 @@ impl ThreadsClient3 {
     ///
     /// # Arguments
     ///
+    /// * `limit` - Maximum number of messages to return. Cannot exceed 100.
+    /// * `page_token` - Token returned by the previous response for retrieving the next, older page.
     /// * `options` - Additional request options such as headers, timeout, etc.
     ///
     /// # Returns
@@ -201,6 +203,9 @@ impl ThreadsClient3 {
     ///         .get(
     ///             &PodsPodID("pod_id".to_string()),
     ///             &ThreadID("thread_id".to_string()),
+    ///             &PodsThreadsGetQueryRequest {
+    ///                 ..Default::default()
+    ///             },
     ///             None,
     ///         )
     ///         .await;
@@ -210,6 +215,7 @@ impl ThreadsClient3 {
         &self,
         pod_id: &PodsPodId,
         thread_id: &ThreadId,
+        request: &PodsThreadsGetQueryRequest,
         options: Option<RequestOptions>,
     ) -> Result<Thread, ApiError> {
         self.http_client
@@ -217,7 +223,10 @@ impl ThreadsClient3 {
                 Method::GET,
                 &format!("v0/pods/{}/threads/{}", pod_id.0, thread_id.0),
                 None,
-                None,
+                QueryBuilder::new()
+                    .serialize("limit", request.limit.clone())
+                    .serialize("page_token", request.page_token.clone())
+                    .build(),
                 options,
             )
             .await

@@ -127,6 +127,70 @@ impl InboxesClient2 {
             .await
     }
 
+    /// Searches inboxes in the pod by address or display name, ranked by
+    /// relevance. Each word in the query matches the start of a word in the
+    /// address or display name, so `sup` matches `support@example.com` but
+    /// `port` does not. An exact address match always ranks first. `limit`
+    /// cannot exceed 100. A page can be empty and still carry a
+    /// `next_page_token`; keep paging until the token is absent.
+    ///
+    /// # Arguments
+    ///
+    /// * `q` - Address or display name to search for. Matches word prefixes. Must be 2 to 256 characters.
+    /// * `options` - Additional request options such as headers, timeout, etc.
+    ///
+    /// # Returns
+    ///
+    /// JSON response from the API
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use agentmail_sdk::prelude::*;
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let config = ClientConfig {
+    ///         token: Some("<token>".to_string()),
+    ///         ..Default::default()
+    ///     };
+    ///     let client = AgentmailClient::new(config).expect("Failed to build client");
+    ///     client
+    ///         .pods
+    ///         .inboxes
+    ///         .search(
+    ///             &PodsPodID("pod_id".to_string()),
+    ///             &PodsInboxesSearchQueryRequest {
+    ///                 q: "q".to_string(),
+    ///                 limit: None,
+    ///                 page_token: None,
+    ///             },
+    ///             None,
+    ///         )
+    ///         .await;
+    /// }
+    /// ```
+    pub async fn search(
+        &self,
+        pod_id: &PodsPodId,
+        request: &PodsInboxesSearchQueryRequest,
+        options: Option<RequestOptions>,
+    ) -> Result<InboxesSearchInboxesResponse, ApiError> {
+        self.http_client
+            .execute_request(
+                Method::GET,
+                &format!("v0/pods/{}/inboxes/search", pod_id.0),
+                None,
+                QueryBuilder::new()
+                    .string("q", request.q.clone())
+                    .serialize("limit", request.limit.clone())
+                    .serialize("page_token", request.page_token.clone())
+                    .build(),
+                options,
+            )
+            .await
+    }
+
     /// **CLI:**
     /// ```bash
     /// agentmail pods inboxes get --pod-id <pod_id> --inbox-id <inbox_id>

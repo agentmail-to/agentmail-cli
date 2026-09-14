@@ -207,9 +207,10 @@ impl ProvidersClient {
             .await
     }
 
-    /// Starts signing an inbox in to a provider. Returns a `magic_url` valid
-    /// for five minutes; open it in the browser that will hold the sign-in.
-    /// Requires `api_key_create` and an `Idempotency-Key` header.
+    /// Starts signing an inbox in to a provider. Returns a single-use `magic_url`,
+    /// valid for five minutes, to open in the client that will hold the sign-in;
+    /// the client enrolls as the inbox and continues to the provider. Poll
+    /// [Get API Key](/api-reference/api-keys/get) with `api_key_id` for `status`.
     ///
     /// # Arguments
     ///
@@ -248,7 +249,7 @@ impl ProvidersClient {
         provider_id: &ProviderId,
         request: &ConnectProviderBody,
         options: Option<RequestOptions>,
-    ) -> Result<ConnectProviderAccepted, ApiError> {
+    ) -> Result<ConnectAccepted, ApiError> {
         self.http_client
             .execute_request(
                 Method::POST,

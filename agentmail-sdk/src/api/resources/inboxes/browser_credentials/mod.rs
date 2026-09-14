@@ -1,2 +1,0 @@
-pub mod inboxes_browser_credentials;
-pub use inboxes_browser_credentials::BrowserCredentialsClient;

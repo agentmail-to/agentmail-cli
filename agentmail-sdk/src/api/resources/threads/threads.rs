@@ -173,6 +173,8 @@ impl ThreadsClient {
     ///
     /// # Arguments
     ///
+    /// * `limit` - Maximum number of messages to return. Cannot exceed 100.
+    /// * `page_token` - Token returned by the previous response for retrieving the next, older page.
     /// * `options` - Additional request options such as headers, timeout, etc.
     ///
     /// # Returns
@@ -193,13 +195,20 @@ impl ThreadsClient {
     ///     let client = AgentmailClient::new(config).expect("Failed to build client");
     ///     client
     ///         .threads
-    ///         .get(&ThreadID("thread_id".to_string()), None)
+    ///         .get(
+    ///             &ThreadID("thread_id".to_string()),
+    ///             &ThreadsGetQueryRequest {
+    ///                 ..Default::default()
+    ///             },
+    ///             None,
+    ///         )
     ///         .await;
     /// }
     /// ```
     pub async fn get(
         &self,
         thread_id: &ThreadId,
+        request: &ThreadsGetQueryRequest,
         options: Option<RequestOptions>,
     ) -> Result<Thread, ApiError> {
         self.http_client
@@ -207,7 +216,10 @@ impl ThreadsClient {
                 Method::GET,
                 &format!("v0/threads/{}", thread_id.0),
                 None,
-                None,
+                QueryBuilder::new()
+                    .serialize("limit", request.limit.clone())
+                    .serialize("page_token", request.page_token.clone())
+                    .build(),
                 options,
             )
             .await
