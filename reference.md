@@ -12,7 +12,6 @@ Full command reference for `agentmail`.
 - [`agentmail drafts`](#agentmail-drafts)
 - [`agentmail inboxes`](#agentmail-inboxes)
 - [`agentmail inboxes api-keys`](#agentmail-inboxes-api-keys)
-- [`agentmail inboxes browser-credentials`](#agentmail-inboxes-browser-credentials)
 - [`agentmail inboxes drafts`](#agentmail-inboxes-drafts)
 - [`agentmail inboxes events`](#agentmail-inboxes-events)
 - [`agentmail inboxes lists`](#agentmail-inboxes-lists)
@@ -110,17 +109,10 @@ agentmail agent verify --otp-code 123456
 
 ### `agentmail api-keys`
 
-#### `agentmail api-keys cancel-browser-enrollment`
-
-Cancel one pending, unexpired browser enrollment intent. Requires `api_key_delete`.
-
-`DELETE /v0/api-keys/browser-credentials/enrollments/{enrollment_id}`
-
-| Flag | Type | Required | Description |
-|------|------|----------|-------------|
-| `--enrollment-id` | `string (uuid)` | Yes |  |
-
 #### `agentmail api-keys create`
+
+Creates a bearer key, or registers a public key when the body carries
+`public_key`. The route selects the scope. Bearer secrets are returned once.
 
 **CLI:**
 ```bash
@@ -133,20 +125,10 @@ agentmail api-keys create --name "My Key"
 |------|------|----------|-------------|
 | `--json` | `JSON` | Yes | Request body as JSON (or use individual body-field flags) |
 
-#### `agentmail api-keys create-public-key`
-
-Register a public P-256 JWK using an existing AgentMail bearer API key
-with `api_key_create`. Re-registering the same JWK creates a new
-credential ID; it does not replace or recover an earlier credential.
-The private key must never be sent to AgentMail.
-
-`POST /v0/api-keys/public-keys`
-
-| Flag | Type | Required | Description |
-|------|------|----------|-------------|
-| `--json` | `JSON` | Yes | Request body as JSON (or use individual body-field flags) |
-
 #### `agentmail api-keys delete`
+
+Deletes one credential of any family. A pending sign-in key is
+cancelled; an active one is revoked. Public keys also resolve by `client_id`.
 
 **CLI:**
 ```bash
@@ -159,27 +141,22 @@ agentmail api-keys delete --api-key-id <api_key_id>
 |------|------|----------|-------------|
 | `--api-key-id` | `ApiKeyId` | Yes |  |
 
-#### `agentmail api-keys delete-browser-consent`
+#### `agentmail api-keys get`
 
-Revoke one remembered AgentID client approval. Requires `api_key_delete`.
+Returns one credential of any family. Public keys also resolve by
+`client_id`. Poll a sign-in key until `status` is `active`.
 
-`DELETE /v0/api-keys/browser-consents/{consent_id}`
-
-| Flag | Type | Required | Description |
-|------|------|----------|-------------|
-| `--consent-id` | `string` | Yes |  |
-
-#### `agentmail api-keys delete-browser-credential`
-
-Permanently revoke one active browser credential. Requires `api_key_delete`.
-
-`DELETE /v0/api-keys/browser-credentials/{credential_id}`
+`GET /v0/api-keys/{api_key_id}`
 
 | Flag | Type | Required | Description |
 |------|------|----------|-------------|
-| `--credential-id` | `string (uuid)` | Yes |  |
+| `--api-key-id` | `ApiKeyId` | Yes |  |
 
 #### `agentmail api-keys list`
+
+Lists every credential, newest first. Filter one family with `type`.
+Page to token exhaustion: a page can be empty and still carry a
+`next_page_token`.
 
 **CLI:**
 ```bash
@@ -190,98 +167,22 @@ agentmail api-keys list
 
 | Flag | Type | Required | Description |
 |------|------|----------|-------------|
+| `--type` | `ApiKeyType` | No | Restrict the list to one credential family. Omit for every family. |
 | `--limit` | `Limit` | No |  |
 | `--page-token` | `PageToken` | No |  |
 | `--ascending` | `Ascending` | No |  |
 
-#### `agentmail api-keys list-browser-consents`
+#### `agentmail api-keys update`
 
-List remembered AgentID client approvals for one live inbox. Requires `api_key_read`.
+Renames a credential or changes its permissions. Public keys also resolve
+by `client_id`; a sign-in key accepts only `provider_connect` and
+`provider_share_owner`.
 
-`GET /v0/api-keys/browser-consents`
-
-| Flag | Type | Required | Description |
-|------|------|----------|-------------|
-| `--inbox-id` | `string (email)` | Yes |  |
-| `--limit` | `BrowserAuthorizationListLimit` | No |  |
-| `--page-token` | `PageToken` | No |  |
-
-#### `agentmail api-keys list-browser-credential-events`
-
-List owner-facing browser credential and consent lifecycle events. Requires `api_key_read`.
-
-`GET /v0/api-keys/browser-credentials/events`
+`PATCH /v0/api-keys/{api_key_id}`
 
 | Flag | Type | Required | Description |
 |------|------|----------|-------------|
-| `--limit` | `BrowserAuthorizationListLimit` | No |  |
-| `--page-token` | `PageToken` | No |  |
-
-#### `agentmail api-keys list-browser-credentials`
-
-List active browser credentials visible to the caller's scope. Requires `api_key_read`.
-
-`GET /v0/api-keys/browser-credentials`
-
-| Flag | Type | Required | Description |
-|------|------|----------|-------------|
-| `--limit` | `BrowserAuthorizationListLimit` | No |  |
-| `--page-token` | `PageToken` | No |  |
-
-#### `agentmail api-keys list-public-keys`
-
-List only public-key credentials visible to the bearer caller's scope.
-Bearer credentials are never returned, even though both credential types
-share storage and pagination indexes. Requires `api_key_read`.
-
-`GET /v0/api-keys/public-keys`
-
-| Flag | Type | Required | Description |
-|------|------|----------|-------------|
-| `--limit` | `Limit` | No |  |
-| `--page-token` | `PageToken` | No |  |
-| `--ascending` | `Ascending` | No |  |
-
-#### `agentmail api-keys revoke-all-agent-id-sign-in-keys`
-
-Invalidate every current public-key credential in the caller's
-organization by advancing its AgentID key generation. The caller must be
-organization-scoped and either have `api_key_delete` or, for a verified
-self-serve agent organization, use an unrestricted unmanaged bearer
-credential. No request body is accepted.
-
-`Idempotency-Key` is required and must be a UUID. Reusing the same UUID
-returns the original permanent receipt without advancing the generation
-again. A new UUID performs a new generation advance.
-
-`POST /v0/api-keys/public-keys/agentid-sign-in/revoke-all`
-
-| Flag | Type | Required | Description |
-|------|------|----------|-------------|
-| `--idempotency-key` | `string (uuid)` | Yes | Required UUID identifying this revoke-all operation permanently. |
-
-#### `agentmail api-keys revoke-public-key`
-
-Permanently revoke one public-key credential. This hard-deletes the
-credential; repeating the request returns not found. Requires
-`api_key_delete`.
-
-`DELETE /v0/api-keys/public-keys/{api_key_id}`
-
-| Flag | Type | Required | Description |
-|------|------|----------|-------------|
-| `--api-key-id` | `string (uuid)` | Yes | Public-key credential ID returned by registration. |
-
-#### `agentmail api-keys update-public-key-name`
-
-Rename the credential. All security-relevant fields are immutable.
-Requires `api_key_update`.
-
-`PATCH /v0/api-keys/public-keys/{api_key_id}`
-
-| Flag | Type | Required | Description |
-|------|------|----------|-------------|
-| `--api-key-id` | `string (uuid)` | Yes | Public-key credential ID returned by registration. |
+| `--api-key-id` | `ApiKeyId` | Yes |  |
 | `--json` | `JSON` | Yes | Request body as JSON (or use individual body-field flags) |
 
 ---
@@ -460,6 +361,19 @@ agentmail drafts list
 
 ### `agentmail inboxes`
 
+#### `agentmail inboxes authorize`
+
+Authorizes the AgentID sign-in a client is already waiting in, for the
+inbox in the path, and returns the pending public key it will activate. A
+repeat for the same token, inbox, and bearer returns the same key.
+
+`POST /v0/inboxes/{inbox_id}/authorize`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--inbox-id` | `inboxesInboxId` | Yes |  |
+| `--json` | `JSON` | Yes | Request body as JSON (or use individual body-field flags) |
+
 #### `agentmail inboxes create`
 
 **CLI:**
@@ -513,6 +427,23 @@ agentmail inboxes list
 | `--limit` | `Limit` | No |  |
 | `--page-token` | `PageToken` | No |  |
 | `--ascending` | `Ascending` | No |  |
+
+#### `agentmail inboxes search`
+
+Searches inboxes in the organization by address or display name, ranked
+by relevance. Each word in the query matches the start of a word in the
+address or display name, so `sup` matches `support@example.com` but
+`port` does not. An exact address match always ranks first. `limit`
+cannot exceed 100. A page can be empty and still carry a
+`next_page_token`; keep paging until the token is absent.
+
+`GET /v0/inboxes/search`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--q` | `string` | Yes | Address or display name to search for. Matches word prefixes. Must be 2 to 256 characters. |
+| `--limit` | `Limit` | No |  |
+| `--page-token` | `PageToken` | No |  |
 
 #### `agentmail inboxes update`
 
@@ -575,43 +506,19 @@ agentmail inboxes api-keys list --inbox-id <inbox_id>
 | `--limit` | `Limit` | No |  |
 | `--page-token` | `PageToken` | No |  |
 
----
+#### `agentmail inboxes api-keys update`
 
-### `agentmail inboxes browser-credentials`
+**CLI:**
+```bash
+agentmail inboxes api-keys update --inbox-id <inbox_id> --api-key-id <api_key_id> --name "Renamed"
+```
 
-#### `agentmail inboxes browser-credentials create-enrollment`
-
-Attach a browser enrollment intent to the inbox. Requires
-`api_key_create`. Before submitting `transaction_jti`, independently
-verify that the browser page's final origin is exactly
-`https://auth.agentid.com`.
-
-This endpoint is available to every organization using US production.
-It is not available in EU production.
-
-Select `inbox_id` from trusted AgentMail configuration. An AgentID
-`login_hint` is not authoritative for selecting the inbox; when the
-transaction includes one, it must match the path inbox.
-
-**AgentMail API keys are sent only to `https://api.agentmail.to`; AgentID never requests them.**
-
-A new intent returns `202`; an idempotent retry for the same pending
-transaction, inbox, and bearer key returns `200` with the same receipt.
-An intent lasts at most five minutes. An activated credential lasts at
-most 30 days and cannot outlive its authorizing bearer API key.
-
-Creation is limited to 20 intents per bearer API key per hour, 100 per
-organization per hour, and five live unused intents per bearer API key.
-Browser activation is separately limited to 20 activations per
-authorizing bearer API key per UTC day. Either kind of limit can return
-`429`; honor the `Retry-After` header. Cancelling an enrollment releases
-its live-intent slot but does not reset the daily activation counter.
-
-`POST /v0/inboxes/{inbox_id}/browser-credentials/enrollments`
+`PATCH /v0/inboxes/{inbox_id}/api-keys/{api_key_id}`
 
 | Flag | Type | Required | Description |
 |------|------|----------|-------------|
 | `--inbox-id` | `inboxesInboxId` | Yes |  |
+| `--api-key-id` | `ApiKeyId` | Yes |  |
 | `--json` | `JSON` | Yes | Request body as JSON (or use individual body-field flags) |
 
 ---
@@ -1140,6 +1047,8 @@ agentmail inboxes threads get --inbox-id <inbox_id> --thread-id <thread_id>
 |------|------|----------|-------------|
 | `--inbox-id` | `inboxesInboxId` | Yes |  |
 | `--thread-id` | `ThreadId` | Yes |  |
+| `--limit` | `Limit` | No | Maximum number of messages to return. Cannot exceed 100. |
+| `--page-token` | `PageToken` | No | Token returned by the previous response for retrieving the next, older page. |
 
 #### `agentmail inboxes threads get-attachment`
 
@@ -1553,6 +1462,21 @@ agentmail pods api-keys list --pod-id <pod_id>
 | `--limit` | `Limit` | No |  |
 | `--page-token` | `PageToken` | No |  |
 
+#### `agentmail pods api-keys update`
+
+**CLI:**
+```bash
+agentmail pods api-keys update --pod-id <pod_id> --api-key-id <api_key_id> --name "Renamed"
+```
+
+`PATCH /v0/pods/{pod_id}/api-keys/{api_key_id}`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--pod-id` | `podsPodId` | Yes |  |
+| `--api-key-id` | `ApiKeyId` | Yes |  |
+| `--json` | `JSON` | Yes | Request body as JSON (or use individual body-field flags) |
+
 ---
 
 ### `agentmail pods domains`
@@ -1772,6 +1696,24 @@ agentmail pods inboxes list --pod-id <pod_id>
 | `--page-token` | `PageToken` | No |  |
 | `--ascending` | `Ascending` | No |  |
 
+#### `agentmail pods inboxes search`
+
+Searches inboxes in the pod by address or display name, ranked by
+relevance. Each word in the query matches the start of a word in the
+address or display name, so `sup` matches `support@example.com` but
+`port` does not. An exact address match always ranks first. `limit`
+cannot exceed 100. A page can be empty and still carry a
+`next_page_token`; keep paging until the token is absent.
+
+`GET /v0/pods/{pod_id}/inboxes/search`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--pod-id` | `podsPodId` | Yes |  |
+| `--q` | `string` | Yes | Address or display name to search for. Matches word prefixes. Must be 2 to 256 characters. |
+| `--limit` | `Limit` | No |  |
+| `--page-token` | `PageToken` | No |  |
+
 #### `agentmail pods inboxes update`
 
 **CLI:**
@@ -1940,6 +1882,8 @@ agentmail pods threads get --pod-id <pod_id> --thread-id <thread_id>
 |------|------|----------|-------------|
 | `--pod-id` | `podsPodId` | Yes |  |
 | `--thread-id` | `ThreadId` | Yes |  |
+| `--limit` | `Limit` | No | Maximum number of messages to return. Cannot exceed 100. |
+| `--page-token` | `PageToken` | No | Token returned by the previous response for retrieving the next, older page. |
 
 #### `agentmail pods threads get-attachment`
 
@@ -2127,9 +2071,10 @@ pod-scoped webhook. Header values remain write-only.
 
 #### `agentmail providers connect`
 
-Starts signing an inbox in to a provider. Returns a `magic_url` valid
-for five minutes; open it in the browser that will hold the sign-in.
-Requires `api_key_create` and an `Idempotency-Key` header.
+Starts signing an inbox in to a provider. Returns a single-use `magic_url`,
+valid for five minutes, to open in the client that will hold the sign-in;
+the client enrolls as the inbox and continues to the provider. Poll
+[Get API Key](/api-reference/api-keys/get) with `api_key_id` for `status`.
 
 `POST /v0/providers/{provider_id}/connect`
 
@@ -2214,6 +2159,8 @@ agentmail threads get --thread-id <thread_id>
 | Flag | Type | Required | Description |
 |------|------|----------|-------------|
 | `--thread-id` | `ThreadId` | Yes |  |
+| `--limit` | `Limit` | No | Maximum number of messages to return. Cannot exceed 100. |
+| `--page-token` | `PageToken` | No | Token returned by the previous response for retrieving the next, older page. |
 
 #### `agentmail threads get-attachment`
 

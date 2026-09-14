@@ -2,43 +2,58 @@ pub use crate::prelude::*;
 #[allow(unused_imports)]
 use super::*;
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq, Hash)]
-pub struct CreateApiKeyRequest {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub name: Option<Name>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub permissions: Option<ApiKeyPermissions>,
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[serde(untagged)]
+pub enum CreateApiKeyRequest {
+        CreateBearerApiKeyRequest(CreateBearerApiKeyRequest),
+
+        CreatePublicKeyRequest(CreatePublicKeyRequest),
 }
 
 impl CreateApiKeyRequest {
-    pub fn builder() -> CreateApiKeyRequestBuilder {
-        <CreateApiKeyRequestBuilder as Default>::default()
+    pub fn is_create_bearer_api_key_request(&self) -> bool {
+        matches!(self, Self::CreateBearerApiKeyRequest(_))
+    }
+
+    pub fn is_create_public_key_request(&self) -> bool {
+        matches!(self, Self::CreatePublicKeyRequest(_))
+    }
+
+
+    pub fn as_create_bearer_api_key_request(&self) -> Option<&CreateBearerApiKeyRequest> {
+        match self {
+                    Self::CreateBearerApiKeyRequest(value) => Some(value),
+                    _ => None,
+                }
+    }
+
+    pub fn into_create_bearer_api_key_request(self) -> Option<CreateBearerApiKeyRequest> {
+        match self {
+                    Self::CreateBearerApiKeyRequest(value) => Some(value),
+                    _ => None,
+                }
+    }
+
+    pub fn as_create_public_key_request(&self) -> Option<&CreatePublicKeyRequest> {
+        match self {
+                    Self::CreatePublicKeyRequest(value) => Some(value),
+                    _ => None,
+                }
+    }
+
+    pub fn into_create_public_key_request(self) -> Option<CreatePublicKeyRequest> {
+        match self {
+                    Self::CreatePublicKeyRequest(value) => Some(value),
+                    _ => None,
+                }
     }
 }
 
-#[derive(Clone, PartialEq, Default, Debug)]
-#[non_exhaustive]
-pub struct CreateApiKeyRequestBuilder {
-    name: Option<Name>,
-    permissions: Option<ApiKeyPermissions>,
-}
-
-impl CreateApiKeyRequestBuilder {
-    pub fn name(mut self, value: Name) -> Self {
-        self.name = Some(value);
-        self
-    }
-
-    pub fn permissions(mut self, value: ApiKeyPermissions) -> Self {
-        self.permissions = Some(value);
-        self
-    }
-
-    /// Consumes the builder and constructs a [`CreateApiKeyRequest`].
-    pub fn build(self) -> Result<CreateApiKeyRequest, BuildError> {
-        Ok(CreateApiKeyRequest {
-            name: self.name,
-            permissions: self.permissions,
-        })
+impl fmt::Display for CreateApiKeyRequest {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::CreateBearerApiKeyRequest(value) => write!(f, "{}", serde_json::to_string(value).unwrap_or_else(|_| format!("{:?}", value))),
+            Self::CreatePublicKeyRequest(value) => write!(f, "{}", serde_json::to_string(value).unwrap_or_else(|_| format!("{:?}", value))),
+        }
     }
 }

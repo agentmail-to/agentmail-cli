@@ -5,6 +5,9 @@ use super::*;
 /// Query parameters for list
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq, Hash)]
 pub struct ApiKeysListQueryRequest {
+    /// Restrict the list to one credential family. Omit for every family.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<ApiKeyType>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub limit: Option<Limit>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -22,12 +25,18 @@ impl ApiKeysListQueryRequest {
 #[derive(Clone, PartialEq, Default, Debug)]
 #[non_exhaustive]
 pub struct ApiKeysListQueryRequestBuilder {
+    r#type: Option<ApiKeyType>,
     limit: Option<Limit>,
     page_token: Option<PageToken>,
     ascending: Option<Ascending>,
 }
 
 impl ApiKeysListQueryRequestBuilder {
+    pub fn r#type(mut self, value: ApiKeyType) -> Self {
+        self.r#type = Some(value);
+        self
+    }
+
     pub fn limit(mut self, value: Limit) -> Self {
         self.limit = Some(value);
         self
@@ -46,6 +55,7 @@ impl ApiKeysListQueryRequestBuilder {
     /// Consumes the builder and constructs a [`ApiKeysListQueryRequest`].
     pub fn build(self) -> Result<ApiKeysListQueryRequest, BuildError> {
         Ok(ApiKeysListQueryRequest {
+            r#type: self.r#type,
             limit: self.limit,
             page_token: self.page_token,
             ascending: self.ascending,

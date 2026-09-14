@@ -13,12 +13,10 @@ pub struct CreateApiKeyResponse {
     pub prefix: Prefix,
     #[serde(default)]
     pub name: Name,
-    /// Pod ID the api key is scoped to.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub pod_id: Option<String>,
-    /// Inbox ID the api key is scoped to.
+    pub pod_id: Option<PodScopeId>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub inbox_id: Option<String>,
+    pub inbox_id: Option<InboxScopeId>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub permissions: Option<ApiKeyPermissions>,
     #[serde(default)]
@@ -38,8 +36,8 @@ pub struct CreateApiKeyResponseBuilder {
     api_key: Option<String>,
     prefix: Option<Prefix>,
     name: Option<Name>,
-    pod_id: Option<String>,
-    inbox_id: Option<String>,
+    pod_id: Option<PodScopeId>,
+    inbox_id: Option<InboxScopeId>,
     permissions: Option<ApiKeyPermissions>,
     created_at: Option<CreatedAt>,
 }
@@ -65,13 +63,13 @@ impl CreateApiKeyResponseBuilder {
         self
     }
 
-    pub fn pod_id(mut self, value: impl Into<String>) -> Self {
-        self.pod_id = Some(value.into());
+    pub fn pod_id(mut self, value: PodScopeId) -> Self {
+        self.pod_id = Some(value);
         self
     }
 
-    pub fn inbox_id(mut self, value: impl Into<String>) -> Self {
-        self.inbox_id = Some(value.into());
+    pub fn inbox_id(mut self, value: InboxScopeId) -> Self {
+        self.inbox_id = Some(value);
         self
     }
 

@@ -65,7 +65,6 @@ pub fn client(ctx: &AppContext) -> agentmail_sdk::api::ApiClient {
         inboxes: agentmail_sdk::api::InboxesClient {
             http_client: http_client.clone(),
             api_keys: agentmail_sdk::api::resources::inboxes::ApiKeysClient2 { http_client: http_client.clone() },
-            browser_credentials: agentmail_sdk::api::resources::inboxes::BrowserCredentialsClient { http_client: http_client.clone() },
             drafts: agentmail_sdk::api::resources::inboxes::DraftsClient2 { http_client: http_client.clone() },
             events: agentmail_sdk::api::resources::inboxes::EventsClient { http_client: http_client.clone() },
             lists: agentmail_sdk::api::resources::inboxes::ListsClient2 { http_client: http_client.clone() },

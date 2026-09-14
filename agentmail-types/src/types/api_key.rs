@@ -2,105 +2,79 @@ pub use crate::prelude::*;
 #[allow(unused_imports)]
 use super::*;
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq, Hash)]
-pub struct ApiKey {
-    #[serde(default)]
-    pub api_key_id: ApiKeyId,
-    #[serde(default)]
-    pub prefix: Prefix,
-    #[serde(default)]
-    pub name: Name,
-    /// Pod ID the api key is scoped to. If set, the key can only access resources within this pod.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub pod_id: Option<String>,
-    /// Inbox ID the api key is scoped to. If set, the key can only access resources within this inbox.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub inbox_id: Option<String>,
-    /// Time at which api key was last used.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub used_at: Option<DateTime<FixedOffset>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub permissions: Option<ApiKeyPermissions>,
-    #[serde(default)]
-    pub created_at: CreatedAt,
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(tag = "type")]
+#[non_exhaustive]
+pub enum ApiKey {
+        #[serde(rename = "bearer")]
+        #[non_exhaustive]
+        Bearer {
+            #[serde(default)]
+            api_key_id: ApiKeyId,
+            #[serde(default)]
+            prefix: Prefix,
+            #[serde(default)]
+            name: Name,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            pod_id: Option<PodScopeId>,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            inbox_id: Option<InboxScopeId>,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            used_at: Option<UsedAt>,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            permissions: Option<ApiKeyPermissions>,
+            #[serde(default)]
+            created_at: CreatedAt,
+            #[serde(default)]
+            updated_at: UpdatedAt,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            expires_at: Option<ExpiresAt>,
+        },
+
+        #[serde(rename = "public_key")]
+        #[non_exhaustive]
+        PublicKey {
+            #[serde(flatten)]
+            data: PublicKeyCredential,
+        },
+
+        /// Catch-all variant for unrecognized discriminant values.
+        /// If the server sends a discriminant not recognized by the current SDK
+        /// version, the raw payload is captured here so callers can still inspect it.
+        #[serde(untagged)]
+        __Unknown(serde_json::Value),
 }
 
 impl ApiKey {
-    pub fn builder() -> ApiKeyBuilder {
-        <ApiKeyBuilder as Default>::default()
-    }
-}
-
-#[derive(Clone, PartialEq, Default, Debug)]
-#[non_exhaustive]
-pub struct ApiKeyBuilder {
-    api_key_id: Option<ApiKeyId>,
-    prefix: Option<Prefix>,
-    name: Option<Name>,
-    pod_id: Option<String>,
-    inbox_id: Option<String>,
-    used_at: Option<DateTime<FixedOffset>>,
-    permissions: Option<ApiKeyPermissions>,
-    created_at: Option<CreatedAt>,
-}
-
-impl ApiKeyBuilder {
-    pub fn api_key_id(mut self, value: ApiKeyId) -> Self {
-        self.api_key_id = Some(value);
-        self
+    pub fn bearer(api_key_id: ApiKeyId, prefix: Prefix, name: Name, created_at: CreatedAt, updated_at: UpdatedAt) -> Self {
+        Self::Bearer { api_key_id, prefix, name, pod_id: None, inbox_id: None, used_at: None, permissions: None, created_at, updated_at, expires_at: None }
     }
 
-    pub fn prefix(mut self, value: Prefix) -> Self {
-        self.prefix = Some(value);
-        self
+    pub fn public_key(data: PublicKeyCredential) -> Self {
+        Self::PublicKey { data }
     }
 
-    pub fn name(mut self, value: Name) -> Self {
-        self.name = Some(value);
-        self
+    pub fn bearer_with_pod_id(api_key_id: ApiKeyId, prefix: Prefix, name: Name, pod_id: PodScopeId, inbox_id: Option<InboxScopeId>, used_at: Option<UsedAt>, permissions: Option<ApiKeyPermissions>, created_at: CreatedAt, updated_at: UpdatedAt, expires_at: Option<ExpiresAt>) -> Self {
+        Self::Bearer { api_key_id, prefix, name, pod_id: Some(pod_id), inbox_id, used_at, permissions, created_at, updated_at, expires_at }
     }
 
-    pub fn pod_id(mut self, value: impl Into<String>) -> Self {
-        self.pod_id = Some(value.into());
-        self
+    pub fn bearer_with_inbox_id(api_key_id: ApiKeyId, prefix: Prefix, name: Name, pod_id: Option<PodScopeId>, inbox_id: InboxScopeId, used_at: Option<UsedAt>, permissions: Option<ApiKeyPermissions>, created_at: CreatedAt, updated_at: UpdatedAt, expires_at: Option<ExpiresAt>) -> Self {
+        Self::Bearer { api_key_id, prefix, name, pod_id, inbox_id: Some(inbox_id), used_at, permissions, created_at, updated_at, expires_at }
     }
 
-    pub fn inbox_id(mut self, value: impl Into<String>) -> Self {
-        self.inbox_id = Some(value.into());
-        self
+    pub fn bearer_with_used_at(api_key_id: ApiKeyId, prefix: Prefix, name: Name, pod_id: Option<PodScopeId>, inbox_id: Option<InboxScopeId>, used_at: UsedAt, permissions: Option<ApiKeyPermissions>, created_at: CreatedAt, updated_at: UpdatedAt, expires_at: Option<ExpiresAt>) -> Self {
+        Self::Bearer { api_key_id, prefix, name, pod_id, inbox_id, used_at: Some(used_at), permissions, created_at, updated_at, expires_at }
     }
 
-    pub fn used_at(mut self, value: DateTime<FixedOffset>) -> Self {
-        self.used_at = Some(value);
-        self
+    pub fn bearer_with_permissions(api_key_id: ApiKeyId, prefix: Prefix, name: Name, pod_id: Option<PodScopeId>, inbox_id: Option<InboxScopeId>, used_at: Option<UsedAt>, permissions: ApiKeyPermissions, created_at: CreatedAt, updated_at: UpdatedAt, expires_at: Option<ExpiresAt>) -> Self {
+        Self::Bearer { api_key_id, prefix, name, pod_id, inbox_id, used_at, permissions: Some(permissions), created_at, updated_at, expires_at }
     }
 
-    pub fn permissions(mut self, value: ApiKeyPermissions) -> Self {
-        self.permissions = Some(value);
-        self
+    pub fn bearer_with_expires_at(api_key_id: ApiKeyId, prefix: Prefix, name: Name, pod_id: Option<PodScopeId>, inbox_id: Option<InboxScopeId>, used_at: Option<UsedAt>, permissions: Option<ApiKeyPermissions>, created_at: CreatedAt, updated_at: UpdatedAt, expires_at: ExpiresAt) -> Self {
+        Self::Bearer { api_key_id, prefix, name, pod_id, inbox_id, used_at, permissions, created_at, updated_at, expires_at: Some(expires_at) }
     }
 
-    pub fn created_at(mut self, value: CreatedAt) -> Self {
-        self.created_at = Some(value);
-        self
-    }
-
-    /// Consumes the builder and constructs a [`ApiKey`].
-    /// This method will fail if any of the following fields are not set:
-    /// - [`api_key_id`](ApiKeyBuilder::api_key_id)
-    /// - [`prefix`](ApiKeyBuilder::prefix)
-    /// - [`name`](ApiKeyBuilder::name)
-    /// - [`created_at`](ApiKeyBuilder::created_at)
-    pub fn build(self) -> Result<ApiKey, BuildError> {
-        Ok(ApiKey {
-            api_key_id: self.api_key_id.ok_or_else(|| BuildError::missing_field("api_key_id"))?,
-            prefix: self.prefix.ok_or_else(|| BuildError::missing_field("prefix"))?,
-            name: self.name.ok_or_else(|| BuildError::missing_field("name"))?,
-            pod_id: self.pod_id,
-            inbox_id: self.inbox_id,
-            used_at: self.used_at,
-            permissions: self.permissions,
-            created_at: self.created_at.ok_or_else(|| BuildError::missing_field("created_at"))?,
-        })
+    pub fn unknown(value: serde_json::Value) -> Self {
+        Self::__Unknown(value)
     }
 }
