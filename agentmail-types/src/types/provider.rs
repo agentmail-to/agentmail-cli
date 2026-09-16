@@ -20,6 +20,9 @@ pub struct Provider {
     pub terms_url: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub privacy_url: Option<String>,
+    /// Maximum number of accounts your organization may sign up at this provider. Omitted when the provider sets no limit. 0 means the provider has paused new sign-ups; existing accounts keep signing in.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub owner_signup_limit: Option<i64>,
 }
 
 impl Provider {
@@ -38,6 +41,7 @@ pub struct ProviderBuilder {
     logo_url: Option<String>,
     terms_url: Option<String>,
     privacy_url: Option<String>,
+    owner_signup_limit: Option<i64>,
 }
 
 impl ProviderBuilder {
@@ -76,6 +80,11 @@ impl ProviderBuilder {
         self
     }
 
+    pub fn owner_signup_limit(mut self, value: i64) -> Self {
+        self.owner_signup_limit = Some(value);
+        self
+    }
+
     /// Consumes the builder and constructs a [`Provider`].
     /// This method will fail if any of the following fields are not set:
     /// - [`provider_id`](ProviderBuilder::provider_id)
@@ -88,6 +97,7 @@ impl ProviderBuilder {
             logo_url: self.logo_url,
             terms_url: self.terms_url,
             privacy_url: self.privacy_url,
+            owner_signup_limit: self.owner_signup_limit,
         })
     }
 }
