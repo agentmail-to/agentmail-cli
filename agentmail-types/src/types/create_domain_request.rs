@@ -6,6 +6,13 @@ use super::*;
 pub struct CreateDomainRequest {
     #[serde(default)]
     pub domain: DomainName,
+    /// Allow registration when the domain already has Google Workspace MX records.
+    /// Defaults to false; registration otherwise returns 422 when a conflicting
+    /// provider is detected.
+    /// This flag does not configure DNS or inbound routing. For shared Google
+    /// Workspace domains, follow the [Google Workspace guide](/google-workspace).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub allow_conflicting_provider: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub feedback_enabled: Option<FeedbackEnabled>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -24,6 +31,7 @@ impl CreateDomainRequest {
 #[non_exhaustive]
 pub struct CreateDomainRequestBuilder {
     domain: Option<DomainName>,
+    allow_conflicting_provider: Option<bool>,
     feedback_enabled: Option<FeedbackEnabled>,
     subdomains_enabled: Option<SubdomainsEnabled>,
     tracking_enabled: Option<TrackingEnabled>,
@@ -32,6 +40,11 @@ pub struct CreateDomainRequestBuilder {
 impl CreateDomainRequestBuilder {
     pub fn domain(mut self, value: DomainName) -> Self {
         self.domain = Some(value);
+        self
+    }
+
+    pub fn allow_conflicting_provider(mut self, value: bool) -> Self {
+        self.allow_conflicting_provider = Some(value);
         self
     }
 
@@ -56,6 +69,7 @@ impl CreateDomainRequestBuilder {
     pub fn build(self) -> Result<CreateDomainRequest, BuildError> {
         Ok(CreateDomainRequest {
             domain: self.domain.ok_or_else(|| BuildError::missing_field("domain"))?,
+            allow_conflicting_provider: self.allow_conflicting_provider,
             feedback_enabled: self.feedback_enabled,
             subdomains_enabled: self.subdomains_enabled,
             tracking_enabled: self.tracking_enabled,
