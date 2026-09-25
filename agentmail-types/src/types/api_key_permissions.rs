@@ -112,6 +112,10 @@ pub struct ApiKeyPermissions {
     /// for both values.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub provider_share_owner: Option<bool>,
+    /// Update accounts: disable or re-enable an inbox's sign-in at a provider. Reading accounts
+    /// needs only `inbox_read`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub account_update: Option<bool>,
     /// Read pods.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pod_read: Option<bool>,
@@ -167,6 +171,7 @@ pub struct ApiKeyPermissionsBuilder {
     api_key_delete: Option<bool>,
     provider_connect: Option<bool>,
     provider_share_owner: Option<bool>,
+    account_update: Option<bool>,
     pod_read: Option<bool>,
     pod_create: Option<bool>,
     pod_delete: Option<bool>,
@@ -348,6 +353,11 @@ impl ApiKeyPermissionsBuilder {
         self
     }
 
+    pub fn account_update(mut self, value: bool) -> Self {
+        self.account_update = Some(value);
+        self
+    }
+
     pub fn pod_read(mut self, value: bool) -> Self {
         self.pod_read = Some(value);
         self
@@ -401,6 +411,7 @@ impl ApiKeyPermissionsBuilder {
             api_key_delete: self.api_key_delete,
             provider_connect: self.provider_connect,
             provider_share_owner: self.provider_share_owner,
+            account_update: self.account_update,
             pod_read: self.pod_read,
             pod_create: self.pod_create,
             pod_delete: self.pod_delete,

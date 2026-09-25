@@ -4,6 +4,8 @@ use super::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct WebhooksCreateWebhookRequest {
+    /// Pods for which to send events. Maximum 10 per webhook. The webhook receives an event that matches
+    /// any listed pod or inbox, so a listed pod already covers every inbox in it.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pod_ids: Option<PodIds>,
     #[serde(skip_serializing_if = "Option::is_none")]
