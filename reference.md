@@ -11,6 +11,7 @@ Full command reference for `agentmail`.
 - [`agentmail domains`](#agentmail-domains)
 - [`agentmail drafts`](#agentmail-drafts)
 - [`agentmail inboxes`](#agentmail-inboxes)
+- [`agentmail inboxes accounts`](#agentmail-inboxes-accounts)
 - [`agentmail inboxes api-keys`](#agentmail-inboxes-api-keys)
 - [`agentmail inboxes drafts`](#agentmail-inboxes-drafts)
 - [`agentmail inboxes events`](#agentmail-inboxes-events)
@@ -23,6 +24,7 @@ Full command reference for `agentmail`.
 - [`agentmail metrics`](#agentmail-metrics)
 - [`agentmail organizations`](#agentmail-organizations)
 - [`agentmail pods`](#agentmail-pods)
+- [`agentmail pods accounts`](#agentmail-pods-accounts)
 - [`agentmail pods api-keys`](#agentmail-pods-api-keys)
 - [`agentmail pods domains`](#agentmail-pods-domains)
 - [`agentmail pods drafts`](#agentmail-pods-drafts)
@@ -41,7 +43,8 @@ Full command reference for `agentmail`.
 
 #### `agentmail accounts get`
 
-Get Account
+Returns one account by ID. An account outside the key's scope is a 404.
+Requires `inbox_read`.
 
 `GET /v0/accounts/{account_id}`
 
@@ -51,7 +54,9 @@ Get Account
 
 #### `agentmail accounts list`
 
-Lists accounts across all providers.
+Lists accounts across all providers, scoped to the API key: an
+organization key sees every account, a pod key its pod's, an inbox key
+its inbox's. Requires `inbox_read`.
 
 `GET /v0/accounts`
 
@@ -60,6 +65,33 @@ Lists accounts across all providers.
 | `--limit` | `Limit` | No |  |
 | `--page-token` | `PageToken` | No |  |
 | `--ascending` | `Ascending` | No |  |
+
+#### `agentmail accounts update`
+
+Updates one account. Set `status` to `disabled` to stop the inbox from
+signing in at the provider again, or to `enabled` to re-enable it.
+Idempotent: disabling an already disabled account keeps its original
+`disabled_at`, and enabling an enabled account is a no-op.
+
+Find the `account_id` with List Accounts. An account exists only after an
+inbox's first sign-in at a provider, so it cannot be disabled in advance.
+A disable applies to that inbox at that provider whichever sign-in key is
+used: the provider's next authorization ends in `access_denied`, and a code
+issued earlier is refused with `invalid_grant`. Access tokens already
+issued stay valid until they expire, and the provider's own session is
+unaffected.
+
+Requires `account_update`, which sign-in keys (`type: public_key`) cannot
+hold, so call this with a bearer API key. An account outside the key's
+scope is a 404. A 409 means the account changed during the write; read it
+again and retry.
+
+`PATCH /v0/accounts/{account_id}/update`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--account-id` | `AccountId` | Yes |  |
+| `--json` | `JSON` | Yes | Request body as JSON (or use individual body-field flags) |
 
 ---
 
@@ -364,8 +396,9 @@ agentmail drafts list
 #### `agentmail inboxes authorize`
 
 Authorizes the AgentID sign-in a client is already waiting in, for the
-inbox in the path, and returns the pending public key it will activate. A
-repeat for the same token, inbox, and bearer returns the same key.
+inbox in the path, and returns the ID of the pending public key it will
+activate. Read the key with Get API Key. A repeat for the same token,
+inbox, and bearer returns the same key ID.
 
 `POST /v0/inboxes/{inbox_id}/authorize`
 
@@ -458,6 +491,35 @@ agentmail inboxes update --inbox-id <inbox_id> --display-name "Updated Name"
 |------|------|----------|-------------|
 | `--inbox-id` | `inboxesInboxId` | Yes |  |
 | `--json` | `JSON` | Yes | Request body as JSON (or use individual body-field flags) |
+
+---
+
+### `agentmail inboxes accounts`
+
+#### `agentmail inboxes accounts get`
+
+Returns one account held by the inbox. An account elsewhere is a 404. Requires
+`inbox_read`.
+
+`GET /v0/inboxes/{inbox_id}/accounts/{account_id}`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--inbox-id` | `inboxesInboxId` | Yes |  |
+| `--account-id` | `AccountId` | Yes |  |
+
+#### `agentmail inboxes accounts list`
+
+Lists accounts held by the inbox, across all providers. Requires `inbox_read`.
+
+`GET /v0/inboxes/{inbox_id}/accounts`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--inbox-id` | `inboxesInboxId` | Yes |  |
+| `--limit` | `Limit` | No |  |
+| `--page-token` | `PageToken` | No |  |
+| `--ascending` | `Ascending` | No |  |
 
 ---
 
@@ -992,6 +1054,37 @@ agentmail inboxes metrics query-events --inbox-id <inbox_id>
 | `--limit` | `MetricLimit` | No |  |
 | `--descending` | `Descending` | No |  |
 
+#### `agentmail inboxes metrics query-rates`
+
+Rolling bounce and complaint rates for the inbox. At each `period`
+grid point, the bounced (or complained) messages over the preceding
+`window` divided by the messages sent over the same window, with the
+send count alongside. Account moderation evaluates the organization-wide
+rate, so use the organization endpoint to see the number it acts on;
+the inbox view shows which inboxes contribute. Defaults to the rolling
+24-hour rate sampled hourly over the last day; `start` must be within
+the last 90 days, `window` must be a whole multiple of `period`, and
+the range plus window divided by `period` must not exceed 1000
+buckets.
+
+**CLI:**
+```bash
+agentmail inboxes metrics query-rates --inbox-id <inbox_id>
+```
+
+`GET /v0/inboxes/{inbox_id}/metrics/rates`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--inbox-id` | `inboxesInboxId` | Yes |  |
+| `--rate-types` | `RateTypes` | No |  |
+| `--start` | `Start` | No |  |
+| `--end` | `End` | No |  |
+| `--period` | `RatePeriod` | No |  |
+| `--window` | `Window` | No |  |
+| `--limit` | `MetricLimit` | No |  |
+| `--descending` | `Descending` | No |  |
+
 #### `agentmail inboxes metrics query-usage`
 
 Cumulative usage series for the inbox. Each point is the running total
@@ -1323,6 +1416,37 @@ agentmail metrics query-events
 | `--limit` | `MetricLimit` | No |  |
 | `--descending` | `Descending` | No |  |
 
+#### `agentmail metrics query-rates`
+
+Rolling bounce and complaint rates for the organization. At each
+`period` grid point, the bounced (or complained) messages over the
+preceding `window` divided by the messages sent over the same window,
+with the send count alongside so you can see the volume behind
+it. This is the number AgentMail's account moderation acts on: a
+warning at a 5% bounce rate and suspension at 10%, evaluated over a
+rolling 24 hours once at least 1,000 messages were sent in that
+window. Defaults to the rolling 24-hour rate sampled hourly over the
+last day; `start` must be within the last 90 days, `window` must be a
+whole multiple of `period`, and the range plus window divided by
+`period` must not exceed 1000 buckets.
+
+**CLI:**
+```bash
+agentmail metrics query-rates
+```
+
+`GET /v0/metrics/rates`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--rate-types` | `RateTypes` | No |  |
+| `--start` | `Start` | No |  |
+| `--end` | `End` | No |  |
+| `--period` | `RatePeriod` | No |  |
+| `--window` | `Window` | No |  |
+| `--limit` | `MetricLimit` | No |  |
+| `--descending` | `Descending` | No |  |
+
 #### `agentmail metrics query-usage`
 
 Cumulative usage series for the organization. Each point is the running
@@ -1411,6 +1535,35 @@ agentmail pods list
 
 | Flag | Type | Required | Description |
 |------|------|----------|-------------|
+| `--limit` | `Limit` | No |  |
+| `--page-token` | `PageToken` | No |  |
+| `--ascending` | `Ascending` | No |  |
+
+---
+
+### `agentmail pods accounts`
+
+#### `agentmail pods accounts get`
+
+Returns one account held by inboxes in the pod. An account elsewhere is a 404. Requires
+`inbox_read`.
+
+`GET /v0/pods/{pod_id}/accounts/{account_id}`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--pod-id` | `podsPodId` | Yes |  |
+| `--account-id` | `AccountId` | Yes |  |
+
+#### `agentmail pods accounts list`
+
+Lists accounts held by inboxes in the pod, across all providers. Requires `inbox_read`.
+
+`GET /v0/pods/{pod_id}/accounts`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--pod-id` | `podsPodId` | Yes |  |
 | `--limit` | `Limit` | No |  |
 | `--page-token` | `PageToken` | No |  |
 | `--ascending` | `Ascending` | No |  |
@@ -1824,6 +1977,37 @@ agentmail pods metrics query-events --pod-id <pod_id>
 | `--start` | `Start` | No |  |
 | `--end` | `End` | No |  |
 | `--period` | `Period` | No |  |
+| `--limit` | `MetricLimit` | No |  |
+| `--descending` | `Descending` | No |  |
+
+#### `agentmail pods metrics query-rates`
+
+Rolling bounce and complaint rates for the pod. At each `period` grid
+point, the bounced (or complained) messages over the preceding
+`window` divided by the messages sent over the same window, with the
+send count alongside. Account moderation evaluates the organization-wide
+rate, so use the organization endpoint to see the number it acts on;
+the pod view shows which pods contribute. Defaults to the rolling
+24-hour rate sampled hourly over the last day; `start` must be within
+the last 90 days, `window` must be a whole multiple of `period`, and
+the range plus window divided by `period` must not exceed 1000
+buckets.
+
+**CLI:**
+```bash
+agentmail pods metrics query-rates --pod-id <pod_id>
+```
+
+`GET /v0/pods/{pod_id}/metrics/rates`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--pod-id` | `podsPodId` | Yes |  |
+| `--rate-types` | `RateTypes` | No |  |
+| `--start` | `Start` | No |  |
+| `--end` | `End` | No |  |
+| `--period` | `RatePeriod` | No |  |
+| `--window` | `Window` | No |  |
 | `--limit` | `MetricLimit` | No |  |
 | `--descending` | `Descending` | No |  |
 

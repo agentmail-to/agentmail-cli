@@ -2,13 +2,15 @@ pub use crate::prelude::*;
 #[allow(unused_imports)]
 use super::*;
 
-/// Update a pod-scoped webhook. You can adjust which inboxes within the pod it listens to and replace
-/// its `event_types`, but not the pod scope itself.
+/// Update a pod-scoped webhook. You can adjust which inboxes within the pod it listens to, replace
+/// its `event_types`, and set `enabled`, but not change the pod scope itself.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq, Hash)]
 pub struct WebhooksUpdatePodWebhookRequest {
     #[serde(flatten)]
     pub webhooks_update_inbox_webhook_request_fields: WebhooksUpdateInboxWebhookRequest,
-    /// Inbox IDs to subscribe to the webhook.
+    /// Inbox IDs to subscribe to the webhook. This only adds to what the webhook receives: on a webhook
+    /// that covers its whole pod, it changes nothing. To receive only specific inboxes, create a webhook
+    /// with `inbox_ids` instead.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub add_inbox_ids: Option<InboxIds>,
     /// Inbox IDs to unsubscribe from the webhook.

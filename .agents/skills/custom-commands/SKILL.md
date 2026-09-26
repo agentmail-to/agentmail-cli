@@ -66,6 +66,7 @@ with the following sub-clients:
 | Field | Type | Description |
 |-------|------|-------------|
 | `client.inboxes` | `agentmail_sdk::api::InboxesClient` | inboxes operations |
+| `client.accounts` | `agentmail_sdk::api::AccountsClient2` | accounts operations |
 | `client.api_keys` | `agentmail_sdk::api::ApiKeysClient2` | api_keys operations |
 | `client.drafts` | `agentmail_sdk::api::DraftsClient2` | drafts operations |
 | `client.events` | `agentmail_sdk::api::EventsClient` | events operations |
@@ -75,6 +76,7 @@ with the following sub-clients:
 | `client.threads` | `agentmail_sdk::api::ThreadsClient2` | threads operations |
 | `client.webhooks` | `agentmail_sdk::api::WebhooksClient2` | webhooks operations |
 | `client.pods` | `agentmail_sdk::api::PodsClient` | pods operations |
+| `client.accounts` | `agentmail_sdk::api::AccountsClient3` | accounts operations |
 | `client.api_keys` | `agentmail_sdk::api::ApiKeysClient3` | api_keys operations |
 | `client.domains` | `agentmail_sdk::api::DomainsClient2` | domains operations |
 | `client.drafts` | `agentmail_sdk::api::DraftsClient3` | drafts operations |

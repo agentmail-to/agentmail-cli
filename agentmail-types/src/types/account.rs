@@ -29,6 +29,12 @@ pub struct Account {
     /// Number of sign-ins at provider.
     #[serde(default)]
     pub sign_in_count: i64,
+    /// Present only while the account is disabled. Absent means the inbox may sign in.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub status: Option<AccountStatus>,
+    /// Time at which the account was disabled. Present only while `status` is `disabled`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub disabled_at: Option<DateTime<FixedOffset>>,
 }
 
 impl Account {
@@ -49,6 +55,8 @@ pub struct AccountBuilder {
     first_signed_in_at: Option<DateTime<FixedOffset>>,
     last_signed_in_at: Option<DateTime<FixedOffset>>,
     sign_in_count: Option<i64>,
+    status: Option<AccountStatus>,
+    disabled_at: Option<DateTime<FixedOffset>>,
 }
 
 impl AccountBuilder {
@@ -97,6 +105,16 @@ impl AccountBuilder {
         self
     }
 
+    pub fn status(mut self, value: AccountStatus) -> Self {
+        self.status = Some(value);
+        self
+    }
+
+    pub fn disabled_at(mut self, value: DateTime<FixedOffset>) -> Self {
+        self.disabled_at = Some(value);
+        self
+    }
+
     /// Consumes the builder and constructs a [`Account`].
     /// This method will fail if any of the following fields are not set:
     /// - [`account_id`](AccountBuilder::account_id)
@@ -118,6 +136,8 @@ impl AccountBuilder {
             first_signed_in_at: self.first_signed_in_at.ok_or_else(|| BuildError::missing_field("first_signed_in_at"))?,
             last_signed_in_at: self.last_signed_in_at.ok_or_else(|| BuildError::missing_field("last_signed_in_at"))?,
             sign_in_count: self.sign_in_count.ok_or_else(|| BuildError::missing_field("sign_in_count"))?,
+            status: self.status,
+            disabled_at: self.disabled_at,
         })
     }
 }

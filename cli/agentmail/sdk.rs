@@ -64,6 +64,7 @@ pub fn client(ctx: &AppContext) -> agentmail_sdk::api::ApiClient {
         config,
         inboxes: agentmail_sdk::api::InboxesClient {
             http_client: http_client.clone(),
+            accounts: agentmail_sdk::api::resources::inboxes::AccountsClient2 { http_client: http_client.clone() },
             api_keys: agentmail_sdk::api::resources::inboxes::ApiKeysClient2 { http_client: http_client.clone() },
             drafts: agentmail_sdk::api::resources::inboxes::DraftsClient2 { http_client: http_client.clone() },
             events: agentmail_sdk::api::resources::inboxes::EventsClient { http_client: http_client.clone() },
@@ -75,6 +76,7 @@ pub fn client(ctx: &AppContext) -> agentmail_sdk::api::ApiClient {
         },
         pods: agentmail_sdk::api::PodsClient {
             http_client: http_client.clone(),
+            accounts: agentmail_sdk::api::resources::pods::AccountsClient3 { http_client: http_client.clone() },
             api_keys: agentmail_sdk::api::resources::pods::ApiKeysClient3 { http_client: http_client.clone() },
             domains: agentmail_sdk::api::resources::pods::DomainsClient2 { http_client: http_client.clone() },
             drafts: agentmail_sdk::api::resources::pods::DraftsClient3 { http_client: http_client.clone() },

@@ -2,7 +2,7 @@ pub use crate::prelude::*;
 #[allow(unused_imports)]
 use super::*;
 
-/// S3 presigned URL to download the raw .eml file.
+/// CloudFront signed URL to download the raw .eml file.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq, Hash)]
 pub struct RawMessageResponse {
     /// ID of the message.
@@ -11,7 +11,7 @@ pub struct RawMessageResponse {
     /// Size of the raw message in bytes.
     #[serde(default)]
     pub size: MessageSize,
-    /// S3 presigned URL to download the raw message. Expires at expires_at.
+    /// CloudFront signed URL to download the raw message. Expires at expires_at.
     #[serde(default)]
     pub download_url: String,
     /// Time at which the download URL expires.
