@@ -122,6 +122,9 @@ pub struct ApiKeyPermissions {
     /// Create pods.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pod_create: Option<bool>,
+    /// Update pods.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pod_update: Option<bool>,
     /// Delete pods.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pod_delete: Option<bool>,
@@ -174,6 +177,7 @@ pub struct ApiKeyPermissionsBuilder {
     account_update: Option<bool>,
     pod_read: Option<bool>,
     pod_create: Option<bool>,
+    pod_update: Option<bool>,
     pod_delete: Option<bool>,
 }
 
@@ -368,6 +372,11 @@ impl ApiKeyPermissionsBuilder {
         self
     }
 
+    pub fn pod_update(mut self, value: bool) -> Self {
+        self.pod_update = Some(value);
+        self
+    }
+
     pub fn pod_delete(mut self, value: bool) -> Self {
         self.pod_delete = Some(value);
         self
@@ -414,6 +423,7 @@ impl ApiKeyPermissionsBuilder {
             account_update: self.account_update,
             pod_read: self.pod_read,
             pod_create: self.pod_create,
+            pod_update: self.pod_update,
             pod_delete: self.pod_delete,
         })
     }

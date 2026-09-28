@@ -5,7 +5,7 @@
 //!
 //! ## Type Categories
 //!
-//! - **Request/Response Types**: 115 types for API operations
+//! - **Request/Response Types**: 117 types for API operations
 //! - **Model Types**: 240 types for data representation
 
 pub mod limit;
@@ -68,6 +68,7 @@ pub mod update_account_status;
 pub mod account;
 pub mod list_accounts_response;
 pub mod agent_signup_response;
+pub mod agent_attach_human_response;
 pub mod agent_verify_response;
 pub mod api_key_id;
 pub mod prefix;
@@ -309,6 +310,7 @@ pub mod webhooks_create_webhook_request;
 pub mod webhooks_update_webhook_request;
 pub mod update_account_request;
 pub mod agent_signup_request;
+pub mod agent_attach_human_request;
 pub mod agent_verify_request;
 pub mod connect_provider_body;
 pub mod create_draft_request;
@@ -424,6 +426,7 @@ pub use update_account_status::UpdateAccountStatus;
 pub use account::Account;
 pub use list_accounts_response::ListAccountsResponse;
 pub use agent_signup_response::AgentSignupResponse;
+pub use agent_attach_human_response::AgentAttachHumanResponse;
 pub use agent_verify_response::AgentVerifyResponse;
 pub use api_key_id::ApiKeyId;
 pub use prefix::Prefix;
@@ -665,6 +668,7 @@ pub use webhooks_create_webhook_request::WebhooksCreateWebhookRequest;
 pub use webhooks_update_webhook_request::WebhooksUpdateWebhookRequest;
 pub use update_account_request::UpdateAccountRequest;
 pub use agent_signup_request::AgentSignupRequest;
+pub use agent_attach_human_request::AgentAttachHumanRequest;
 pub use agent_verify_request::AgentVerifyRequest;
 pub use connect_provider_body::ConnectProviderBody;
 pub use create_draft_request::CreateDraftRequest;
