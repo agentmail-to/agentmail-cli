@@ -7,10 +7,12 @@ Full command reference for `agentmail`.
 - [`agentmail accounts`](#agentmail-accounts)
 - [`agentmail agent`](#agentmail-agent)
 - [`agentmail api-keys`](#agentmail-api-keys)
+- [`agentmail apps`](#agentmail-apps)
 - [`agentmail auth`](#agentmail-auth)
 - [`agentmail domains`](#agentmail-domains)
 - [`agentmail drafts`](#agentmail-drafts)
 - [`agentmail inboxes`](#agentmail-inboxes)
+- [`agentmail inboxes accounts`](#agentmail-inboxes-accounts)
 - [`agentmail inboxes api-keys`](#agentmail-inboxes-api-keys)
 - [`agentmail inboxes drafts`](#agentmail-inboxes-drafts)
 - [`agentmail inboxes events`](#agentmail-inboxes-events)
@@ -23,6 +25,7 @@ Full command reference for `agentmail`.
 - [`agentmail metrics`](#agentmail-metrics)
 - [`agentmail organizations`](#agentmail-organizations)
 - [`agentmail pods`](#agentmail-pods)
+- [`agentmail pods accounts`](#agentmail-pods-accounts)
 - [`agentmail pods api-keys`](#agentmail-pods-api-keys)
 - [`agentmail pods domains`](#agentmail-pods-domains)
 - [`agentmail pods drafts`](#agentmail-pods-drafts)
@@ -31,7 +34,6 @@ Full command reference for `agentmail`.
 - [`agentmail pods metrics`](#agentmail-pods-metrics)
 - [`agentmail pods threads`](#agentmail-pods-threads)
 - [`agentmail pods webhooks`](#agentmail-pods-webhooks)
-- [`agentmail providers`](#agentmail-providers)
 - [`agentmail threads`](#agentmail-threads)
 - [`agentmail webhooks`](#agentmail-webhooks)
 
@@ -41,7 +43,8 @@ Full command reference for `agentmail`.
 
 #### `agentmail accounts get`
 
-Get Account
+Returns one account by ID. An account outside the key's scope is a 404.
+Requires `inbox_read`.
 
 `GET /v0/accounts/{account_id}`
 
@@ -51,7 +54,9 @@ Get Account
 
 #### `agentmail accounts list`
 
-Lists accounts across all providers.
+Lists accounts across all apps, scoped to the API key: an
+organization key sees every account, a pod key its pod's, an inbox key
+its inbox's. Requires `inbox_read`.
 
 `GET /v0/accounts`
 
@@ -61,15 +66,67 @@ Lists accounts across all providers.
 | `--page-token` | `PageToken` | No |  |
 | `--ascending` | `Ascending` | No |  |
 
+#### `agentmail accounts update`
+
+Updates one account. Set `status` to `disabled` to stop the inbox from
+signing in at the app again, or to `enabled` to re-enable it.
+Idempotent: disabling an already disabled account keeps its original
+`disabled_at`, and enabling an enabled account is a no-op.
+
+Find the `account_id` with List Accounts. An account exists only after an
+inbox's first sign-in at an app, so it cannot be disabled in advance.
+A disable applies to that inbox at that app whichever sign-in key is
+used: the app's next authorization ends in `access_denied`, and a code
+issued earlier is refused with `invalid_grant`. Access tokens already
+issued stay valid until they expire, and the app's own session is
+unaffected.
+
+Requires `account_update`, which sign-in keys (`type: public_key`) cannot
+hold, so call this with a bearer API key. An account outside the key's
+scope is a 404. A 409 means the account changed during the write; read it
+again and retry.
+
+`PATCH /v0/accounts/{account_id}/update`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--account-id` | `AccountId` | Yes |  |
+| `--json` | `JSON` | Yes | Request body as JSON (or use individual body-field flags) |
+
 ---
 
 ### `agentmail agent`
+
+#### `agentmail agent attach-human`
+
+Attach a human to an unverified agent organization. A 6-digit OTP is sent to the human's email, which you then submit to the verify endpoint.
+
+Use it after signing up without a `human_email`. Once the human is attached, the organization can send email to that human only, and verification lifts the remaining restrictions. For up to 5 minutes after attaching, sends to the human can still be rejected with a `429` daily send limit error while the API key's cached limits catch up. Wait and retry.
+
+Calling it again with the same `human_email` does not rotate the API key. It resends the OTP if it was never delivered, or issues a new one if it expired. While the current OTP is still valid, calling it again keeps that OTP and its attempt count. If all 10 attempts are used up, wait until the OTP expires, 24 hours after it was issued, then call it again for a new one.
+
+Calling it with a different `human_email` replaces the attached human and sends the new human an OTP. An organization can replace its human at most 2 times.
+
+Only available until the organization is verified.
+
+**CLI:**
+```bash
+agentmail agent attach-human --human-email user@example.com
+```
+
+`POST /v0/agent/human`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--json` | `JSON` | Yes | Request body as JSON (or use individual body-field flags) |
 
 #### `agentmail agent sign-up`
 
 Create a new agent organization with an inbox and API key. This endpoint is for signing up for the first time. If you've already signed up, you're all set — just use your existing API key.
 
 A 6-digit OTP is sent to the human's email for verification.
+
+`human_email` is optional. Without it, the inbox can receive email but cannot send to anyone until a human is attached with the attach human endpoint. There is also no way to recover the API key, so store it durably. Calling sign-up again without `human_email` creates a new organization, which needs a different `username`: the original username stays with the lost organization's inbox.
 
 This endpoint is idempotent. Calling it again with the same `human_email` will rotate the API key and resend the OTP if expired.
 
@@ -92,7 +149,7 @@ Verify an agent organization using the 6-digit OTP sent to the human's email dur
 
 On success, the organization is upgraded from `agent_unverified` to `agent_verified`, the send allowlist is removed, and free plan entitlements are applied.
 
-The OTP expires after 24 hours and allows a maximum of 10 attempts. If you run into any difficulties receiving the OTP code, you can also create an account on [console.agentmail.to](https://console.agentmail.to) using the human email address you provided to verify your account.
+The OTP expires after 24 hours and allows a maximum of 10 attempts. If the OTP expired, call the attach human endpoint with the same `human_email` to get a new one without rotating the API key. Once all 10 attempts are used, even the correct OTP is rejected, and attach human keeps returning the same OTP until it expires, so wait for it to expire before asking for a new one. An organization that signed up without a `human_email` has no OTP until a human is attached. If you run into any difficulties receiving the OTP code, you can also create an account on [console.agentmail.to](https://console.agentmail.to) using the human email address you provided to verify your account.
 
 **CLI:**
 ```bash
@@ -175,8 +232,8 @@ agentmail api-keys list
 #### `agentmail api-keys update`
 
 Renames a credential or changes its permissions. Public keys also resolve
-by `client_id`; a sign-in key accepts only `provider_connect` and
-`provider_share_owner`.
+by `client_id`; a sign-in key accepts only `app_connect` and
+`app_share_owner`.
 
 `PATCH /v0/api-keys/{api_key_id}`
 
@@ -184,6 +241,74 @@ by `client_id`; a sign-in key accepts only `provider_connect` and
 |------|------|----------|-------------|
 | `--api-key-id` | `ApiKeyId` | Yes |  |
 | `--json` | `JSON` | Yes | Request body as JSON (or use individual body-field flags) |
+
+---
+
+### `agentmail apps`
+
+#### `agentmail apps connect`
+
+Starts signing an inbox in to an app. Returns a single-use `magic_url`,
+valid for five minutes, to open in the client that will hold the sign-in;
+the client enrolls as the inbox and continues to the app.
+A `404` names the missing resource: `App` or `Inbox`.
+A `403` `AppSignupLimitError` means the app accepts no more sign-ups from
+your organization; sign in with an inbox that already has an account there.
+
+`POST /v0/apps/{app_id}/connect`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--app-id` | `AppId` | Yes |  |
+| `--idempotency-key` | `string` | No | Unique key that makes the connect idempotent. The endpoint requires one; the CLI generates a UUID when the flag is omitted and reuses it across retries, so a transient failure cannot start a second sign-in. Pass a value to make a manual re-run resolve to the same attempt. |
+| `--json` | `JSON` | No | Request body as JSON (or use individual body-field flags) |
+
+#### `agentmail apps get`
+
+Gets one app by ID. An app in the catalog returns its full entry.
+A registered app that the catalog does not list returns its ID and
+name only, without `updated_at`, so anyone holding its ID can still look
+it up. List Apps and Search Apps show catalog entries only.
+
+`GET /v0/apps/{app_id}`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--app-id` | `AppId` | Yes |  |
+
+#### `agentmail apps list`
+
+Lists apps, most popular first.
+
+`GET /v0/apps`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--limit` | `Limit` | No |  |
+| `--page-token` | `PageToken` | No |  |
+
+#### `agentmail apps list-accounts`
+
+Lists accounts at one app, most recent sign-in first.
+
+`GET /v0/apps/{app_id}/accounts`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--app-id` | `AppId` | Yes |  |
+| `--limit` | `Limit` | No |  |
+| `--page-token` | `PageToken` | No |  |
+
+#### `agentmail apps search`
+
+Searches apps by name prefix.
+
+`GET /v0/apps/search`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--q` | `string` | Yes | Name prefix to search for. |
+| `--limit` | `Limit` | No |  |
 
 ---
 
@@ -364,8 +489,10 @@ agentmail drafts list
 #### `agentmail inboxes authorize`
 
 Authorizes the AgentID sign-in a client is already waiting in, for the
-inbox in the path, and returns the pending public key it will activate. A
-repeat for the same token, inbox, and bearer returns the same key.
+inbox in the path, and returns the ID of the pending public key it will
+activate. Read the key with Get API Key. A repeat for the same token,
+inbox, and bearer returns the same key ID. A `403` `AppSignupLimitError`
+means the app accepts no more sign-ups from your organization.
 
 `POST /v0/inboxes/{inbox_id}/authorize`
 
@@ -458,6 +585,35 @@ agentmail inboxes update --inbox-id <inbox_id> --display-name "Updated Name"
 |------|------|----------|-------------|
 | `--inbox-id` | `inboxesInboxId` | Yes |  |
 | `--json` | `JSON` | Yes | Request body as JSON (or use individual body-field flags) |
+
+---
+
+### `agentmail inboxes accounts`
+
+#### `agentmail inboxes accounts get`
+
+Returns one account held by the inbox. An account elsewhere is a 404. Requires
+`inbox_read`.
+
+`GET /v0/inboxes/{inbox_id}/accounts/{account_id}`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--inbox-id` | `inboxesInboxId` | Yes |  |
+| `--account-id` | `AccountId` | Yes |  |
+
+#### `agentmail inboxes accounts list`
+
+Lists accounts held by the inbox, across all apps. Requires `inbox_read`.
+
+`GET /v0/inboxes/{inbox_id}/accounts`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--inbox-id` | `inboxesInboxId` | Yes |  |
+| `--limit` | `Limit` | No |  |
+| `--page-token` | `PageToken` | No |  |
+| `--ascending` | `Ascending` | No |  |
 
 ---
 
@@ -992,6 +1148,37 @@ agentmail inboxes metrics query-events --inbox-id <inbox_id>
 | `--limit` | `MetricLimit` | No |  |
 | `--descending` | `Descending` | No |  |
 
+#### `agentmail inboxes metrics query-rates`
+
+Rolling bounce and complaint rates for the inbox. At each `period`
+grid point, the bounced (or complained) messages over the preceding
+`window` divided by the messages sent over the same window, with the
+send count alongside. Account moderation evaluates the organization-wide
+rate, so use the organization endpoint to see the number it acts on;
+the inbox view shows which inboxes contribute. Defaults to the rolling
+24-hour rate sampled hourly over the last day; `start` must be within
+the last 90 days, `window` must be a whole multiple of `period`, and
+the range plus window divided by `period` must not exceed 1000
+buckets.
+
+**CLI:**
+```bash
+agentmail inboxes metrics query-rates --inbox-id <inbox_id>
+```
+
+`GET /v0/inboxes/{inbox_id}/metrics/rates`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--inbox-id` | `inboxesInboxId` | Yes |  |
+| `--rate-types` | `RateTypes` | No |  |
+| `--start` | `Start` | No |  |
+| `--end` | `End` | No |  |
+| `--period` | `RatePeriod` | No |  |
+| `--window` | `Window` | No |  |
+| `--limit` | `MetricLimit` | No |  |
+| `--descending` | `Descending` | No |  |
+
 #### `agentmail inboxes metrics query-usage`
 
 Cumulative usage series for the inbox. Each point is the running total
@@ -1323,6 +1510,37 @@ agentmail metrics query-events
 | `--limit` | `MetricLimit` | No |  |
 | `--descending` | `Descending` | No |  |
 
+#### `agentmail metrics query-rates`
+
+Rolling bounce and complaint rates for the organization. At each
+`period` grid point, the bounced (or complained) messages over the
+preceding `window` divided by the messages sent over the same window,
+with the send count alongside so you can see the volume behind
+it. This is the number AgentMail's account moderation acts on: a
+warning at a 5% bounce rate and suspension at 10%, evaluated over a
+rolling 24 hours once at least 1,000 messages were sent in that
+window. Defaults to the rolling 24-hour rate sampled hourly over the
+last day; `start` must be within the last 90 days, `window` must be a
+whole multiple of `period`, and the range plus window divided by
+`period` must not exceed 1000 buckets.
+
+**CLI:**
+```bash
+agentmail metrics query-rates
+```
+
+`GET /v0/metrics/rates`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--rate-types` | `RateTypes` | No |  |
+| `--start` | `Start` | No |  |
+| `--end` | `End` | No |  |
+| `--period` | `RatePeriod` | No |  |
+| `--window` | `Window` | No |  |
+| `--limit` | `MetricLimit` | No |  |
+| `--descending` | `Descending` | No |  |
+
 #### `agentmail metrics query-usage`
 
 Cumulative usage series for the organization. Each point is the running
@@ -1411,6 +1629,35 @@ agentmail pods list
 
 | Flag | Type | Required | Description |
 |------|------|----------|-------------|
+| `--limit` | `Limit` | No |  |
+| `--page-token` | `PageToken` | No |  |
+| `--ascending` | `Ascending` | No |  |
+
+---
+
+### `agentmail pods accounts`
+
+#### `agentmail pods accounts get`
+
+Returns one account held by inboxes in the pod. An account elsewhere is a 404. Requires
+`inbox_read`.
+
+`GET /v0/pods/{pod_id}/accounts/{account_id}`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--pod-id` | `podsPodId` | Yes |  |
+| `--account-id` | `AccountId` | Yes |  |
+
+#### `agentmail pods accounts list`
+
+Lists accounts held by inboxes in the pod, across all apps. Requires `inbox_read`.
+
+`GET /v0/pods/{pod_id}/accounts`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--pod-id` | `podsPodId` | Yes |  |
 | `--limit` | `Limit` | No |  |
 | `--page-token` | `PageToken` | No |  |
 | `--ascending` | `Ascending` | No |  |
@@ -1827,6 +2074,37 @@ agentmail pods metrics query-events --pod-id <pod_id>
 | `--limit` | `MetricLimit` | No |  |
 | `--descending` | `Descending` | No |  |
 
+#### `agentmail pods metrics query-rates`
+
+Rolling bounce and complaint rates for the pod. At each `period` grid
+point, the bounced (or complained) messages over the preceding
+`window` divided by the messages sent over the same window, with the
+send count alongside. Account moderation evaluates the organization-wide
+rate, so use the organization endpoint to see the number it acts on;
+the pod view shows which pods contribute. Defaults to the rolling
+24-hour rate sampled hourly over the last day; `start` must be within
+the last 90 days, `window` must be a whole multiple of `period`, and
+the range plus window divided by `period` must not exceed 1000
+buckets.
+
+**CLI:**
+```bash
+agentmail pods metrics query-rates --pod-id <pod_id>
+```
+
+`GET /v0/pods/{pod_id}/metrics/rates`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--pod-id` | `podsPodId` | Yes |  |
+| `--rate-types` | `RateTypes` | No |  |
+| `--start` | `Start` | No |  |
+| `--end` | `End` | No |  |
+| `--period` | `RatePeriod` | No |  |
+| `--window` | `Window` | No |  |
+| `--limit` | `MetricLimit` | No |  |
+| `--descending` | `Descending` | No |  |
+
 #### `agentmail pods metrics query-usage`
 
 Cumulative usage series for the pod. Each point is the running total of
@@ -2064,69 +2342,6 @@ pod-scoped webhook. Header values remain write-only.
 | `--pod-id` | `podsPodId` | Yes |  |
 | `--webhook-id` | `webhooksWebhookId` | Yes |  |
 | `--json` | `JSON` | Yes | Request body as JSON (or use individual body-field flags) |
-
----
-
-### `agentmail providers`
-
-#### `agentmail providers connect`
-
-Starts signing an inbox in to a provider. Returns a single-use `magic_url`,
-valid for five minutes, to open in the client that will hold the sign-in;
-the client enrolls as the inbox and continues to the provider. Poll
-[Get API Key](/api-reference/api-keys/get) with `api_key_id` for `status`.
-
-`POST /v0/providers/{provider_id}/connect`
-
-| Flag | Type | Required | Description |
-|------|------|----------|-------------|
-| `--provider-id` | `ProviderId` | Yes |  |
-| `--idempotency-key` | `string` | No | Unique key that makes the connect idempotent. The endpoint requires one; the CLI generates a UUID when the flag is omitted and reuses it across retries, so a transient failure cannot start a second sign-in. Pass a value to make a manual re-run resolve to the same attempt. |
-| `--json` | `JSON` | No | Request body as JSON (or use individual body-field flags) |
-
-#### `agentmail providers get`
-
-Get Provider
-
-`GET /v0/providers/{provider_id}`
-
-| Flag | Type | Required | Description |
-|------|------|----------|-------------|
-| `--provider-id` | `ProviderId` | Yes |  |
-
-#### `agentmail providers list`
-
-Lists providers, most popular first.
-
-`GET /v0/providers`
-
-| Flag | Type | Required | Description |
-|------|------|----------|-------------|
-| `--limit` | `Limit` | No |  |
-| `--page-token` | `PageToken` | No |  |
-
-#### `agentmail providers list-accounts`
-
-Lists accounts at one provider, most recent sign-in first.
-
-`GET /v0/providers/{provider_id}/accounts`
-
-| Flag | Type | Required | Description |
-|------|------|----------|-------------|
-| `--provider-id` | `ProviderId` | Yes |  |
-| `--limit` | `Limit` | No |  |
-| `--page-token` | `PageToken` | No |  |
-
-#### `agentmail providers search`
-
-Searches providers by name prefix.
-
-`GET /v0/providers/search`
-
-| Flag | Type | Required | Description |
-|------|------|----------|-------------|
-| `--q` | `string` | Yes | Name prefix to search for. |
-| `--limit` | `Limit` | No |  |
 
 ---
 

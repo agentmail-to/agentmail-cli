@@ -2,6 +2,8 @@ use crate::api::*;
 use crate::{ApiError, ClientConfig, HttpClient, QueryBuilder, RequestOptions};
 use reqwest::Method;
 
+pub mod accounts;
+pub use accounts::AccountsClient3;
 pub mod api_keys;
 pub use api_keys::ApiKeysClient3;
 pub mod domains;
@@ -20,6 +22,7 @@ pub mod webhooks;
 pub use webhooks::WebhooksClient3;
 pub struct PodsClient {
     pub http_client: HttpClient,
+    pub accounts: AccountsClient3,
     pub api_keys: ApiKeysClient3,
     pub domains: DomainsClient2,
     pub drafts: DraftsClient3,
@@ -34,6 +37,7 @@ impl PodsClient {
     pub fn new(config: ClientConfig) -> Result<Self, ApiError> {
         Ok(Self {
             http_client: HttpClient::new(config.clone())?,
+            accounts: AccountsClient3::new(config.clone())?,
             api_keys: ApiKeysClient3::new(config.clone())?,
             domains: DomainsClient2::new(config.clone())?,
             drafts: DraftsClient3::new(config.clone())?,

@@ -147,4 +147,82 @@ impl MetricsClient {
             )
             .await
     }
+
+    /// Rolling bounce and complaint rates for the organization. At each
+    /// `period` grid point, the bounced (or complained) messages over the
+    /// preceding `window` divided by the messages sent over the same window,
+    /// with the send count alongside so you can see the volume behind
+    /// it. This is the number AgentMail's account moderation acts on: a
+    /// warning at a 5% bounce rate and suspension at 10%, evaluated over a
+    /// rolling 24 hours once at least 1,000 messages were sent in that
+    /// window. Defaults to the rolling 24-hour rate sampled hourly over the
+    /// last day; `start` must be within the last 90 days, `window` must be a
+    /// whole multiple of `period`, and the range plus window divided by
+    /// `period` must not exceed 1000 buckets.
+    ///
+    /// **CLI:**
+    /// ```bash
+    /// agentmail metrics query-rates
+    /// ```
+    ///
+    /// # Arguments
+    ///
+    /// * `options` - Additional request options such as headers, timeout, etc.
+    ///
+    /// # Returns
+    ///
+    /// JSON response from the API
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use agentmail_sdk::prelude::*;
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let config = ClientConfig {
+    ///         token: Some("<token>".to_string()),
+    ///         ..Default::default()
+    ///     };
+    ///     let client = AgentmailClient::new(config).expect("Failed to build client");
+    ///     client
+    ///         .metrics
+    ///         .query_rates(
+    ///             &MetricsQueryRatesQueryRequest {
+    ///                 rate_types: vec![],
+    ///                 start: None,
+    ///                 end: None,
+    ///                 period: None,
+    ///                 window: None,
+    ///                 limit: None,
+    ///                 descending: None,
+    ///             },
+    ///             None,
+    ///         )
+    ///         .await;
+    /// }
+    /// ```
+    pub async fn query_rates(
+        &self,
+        request: &MetricsQueryRatesQueryRequest,
+        options: Option<RequestOptions>,
+    ) -> Result<QueryRatesResponse, ApiError> {
+        self.http_client
+            .execute_request(
+                Method::GET,
+                "v0/metrics/rates",
+                None,
+                QueryBuilder::new()
+                    .serialize_array("rate_types", request.rate_types.clone())
+                    .serialize("start", request.start.clone())
+                    .serialize("end", request.end.clone())
+                    .serialize("period", request.period.clone())
+                    .serialize("window", request.window.clone())
+                    .serialize("limit", request.limit.clone())
+                    .serialize("descending", request.descending.clone())
+                    .build(),
+                options,
+            )
+            .await
+    }
 }
