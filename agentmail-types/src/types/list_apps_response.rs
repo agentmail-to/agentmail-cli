@@ -3,7 +3,7 @@ pub use crate::prelude::*;
 use super::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq, Hash)]
-pub struct ListProvidersResponse {
+pub struct ListAppsResponse {
     #[serde(default)]
     pub count: Count,
     #[serde(default)]
@@ -11,25 +11,25 @@ pub struct ListProvidersResponse {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub next_page_token: Option<PageToken>,
     #[serde(default)]
-    pub providers: Vec<Provider>,
+    pub apps: Vec<App>,
 }
 
-impl ListProvidersResponse {
-    pub fn builder() -> ListProvidersResponseBuilder {
-        <ListProvidersResponseBuilder as Default>::default()
+impl ListAppsResponse {
+    pub fn builder() -> ListAppsResponseBuilder {
+        <ListAppsResponseBuilder as Default>::default()
     }
 }
 
 #[derive(Clone, PartialEq, Default, Debug)]
 #[non_exhaustive]
-pub struct ListProvidersResponseBuilder {
+pub struct ListAppsResponseBuilder {
     count: Option<Count>,
     limit: Option<Limit>,
     next_page_token: Option<PageToken>,
-    providers: Option<Vec<Provider>>,
+    apps: Option<Vec<App>>,
 }
 
-impl ListProvidersResponseBuilder {
+impl ListAppsResponseBuilder {
     pub fn count(mut self, value: Count) -> Self {
         self.count = Some(value);
         self
@@ -45,22 +45,22 @@ impl ListProvidersResponseBuilder {
         self
     }
 
-    pub fn providers(mut self, value: Vec<Provider>) -> Self {
-        self.providers = Some(value);
+    pub fn apps(mut self, value: Vec<App>) -> Self {
+        self.apps = Some(value);
         self
     }
 
-    /// Consumes the builder and constructs a [`ListProvidersResponse`].
+    /// Consumes the builder and constructs a [`ListAppsResponse`].
     /// This method will fail if any of the following fields are not set:
-    /// - [`count`](ListProvidersResponseBuilder::count)
-    /// - [`limit`](ListProvidersResponseBuilder::limit)
-    /// - [`providers`](ListProvidersResponseBuilder::providers)
-    pub fn build(self) -> Result<ListProvidersResponse, BuildError> {
-        Ok(ListProvidersResponse {
+    /// - [`count`](ListAppsResponseBuilder::count)
+    /// - [`limit`](ListAppsResponseBuilder::limit)
+    /// - [`apps`](ListAppsResponseBuilder::apps)
+    pub fn build(self) -> Result<ListAppsResponse, BuildError> {
+        Ok(ListAppsResponse {
             count: self.count.ok_or_else(|| BuildError::missing_field("count"))?,
             limit: self.limit.ok_or_else(|| BuildError::missing_field("limit"))?,
             next_page_token: self.next_page_token,
-            providers: self.providers.ok_or_else(|| BuildError::missing_field("providers"))?,
+            apps: self.apps.ok_or_else(|| BuildError::missing_field("apps"))?,
         })
     }
 }

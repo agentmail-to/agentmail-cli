@@ -90,13 +90,13 @@ pub fn client(ctx: &AppContext) -> agentmail_sdk::api::ApiClient {
         accounts: agentmail_sdk::api::AccountsClient { http_client: http_client.clone() },
         agent: agentmail_sdk::api::AgentClient { http_client: http_client.clone() },
         api_keys: agentmail_sdk::api::ApiKeysClient { http_client: http_client.clone() },
+        apps: agentmail_sdk::api::AppsClient { http_client: http_client.clone() },
         auth: agentmail_sdk::api::AuthClient { http_client: http_client.clone() },
         domains: agentmail_sdk::api::DomainsClient { http_client: http_client.clone() },
         drafts: agentmail_sdk::api::DraftsClient { http_client: http_client.clone() },
         lists: agentmail_sdk::api::ListsClient { http_client: http_client.clone() },
         metrics: agentmail_sdk::api::MetricsClient { http_client: http_client.clone() },
         organizations: agentmail_sdk::api::OrganizationsClient { http_client: http_client.clone() },
-        providers: agentmail_sdk::api::ProvidersClient { http_client: http_client.clone() },
         threads: agentmail_sdk::api::ThreadsClient { http_client: http_client.clone() },
     }
 }

@@ -369,7 +369,8 @@ impl InboxesClient {
     /// Authorizes the AgentID sign-in a client is already waiting in, for the
     /// inbox in the path, and returns the ID of the pending public key it will
     /// activate. Read the key with Get API Key. A repeat for the same token,
-    /// inbox, and bearer returns the same key ID.
+    /// inbox, and bearer returns the same key ID. A `403` `AppSignupLimitError`
+    /// means the app accepts no more sign-ups from your organization.
     ///
     /// # Arguments
     ///

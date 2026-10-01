@@ -4,7 +4,7 @@ use super::*;
 
 /// Query parameters for search
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq, Hash)]
-pub struct ProvidersSearchQueryRequest {
+pub struct AppsSearchQueryRequest {
     /// Name prefix to search for.
     #[serde(default)]
     pub q: String,
@@ -12,20 +12,20 @@ pub struct ProvidersSearchQueryRequest {
     pub limit: Option<Limit>,
 }
 
-impl ProvidersSearchQueryRequest {
-    pub fn builder() -> ProvidersSearchQueryRequestBuilder {
-        <ProvidersSearchQueryRequestBuilder as Default>::default()
+impl AppsSearchQueryRequest {
+    pub fn builder() -> AppsSearchQueryRequestBuilder {
+        <AppsSearchQueryRequestBuilder as Default>::default()
     }
 }
 
 #[derive(Clone, PartialEq, Default, Debug)]
 #[non_exhaustive]
-pub struct ProvidersSearchQueryRequestBuilder {
+pub struct AppsSearchQueryRequestBuilder {
     q: Option<String>,
     limit: Option<Limit>,
 }
 
-impl ProvidersSearchQueryRequestBuilder {
+impl AppsSearchQueryRequestBuilder {
     pub fn q(mut self, value: impl Into<String>) -> Self {
         self.q = Some(value.into());
         self
@@ -36,11 +36,11 @@ impl ProvidersSearchQueryRequestBuilder {
         self
     }
 
-    /// Consumes the builder and constructs a [`ProvidersSearchQueryRequest`].
+    /// Consumes the builder and constructs a [`AppsSearchQueryRequest`].
     /// This method will fail if any of the following fields are not set:
-    /// - [`q`](ProvidersSearchQueryRequestBuilder::q)
-    pub fn build(self) -> Result<ProvidersSearchQueryRequest, BuildError> {
-        Ok(ProvidersSearchQueryRequest {
+    /// - [`q`](AppsSearchQueryRequestBuilder::q)
+    pub fn build(self) -> Result<AppsSearchQueryRequest, BuildError> {
+        Ok(AppsSearchQueryRequest {
             q: self.q.ok_or_else(|| BuildError::missing_field("q"))?,
             limit: self.limit,
         })

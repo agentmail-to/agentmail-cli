@@ -4,27 +4,27 @@ use super::*;
 
 /// Query parameters for list
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq, Hash)]
-pub struct ProvidersListQueryRequest {
+pub struct AppsListQueryRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub limit: Option<Limit>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub page_token: Option<PageToken>,
 }
 
-impl ProvidersListQueryRequest {
-    pub fn builder() -> ProvidersListQueryRequestBuilder {
-        <ProvidersListQueryRequestBuilder as Default>::default()
+impl AppsListQueryRequest {
+    pub fn builder() -> AppsListQueryRequestBuilder {
+        <AppsListQueryRequestBuilder as Default>::default()
     }
 }
 
 #[derive(Clone, PartialEq, Default, Debug)]
 #[non_exhaustive]
-pub struct ProvidersListQueryRequestBuilder {
+pub struct AppsListQueryRequestBuilder {
     limit: Option<Limit>,
     page_token: Option<PageToken>,
 }
 
-impl ProvidersListQueryRequestBuilder {
+impl AppsListQueryRequestBuilder {
     pub fn limit(mut self, value: Limit) -> Self {
         self.limit = Some(value);
         self
@@ -35,9 +35,9 @@ impl ProvidersListQueryRequestBuilder {
         self
     }
 
-    /// Consumes the builder and constructs a [`ProvidersListQueryRequest`].
-    pub fn build(self) -> Result<ProvidersListQueryRequest, BuildError> {
-        Ok(ProvidersListQueryRequest {
+    /// Consumes the builder and constructs a [`AppsListQueryRequest`].
+    pub fn build(self) -> Result<AppsListQueryRequest, BuildError> {
+        Ok(AppsListQueryRequest {
             limit: self.limit,
             page_token: self.page_token,
         })

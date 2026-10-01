@@ -89,13 +89,13 @@ with the following sub-clients:
 | `client.accounts` | `agentmail_sdk::api::AccountsClient` | accounts operations |
 | `client.agent` | `agentmail_sdk::api::AgentClient` | agent operations |
 | `client.api_keys` | `agentmail_sdk::api::ApiKeysClient` | api_keys operations |
+| `client.apps` | `agentmail_sdk::api::AppsClient` | apps operations |
 | `client.auth` | `agentmail_sdk::api::AuthClient` | auth operations |
 | `client.domains` | `agentmail_sdk::api::DomainsClient` | domains operations |
 | `client.drafts` | `agentmail_sdk::api::DraftsClient` | drafts operations |
 | `client.lists` | `agentmail_sdk::api::ListsClient` | lists operations |
 | `client.metrics` | `agentmail_sdk::api::MetricsClient` | metrics operations |
 | `client.organizations` | `agentmail_sdk::api::OrganizationsClient` | organizations operations |
-| `client.providers` | `agentmail_sdk::api::ProvidersClient` | providers operations |
 | `client.threads` | `agentmail_sdk::api::ThreadsClient` | threads operations |
 
 ### 3. Key Patterns

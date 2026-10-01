@@ -2,14 +2,14 @@ pub use crate::prelude::*;
 #[allow(unused_imports)]
 use super::*;
 
-/// A provider an inbox can sign in to.
+/// An app an inbox can sign in to.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq, Hash)]
-pub struct Provider {
+pub struct App {
     #[serde(default)]
-    pub provider_id: ProviderId,
+    pub app_id: AppId,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    /// Time at which provider was last updated.
+    /// Time at which app was last updated.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub updated_at: Option<DateTime<FixedOffset>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -20,21 +20,21 @@ pub struct Provider {
     pub terms_url: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub privacy_url: Option<String>,
-    /// Maximum number of accounts your organization may sign up at this provider. Omitted when the provider sets no limit. 0 means the provider has paused new sign-ups; existing accounts keep signing in.
+    /// Maximum number of accounts your organization may sign up at this app. Omitted when the app sets no limit. 0 means the app has paused new sign-ups; existing accounts keep signing in.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub owner_signup_limit: Option<i64>,
 }
 
-impl Provider {
-    pub fn builder() -> ProviderBuilder {
-        <ProviderBuilder as Default>::default()
+impl App {
+    pub fn builder() -> AppBuilder {
+        <AppBuilder as Default>::default()
     }
 }
 
 #[derive(Clone, PartialEq, Default, Debug)]
 #[non_exhaustive]
-pub struct ProviderBuilder {
-    provider_id: Option<ProviderId>,
+pub struct AppBuilder {
+    app_id: Option<AppId>,
     name: Option<String>,
     updated_at: Option<DateTime<FixedOffset>>,
     description: Option<String>,
@@ -44,9 +44,9 @@ pub struct ProviderBuilder {
     owner_signup_limit: Option<i64>,
 }
 
-impl ProviderBuilder {
-    pub fn provider_id(mut self, value: ProviderId) -> Self {
-        self.provider_id = Some(value);
+impl AppBuilder {
+    pub fn app_id(mut self, value: AppId) -> Self {
+        self.app_id = Some(value);
         self
     }
 
@@ -85,12 +85,12 @@ impl ProviderBuilder {
         self
     }
 
-    /// Consumes the builder and constructs a [`Provider`].
+    /// Consumes the builder and constructs a [`App`].
     /// This method will fail if any of the following fields are not set:
-    /// - [`provider_id`](ProviderBuilder::provider_id)
-    pub fn build(self) -> Result<Provider, BuildError> {
-        Ok(Provider {
-            provider_id: self.provider_id.ok_or_else(|| BuildError::missing_field("provider_id"))?,
+    /// - [`app_id`](AppBuilder::app_id)
+    pub fn build(self) -> Result<App, BuildError> {
+        Ok(App {
+            app_id: self.app_id.ok_or_else(|| BuildError::missing_field("app_id"))?,
             name: self.name,
             updated_at: self.updated_at,
             description: self.description,

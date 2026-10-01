@@ -28,16 +28,16 @@ pub enum ApiError {
         fix: Option<ErrorFix>,
         docs: Option<ErrorDocs>,
     },
-    #[error("ConflictError: Conflict - {message}")]
-    ConflictError {
+    #[error("ForbiddenError: Access forbidden - {message}")]
+    ForbiddenError {
         message: String,
         name: Option<ErrorName>,
         code: Option<ErrorCode>,
         fix: Option<ErrorFix>,
         docs: Option<ErrorDocs>,
     },
-    #[error("ForbiddenError: Access forbidden - {message}")]
-    ForbiddenError {
+    #[error("ConflictError: Conflict - {message}")]
+    ConflictError {
         message: String,
         name: Option<ErrorName>,
         code: Option<ErrorCode>,
@@ -172,39 +172,6 @@ impl ApiError {
                     docs: None,
                 };
             }
-            409 => {
-                // Parse error body for ConflictError;
-                if let Some(body_str) = body {
-                    if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(body_str) {
-                        return Self::ConflictError {
-                            message: parsed
-                                .get("message")
-                                .and_then(|v| v.as_str())
-                                .unwrap_or("Unknown error")
-                                .to_string(),
-                            name: parsed
-                                .get("name")
-                                .and_then(|v| serde_json::from_value::<ErrorName>(v.clone()).ok()),
-                            code: parsed
-                                .get("code")
-                                .and_then(|v| serde_json::from_value::<ErrorCode>(v.clone()).ok()),
-                            fix: parsed
-                                .get("fix")
-                                .and_then(|v| serde_json::from_value::<ErrorFix>(v.clone()).ok()),
-                            docs: parsed
-                                .get("docs")
-                                .and_then(|v| serde_json::from_value::<ErrorDocs>(v.clone()).ok()),
-                        };
-                    }
-                }
-                return Self::ConflictError {
-                    message: body.unwrap_or("Unknown error").to_string(),
-                    name: None,
-                    code: None,
-                    fix: None,
-                    docs: None,
-                };
-            }
             403 => {
                 // Parse error body for ForbiddenError;
                 if let Some(body_str) = body {
@@ -231,6 +198,39 @@ impl ApiError {
                     }
                 }
                 return Self::ForbiddenError {
+                    message: body.unwrap_or("Unknown error").to_string(),
+                    name: None,
+                    code: None,
+                    fix: None,
+                    docs: None,
+                };
+            }
+            409 => {
+                // Parse error body for ConflictError;
+                if let Some(body_str) = body {
+                    if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(body_str) {
+                        return Self::ConflictError {
+                            message: parsed
+                                .get("message")
+                                .and_then(|v| v.as_str())
+                                .unwrap_or("Unknown error")
+                                .to_string(),
+                            name: parsed
+                                .get("name")
+                                .and_then(|v| serde_json::from_value::<ErrorName>(v.clone()).ok()),
+                            code: parsed
+                                .get("code")
+                                .and_then(|v| serde_json::from_value::<ErrorCode>(v.clone()).ok()),
+                            fix: parsed
+                                .get("fix")
+                                .and_then(|v| serde_json::from_value::<ErrorFix>(v.clone()).ok()),
+                            docs: parsed
+                                .get("docs")
+                                .and_then(|v| serde_json::from_value::<ErrorDocs>(v.clone()).ok()),
+                        };
+                    }
+                }
+                return Self::ConflictError {
                     message: body.unwrap_or("Unknown error").to_string(),
                     name: None,
                     code: None,
