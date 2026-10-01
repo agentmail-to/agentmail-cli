@@ -54,7 +54,13 @@ generations:
     cli_version: unknown
     generator_versions:
       fernapi/fern-cli-generator: 0.38.10
-current_generation: 4c9aefd77ae432325a08ca82fed607ef8ae8ca50
+  - commit_sha: c2dac7d33a1b45c1144403af99c98aedb4d428f6
+    tree_hash: 8d5c75076f174baa1ad10a085f8c4e32178567d7
+    timestamp: 2026-10-01T22:57:45.679Z
+    cli_version: unknown
+    generator_versions:
+      fernapi/fern-cli-generator: 0.38.10
+current_generation: c2dac7d33a1b45c1144403af99c98aedb4d428f6
 patches:
   - id: patch-bf63549e
     content_hash: sha256:a660ef1be2e6211b2d9aee152022a339ffd879d56f0e8b0b557ce0fb5e4d9b5c

@@ -21,6 +21,8 @@ pub struct CreateApiKeyResponse {
     pub permissions: Option<ApiKeyPermissions>,
     #[serde(default)]
     pub created_at: CreatedAt,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expires_at: Option<ExpiresAt>,
 }
 
 impl CreateApiKeyResponse {
@@ -40,6 +42,7 @@ pub struct CreateApiKeyResponseBuilder {
     inbox_id: Option<InboxScopeId>,
     permissions: Option<ApiKeyPermissions>,
     created_at: Option<CreatedAt>,
+    expires_at: Option<ExpiresAt>,
 }
 
 impl CreateApiKeyResponseBuilder {
@@ -83,6 +86,11 @@ impl CreateApiKeyResponseBuilder {
         self
     }
 
+    pub fn expires_at(mut self, value: ExpiresAt) -> Self {
+        self.expires_at = Some(value);
+        self
+    }
+
     /// Consumes the builder and constructs a [`CreateApiKeyResponse`].
     /// This method will fail if any of the following fields are not set:
     /// - [`api_key_id`](CreateApiKeyResponseBuilder::api_key_id)
@@ -100,6 +108,7 @@ impl CreateApiKeyResponseBuilder {
             inbox_id: self.inbox_id,
             permissions: self.permissions,
             created_at: self.created_at.ok_or_else(|| BuildError::missing_field("created_at"))?,
+            expires_at: self.expires_at,
         })
     }
 }

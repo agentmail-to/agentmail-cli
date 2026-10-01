@@ -3,7 +3,7 @@ pub use crate::prelude::*;
 use super::*;
 
 /// Status to set. `disabled` stops the inbox from signing in at the
-/// provider; `enabled` re-enables it. An enabled account reads back with no
+/// app; `enabled` re-enables it. An enabled account reads back with no
 /// `status`.
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

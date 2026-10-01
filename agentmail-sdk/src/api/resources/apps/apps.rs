@@ -2,18 +2,18 @@ use crate::api::*;
 use crate::{ApiError, ClientConfig, HttpClient, QueryBuilder, RequestOptions};
 use reqwest::Method;
 
-pub struct ProvidersClient {
+pub struct AppsClient {
     pub http_client: HttpClient,
 }
 
-impl ProvidersClient {
+impl AppsClient {
     pub fn new(config: ClientConfig) -> Result<Self, ApiError> {
         Ok(Self {
             http_client: HttpClient::new(config.clone())?,
         })
     }
 
-    /// Lists providers, most popular first.
+    /// Lists apps, most popular first.
     ///
     /// # Arguments
     ///
@@ -36,9 +36,9 @@ impl ProvidersClient {
     ///     };
     ///     let client = AgentmailClient::new(config).expect("Failed to build client");
     ///     client
-    ///         .providers
+    ///         .apps
     ///         .list(
-    ///             &ProvidersListQueryRequest {
+    ///             &AppsListQueryRequest {
     ///                 ..Default::default()
     ///             },
     ///             None,
@@ -48,13 +48,13 @@ impl ProvidersClient {
     /// ```
     pub async fn list(
         &self,
-        request: &ProvidersListQueryRequest,
+        request: &AppsListQueryRequest,
         options: Option<RequestOptions>,
-    ) -> Result<ListProvidersResponse, ApiError> {
+    ) -> Result<ListAppsResponse, ApiError> {
         self.http_client
             .execute_request(
                 Method::GET,
-                "v0/providers",
+                "v0/apps",
                 None,
                 QueryBuilder::new()
                     .serialize("limit", request.limit.clone())
@@ -65,7 +65,7 @@ impl ProvidersClient {
             .await
     }
 
-    /// Searches providers by name prefix.
+    /// Searches apps by name prefix.
     ///
     /// # Arguments
     ///
@@ -89,9 +89,9 @@ impl ProvidersClient {
     ///     };
     ///     let client = AgentmailClient::new(config).expect("Failed to build client");
     ///     client
-    ///         .providers
+    ///         .apps
     ///         .search(
-    ///             &ProvidersSearchQueryRequest {
+    ///             &AppsSearchQueryRequest {
     ///                 q: "q".to_string(),
     ///                 limit: None,
     ///             },
@@ -102,13 +102,13 @@ impl ProvidersClient {
     /// ```
     pub async fn search(
         &self,
-        request: &ProvidersSearchQueryRequest,
+        request: &AppsSearchQueryRequest,
         options: Option<RequestOptions>,
-    ) -> Result<SearchProvidersResponse, ApiError> {
+    ) -> Result<SearchAppsResponse, ApiError> {
         self.http_client
             .execute_request(
                 Method::GET,
-                "v0/providers/search",
+                "v0/apps/search",
                 None,
                 QueryBuilder::new()
                     .string("q", request.q.clone())
@@ -119,6 +119,19 @@ impl ProvidersClient {
             .await
     }
 
+    /// Gets one app by ID. An app in the catalog returns its full entry.
+    /// A registered app that the catalog does not list returns its ID and
+    /// name only, without `updated_at`, so anyone holding its ID can still look
+    /// it up. List Apps and Search Apps show catalog entries only.
+    ///
+    /// # Arguments
+    ///
+    /// * `options` - Additional request options such as headers, timeout, etc.
+    ///
+    /// # Returns
+    ///
+    /// JSON response from the API
+    ///
     /// # Examples
     ///
     /// ```no_run
@@ -131,21 +144,18 @@ impl ProvidersClient {
     ///         ..Default::default()
     ///     };
     ///     let client = AgentmailClient::new(config).expect("Failed to build client");
-    ///     client
-    ///         .providers
-    ///         .get(&ProviderID("provider_id".to_string()), None)
-    ///         .await;
+    ///     client.apps.get(&AppID("app_id".to_string()), None).await;
     /// }
     /// ```
     pub async fn get(
         &self,
-        provider_id: &ProviderId,
+        app_id: &AppId,
         options: Option<RequestOptions>,
-    ) -> Result<Provider, ApiError> {
+    ) -> Result<App, ApiError> {
         self.http_client
             .execute_request(
                 Method::GET,
-                &format!("v0/providers/{}", provider_id.0),
+                &format!("v0/apps/{}", app_id.0),
                 None,
                 None,
                 options,
@@ -153,7 +163,7 @@ impl ProvidersClient {
             .await
     }
 
-    /// Lists accounts at one provider, most recent sign-in first.
+    /// Lists accounts at one app, most recent sign-in first.
     ///
     /// # Arguments
     ///
@@ -176,9 +186,9 @@ impl ProvidersClient {
     ///     };
     ///     let client = AgentmailClient::new(config).expect("Failed to build client");
     ///     client
-    ///         .providers
+    ///         .apps
     ///         .list_accounts(
-    ///             &ProviderID("provider_id".to_string()),
+    ///             &AppID("app_id".to_string()),
     ///             &ListAccountsQueryRequest {
     ///                 ..Default::default()
     ///             },
@@ -189,14 +199,14 @@ impl ProvidersClient {
     /// ```
     pub async fn list_accounts(
         &self,
-        provider_id: &ProviderId,
+        app_id: &AppId,
         request: &ListAccountsQueryRequest,
         options: Option<RequestOptions>,
-    ) -> Result<ListProviderAccountsResponse, ApiError> {
+    ) -> Result<ListAppAccountsResponse, ApiError> {
         self.http_client
             .execute_request(
                 Method::GET,
-                &format!("v0/providers/{}/accounts", provider_id.0),
+                &format!("v0/apps/{}/accounts", app_id.0),
                 None,
                 QueryBuilder::new()
                     .serialize("limit", request.limit.clone())
@@ -207,10 +217,12 @@ impl ProvidersClient {
             .await
     }
 
-    /// Starts signing an inbox in to a provider. Returns a single-use `magic_url`,
+    /// Starts signing an inbox in to an app. Returns a single-use `magic_url`,
     /// valid for five minutes, to open in the client that will hold the sign-in;
-    /// the client enrolls as the inbox and continues to the provider. Poll
-    /// [Get API Key](/api-reference/api-keys/get) with `api_key_id` for `status`.
+    /// the client enrolls as the inbox and continues to the app.
+    /// A `404` names the missing resource: `App` or `Inbox`.
+    /// A `403` `AppSignupLimitError` means the app accepts no more sign-ups from
+    /// your organization; sign in with an inbox that already has an account there.
     ///
     /// # Arguments
     ///
@@ -233,10 +245,10 @@ impl ProvidersClient {
     ///     };
     ///     let client = AgentmailClient::new(config).expect("Failed to build client");
     ///     client
-    ///         .providers
+    ///         .apps
     ///         .connect(
-    ///             &ProviderID("provider_id".to_string()),
-    ///             &ConnectProviderBody {
+    ///             &AppID("app_id".to_string()),
+    ///             &ConnectAppBody {
     ///                 ..Default::default()
     ///             },
     ///             None,
@@ -246,14 +258,14 @@ impl ProvidersClient {
     /// ```
     pub async fn connect(
         &self,
-        provider_id: &ProviderId,
-        request: &ConnectProviderBody,
+        app_id: &AppId,
+        request: &ConnectAppBody,
         options: Option<RequestOptions>,
     ) -> Result<ConnectAccepted, ApiError> {
         self.http_client
             .execute_request(
                 Method::POST,
-                &format!("v0/providers/{}/connect", provider_id.0),
+                &format!("v0/apps/{}/connect", app_id.0),
                 Some(serde_json::to_value(request).map_err(ApiError::Serialization)?),
                 None,
                 options,

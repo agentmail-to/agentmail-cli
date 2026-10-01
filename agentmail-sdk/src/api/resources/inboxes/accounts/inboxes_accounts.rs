@@ -13,7 +13,7 @@ impl AccountsClient2 {
         })
     }
 
-    /// Lists accounts held by the inbox, across all providers. Requires `inbox_read`.
+    /// Lists accounts held by the inbox, across all apps. Requires `inbox_read`.
     ///
     /// # Arguments
     ///

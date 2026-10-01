@@ -3,27 +3,27 @@ pub use crate::prelude::*;
 use super::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq, Hash)]
-pub struct ConnectProviderBody {
+pub struct ConnectAppBody {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub inbox_id: Option<ConnectInboxId>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub accept_disclosure: Option<AcceptDisclosure>,
 }
 
-impl ConnectProviderBody {
-    pub fn builder() -> ConnectProviderBodyBuilder {
-        <ConnectProviderBodyBuilder as Default>::default()
+impl ConnectAppBody {
+    pub fn builder() -> ConnectAppBodyBuilder {
+        <ConnectAppBodyBuilder as Default>::default()
     }
 }
 
 #[derive(Clone, PartialEq, Default, Debug)]
 #[non_exhaustive]
-pub struct ConnectProviderBodyBuilder {
+pub struct ConnectAppBodyBuilder {
     inbox_id: Option<ConnectInboxId>,
     accept_disclosure: Option<AcceptDisclosure>,
 }
 
-impl ConnectProviderBodyBuilder {
+impl ConnectAppBodyBuilder {
     pub fn inbox_id(mut self, value: ConnectInboxId) -> Self {
         self.inbox_id = Some(value);
         self
@@ -34,9 +34,9 @@ impl ConnectProviderBodyBuilder {
         self
     }
 
-    /// Consumes the builder and constructs a [`ConnectProviderBody`].
-    pub fn build(self) -> Result<ConnectProviderBody, BuildError> {
-        Ok(ConnectProviderBody {
+    /// Consumes the builder and constructs a [`ConnectAppBody`].
+    pub fn build(self) -> Result<ConnectAppBody, BuildError> {
+        Ok(ConnectAppBody {
             inbox_id: self.inbox_id,
             accept_disclosure: self.accept_disclosure,
         })

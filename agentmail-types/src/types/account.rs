@@ -2,31 +2,31 @@ pub use crate::prelude::*;
 #[allow(unused_imports)]
 use super::*;
 
-/// One inbox signed in at one provider.
+/// One inbox signed in at one app.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq, Hash)]
 pub struct Account {
     #[serde(default)]
     pub account_id: AccountId,
     #[serde(default)]
-    pub provider_id: ProviderId,
-    /// Display name of provider.
+    pub app_id: AppId,
+    /// Display name of app.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub provider_name: Option<String>,
+    pub app_name: Option<String>,
     #[serde(default)]
     pub inbox_id: InboxesInboxId,
     #[serde(default)]
     pub pod_id: PodsPodId,
     #[serde(default)]
     pub organization_id: OrganizationId,
-    /// Time of first sign-in at provider.
+    /// Time of first sign-in at app.
     #[serde(default)]
     #[serde(with = "crate::core::flexible_datetime::offset")]
     pub first_signed_in_at: DateTime<FixedOffset>,
-    /// Time of most recent sign-in at provider.
+    /// Time of most recent sign-in at app.
     #[serde(default)]
     #[serde(with = "crate::core::flexible_datetime::offset")]
     pub last_signed_in_at: DateTime<FixedOffset>,
-    /// Number of sign-ins at provider.
+    /// Number of sign-ins at app.
     #[serde(default)]
     pub sign_in_count: i64,
     /// Present only while the account is disabled. Absent means the inbox may sign in.
@@ -47,8 +47,8 @@ impl Account {
 #[non_exhaustive]
 pub struct AccountBuilder {
     account_id: Option<AccountId>,
-    provider_id: Option<ProviderId>,
-    provider_name: Option<String>,
+    app_id: Option<AppId>,
+    app_name: Option<String>,
     inbox_id: Option<InboxesInboxId>,
     pod_id: Option<PodsPodId>,
     organization_id: Option<OrganizationId>,
@@ -65,13 +65,13 @@ impl AccountBuilder {
         self
     }
 
-    pub fn provider_id(mut self, value: ProviderId) -> Self {
-        self.provider_id = Some(value);
+    pub fn app_id(mut self, value: AppId) -> Self {
+        self.app_id = Some(value);
         self
     }
 
-    pub fn provider_name(mut self, value: impl Into<String>) -> Self {
-        self.provider_name = Some(value.into());
+    pub fn app_name(mut self, value: impl Into<String>) -> Self {
+        self.app_name = Some(value.into());
         self
     }
 
@@ -118,7 +118,7 @@ impl AccountBuilder {
     /// Consumes the builder and constructs a [`Account`].
     /// This method will fail if any of the following fields are not set:
     /// - [`account_id`](AccountBuilder::account_id)
-    /// - [`provider_id`](AccountBuilder::provider_id)
+    /// - [`app_id`](AccountBuilder::app_id)
     /// - [`inbox_id`](AccountBuilder::inbox_id)
     /// - [`pod_id`](AccountBuilder::pod_id)
     /// - [`organization_id`](AccountBuilder::organization_id)
@@ -128,8 +128,8 @@ impl AccountBuilder {
     pub fn build(self) -> Result<Account, BuildError> {
         Ok(Account {
             account_id: self.account_id.ok_or_else(|| BuildError::missing_field("account_id"))?,
-            provider_id: self.provider_id.ok_or_else(|| BuildError::missing_field("provider_id"))?,
-            provider_name: self.provider_name,
+            app_id: self.app_id.ok_or_else(|| BuildError::missing_field("app_id"))?,
+            app_name: self.app_name,
             inbox_id: self.inbox_id.ok_or_else(|| BuildError::missing_field("inbox_id"))?,
             pod_id: self.pod_id.ok_or_else(|| BuildError::missing_field("pod_id"))?,
             organization_id: self.organization_id.ok_or_else(|| BuildError::missing_field("organization_id"))?,

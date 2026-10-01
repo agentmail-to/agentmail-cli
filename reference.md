@@ -7,6 +7,7 @@ Full command reference for `agentmail`.
 - [`agentmail accounts`](#agentmail-accounts)
 - [`agentmail agent`](#agentmail-agent)
 - [`agentmail api-keys`](#agentmail-api-keys)
+- [`agentmail apps`](#agentmail-apps)
 - [`agentmail auth`](#agentmail-auth)
 - [`agentmail domains`](#agentmail-domains)
 - [`agentmail drafts`](#agentmail-drafts)
@@ -33,7 +34,6 @@ Full command reference for `agentmail`.
 - [`agentmail pods metrics`](#agentmail-pods-metrics)
 - [`agentmail pods threads`](#agentmail-pods-threads)
 - [`agentmail pods webhooks`](#agentmail-pods-webhooks)
-- [`agentmail providers`](#agentmail-providers)
 - [`agentmail threads`](#agentmail-threads)
 - [`agentmail webhooks`](#agentmail-webhooks)
 
@@ -54,7 +54,7 @@ Requires `inbox_read`.
 
 #### `agentmail accounts list`
 
-Lists accounts across all providers, scoped to the API key: an
+Lists accounts across all apps, scoped to the API key: an
 organization key sees every account, a pod key its pod's, an inbox key
 its inbox's. Requires `inbox_read`.
 
@@ -69,16 +69,16 @@ its inbox's. Requires `inbox_read`.
 #### `agentmail accounts update`
 
 Updates one account. Set `status` to `disabled` to stop the inbox from
-signing in at the provider again, or to `enabled` to re-enable it.
+signing in at the app again, or to `enabled` to re-enable it.
 Idempotent: disabling an already disabled account keeps its original
 `disabled_at`, and enabling an enabled account is a no-op.
 
 Find the `account_id` with List Accounts. An account exists only after an
-inbox's first sign-in at a provider, so it cannot be disabled in advance.
-A disable applies to that inbox at that provider whichever sign-in key is
-used: the provider's next authorization ends in `access_denied`, and a code
+inbox's first sign-in at an app, so it cannot be disabled in advance.
+A disable applies to that inbox at that app whichever sign-in key is
+used: the app's next authorization ends in `access_denied`, and a code
 issued earlier is refused with `invalid_grant`. Access tokens already
-issued stay valid until they expire, and the provider's own session is
+issued stay valid until they expire, and the app's own session is
 unaffected.
 
 Requires `account_update`, which sign-in keys (`type: public_key`) cannot
@@ -232,8 +232,8 @@ agentmail api-keys list
 #### `agentmail api-keys update`
 
 Renames a credential or changes its permissions. Public keys also resolve
-by `client_id`; a sign-in key accepts only `provider_connect` and
-`provider_share_owner`.
+by `client_id`; a sign-in key accepts only `app_connect` and
+`app_share_owner`.
 
 `PATCH /v0/api-keys/{api_key_id}`
 
@@ -241,6 +241,74 @@ by `client_id`; a sign-in key accepts only `provider_connect` and
 |------|------|----------|-------------|
 | `--api-key-id` | `ApiKeyId` | Yes |  |
 | `--json` | `JSON` | Yes | Request body as JSON (or use individual body-field flags) |
+
+---
+
+### `agentmail apps`
+
+#### `agentmail apps connect`
+
+Starts signing an inbox in to an app. Returns a single-use `magic_url`,
+valid for five minutes, to open in the client that will hold the sign-in;
+the client enrolls as the inbox and continues to the app.
+A `404` names the missing resource: `App` or `Inbox`.
+A `403` `AppSignupLimitError` means the app accepts no more sign-ups from
+your organization; sign in with an inbox that already has an account there.
+
+`POST /v0/apps/{app_id}/connect`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--app-id` | `AppId` | Yes |  |
+| `--idempotency-key` | `string` | No | Unique key that makes the connect idempotent. The endpoint requires one; the CLI generates a UUID when the flag is omitted and reuses it across retries, so a transient failure cannot start a second sign-in. Pass a value to make a manual re-run resolve to the same attempt. |
+| `--json` | `JSON` | No | Request body as JSON (or use individual body-field flags) |
+
+#### `agentmail apps get`
+
+Gets one app by ID. An app in the catalog returns its full entry.
+A registered app that the catalog does not list returns its ID and
+name only, without `updated_at`, so anyone holding its ID can still look
+it up. List Apps and Search Apps show catalog entries only.
+
+`GET /v0/apps/{app_id}`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--app-id` | `AppId` | Yes |  |
+
+#### `agentmail apps list`
+
+Lists apps, most popular first.
+
+`GET /v0/apps`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--limit` | `Limit` | No |  |
+| `--page-token` | `PageToken` | No |  |
+
+#### `agentmail apps list-accounts`
+
+Lists accounts at one app, most recent sign-in first.
+
+`GET /v0/apps/{app_id}/accounts`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--app-id` | `AppId` | Yes |  |
+| `--limit` | `Limit` | No |  |
+| `--page-token` | `PageToken` | No |  |
+
+#### `agentmail apps search`
+
+Searches apps by name prefix.
+
+`GET /v0/apps/search`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--q` | `string` | Yes | Name prefix to search for. |
+| `--limit` | `Limit` | No |  |
 
 ---
 
@@ -423,7 +491,8 @@ agentmail drafts list
 Authorizes the AgentID sign-in a client is already waiting in, for the
 inbox in the path, and returns the ID of the pending public key it will
 activate. Read the key with Get API Key. A repeat for the same token,
-inbox, and bearer returns the same key ID.
+inbox, and bearer returns the same key ID. A `403` `AppSignupLimitError`
+means the app accepts no more sign-ups from your organization.
 
 `POST /v0/inboxes/{inbox_id}/authorize`
 
@@ -535,7 +604,7 @@ Returns one account held by the inbox. An account elsewhere is a 404. Requires
 
 #### `agentmail inboxes accounts list`
 
-Lists accounts held by the inbox, across all providers. Requires `inbox_read`.
+Lists accounts held by the inbox, across all apps. Requires `inbox_read`.
 
 `GET /v0/inboxes/{inbox_id}/accounts`
 
@@ -1582,7 +1651,7 @@ Returns one account held by inboxes in the pod. An account elsewhere is a 404. R
 
 #### `agentmail pods accounts list`
 
-Lists accounts held by inboxes in the pod, across all providers. Requires `inbox_read`.
+Lists accounts held by inboxes in the pod, across all apps. Requires `inbox_read`.
 
 `GET /v0/pods/{pod_id}/accounts`
 
@@ -2273,69 +2342,6 @@ pod-scoped webhook. Header values remain write-only.
 | `--pod-id` | `podsPodId` | Yes |  |
 | `--webhook-id` | `webhooksWebhookId` | Yes |  |
 | `--json` | `JSON` | Yes | Request body as JSON (or use individual body-field flags) |
-
----
-
-### `agentmail providers`
-
-#### `agentmail providers connect`
-
-Starts signing an inbox in to a provider. Returns a single-use `magic_url`,
-valid for five minutes, to open in the client that will hold the sign-in;
-the client enrolls as the inbox and continues to the provider. Poll
-[Get API Key](/api-reference/api-keys/get) with `api_key_id` for `status`.
-
-`POST /v0/providers/{provider_id}/connect`
-
-| Flag | Type | Required | Description |
-|------|------|----------|-------------|
-| `--provider-id` | `ProviderId` | Yes |  |
-| `--idempotency-key` | `string` | No | Unique key that makes the connect idempotent. The endpoint requires one; the CLI generates a UUID when the flag is omitted and reuses it across retries, so a transient failure cannot start a second sign-in. Pass a value to make a manual re-run resolve to the same attempt. |
-| `--json` | `JSON` | No | Request body as JSON (or use individual body-field flags) |
-
-#### `agentmail providers get`
-
-Get Provider
-
-`GET /v0/providers/{provider_id}`
-
-| Flag | Type | Required | Description |
-|------|------|----------|-------------|
-| `--provider-id` | `ProviderId` | Yes |  |
-
-#### `agentmail providers list`
-
-Lists providers, most popular first.
-
-`GET /v0/providers`
-
-| Flag | Type | Required | Description |
-|------|------|----------|-------------|
-| `--limit` | `Limit` | No |  |
-| `--page-token` | `PageToken` | No |  |
-
-#### `agentmail providers list-accounts`
-
-Lists accounts at one provider, most recent sign-in first.
-
-`GET /v0/providers/{provider_id}/accounts`
-
-| Flag | Type | Required | Description |
-|------|------|----------|-------------|
-| `--provider-id` | `ProviderId` | Yes |  |
-| `--limit` | `Limit` | No |  |
-| `--page-token` | `PageToken` | No |  |
-
-#### `agentmail providers search`
-
-Searches providers by name prefix.
-
-`GET /v0/providers/search`
-
-| Flag | Type | Required | Description |
-|------|------|----------|-------------|
-| `--q` | `string` | Yes | Name prefix to search for. |
-| `--limit` | `Limit` | No |  |
 
 ---
 

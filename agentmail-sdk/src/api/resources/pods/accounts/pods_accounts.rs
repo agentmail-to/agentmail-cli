@@ -13,7 +13,7 @@ impl AccountsClient3 {
         })
     }
 
-    /// Lists accounts held by inboxes in the pod, across all providers. Requires `inbox_read`.
+    /// Lists accounts held by inboxes in the pod, across all apps. Requires `inbox_read`.
     ///
     /// # Arguments
     ///

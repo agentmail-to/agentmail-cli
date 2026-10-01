@@ -3,9 +3,9 @@ pub use crate::prelude::*;
 use super::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq, Hash)]
-pub struct ListProviderAccountsResponse {
+pub struct ListAppAccountsResponse {
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub provider: Option<Provider>,
+    pub app: Option<App>,
     #[serde(default)]
     pub count: Count,
     #[serde(default)]
@@ -16,25 +16,25 @@ pub struct ListProviderAccountsResponse {
     pub accounts: Vec<Account>,
 }
 
-impl ListProviderAccountsResponse {
-    pub fn builder() -> ListProviderAccountsResponseBuilder {
-        <ListProviderAccountsResponseBuilder as Default>::default()
+impl ListAppAccountsResponse {
+    pub fn builder() -> ListAppAccountsResponseBuilder {
+        <ListAppAccountsResponseBuilder as Default>::default()
     }
 }
 
 #[derive(Clone, PartialEq, Default, Debug)]
 #[non_exhaustive]
-pub struct ListProviderAccountsResponseBuilder {
-    provider: Option<Provider>,
+pub struct ListAppAccountsResponseBuilder {
+    app: Option<App>,
     count: Option<Count>,
     limit: Option<Limit>,
     next_page_token: Option<PageToken>,
     accounts: Option<Vec<Account>>,
 }
 
-impl ListProviderAccountsResponseBuilder {
-    pub fn provider(mut self, value: Provider) -> Self {
-        self.provider = Some(value);
+impl ListAppAccountsResponseBuilder {
+    pub fn app(mut self, value: App) -> Self {
+        self.app = Some(value);
         self
     }
 
@@ -58,14 +58,14 @@ impl ListProviderAccountsResponseBuilder {
         self
     }
 
-    /// Consumes the builder and constructs a [`ListProviderAccountsResponse`].
+    /// Consumes the builder and constructs a [`ListAppAccountsResponse`].
     /// This method will fail if any of the following fields are not set:
-    /// - [`count`](ListProviderAccountsResponseBuilder::count)
-    /// - [`limit`](ListProviderAccountsResponseBuilder::limit)
-    /// - [`accounts`](ListProviderAccountsResponseBuilder::accounts)
-    pub fn build(self) -> Result<ListProviderAccountsResponse, BuildError> {
-        Ok(ListProviderAccountsResponse {
-            provider: self.provider,
+    /// - [`count`](ListAppAccountsResponseBuilder::count)
+    /// - [`limit`](ListAppAccountsResponseBuilder::limit)
+    /// - [`accounts`](ListAppAccountsResponseBuilder::accounts)
+    pub fn build(self) -> Result<ListAppAccountsResponse, BuildError> {
+        Ok(ListAppAccountsResponse {
+            app: self.app,
             count: self.count.ok_or_else(|| BuildError::missing_field("count"))?,
             limit: self.limit.ok_or_else(|| BuildError::missing_field("limit"))?,
             next_page_token: self.next_page_token,
