@@ -44,6 +44,39 @@ pub enum ApiError {
         fix: Option<ErrorFix>,
         docs: Option<ErrorDocs>,
     },
+    #[error("PreconditionFailedError: {message}")]
+    PreconditionFailedError {
+        message: String,
+        name: Option<ErrorName>,
+        code: Option<ErrorCode>,
+        current_revision: Option<i64>,
+        fix: Option<ErrorFix>,
+        docs: Option<ErrorDocs>,
+    },
+    #[error("ContentTooLargeError: {message}")]
+    ContentTooLargeError {
+        message: String,
+        name: Option<ErrorName>,
+        code: Option<ErrorCode>,
+        fix: Option<ErrorFix>,
+        docs: Option<ErrorDocs>,
+    },
+    #[error("TooManyRequestsError: Rate limit exceeded - {message}")]
+    TooManyRequestsError {
+        message: String,
+        name: Option<ErrorName>,
+        code: Option<ErrorCode>,
+        fix: Option<ErrorFix>,
+        docs: Option<ErrorDocs>,
+    },
+    #[error("GoneError: {message}")]
+    GoneError {
+        message: String,
+        name: Option<ErrorName>,
+        code: Option<ErrorCode>,
+        fix: Option<ErrorFix>,
+        docs: Option<ErrorDocs>,
+    },
     #[error("HTTP error {status}: {message}")]
     Http { status: u16, message: String },
     #[error("Network error: {0}")]
@@ -231,6 +264,142 @@ impl ApiError {
                     }
                 }
                 return Self::ForbiddenError {
+                    message: body.unwrap_or("Unknown error").to_string(),
+                    name: None,
+                    code: None,
+                    fix: None,
+                    docs: None,
+                };
+            }
+            412 => {
+                // Parse error body for PreconditionFailedError;
+                if let Some(body_str) = body {
+                    if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(body_str) {
+                        return Self::PreconditionFailedError {
+                            message: parsed
+                                .get("message")
+                                .and_then(|v| v.as_str())
+                                .unwrap_or("Unknown error")
+                                .to_string(),
+                            name: parsed
+                                .get("name")
+                                .and_then(|v| serde_json::from_value::<ErrorName>(v.clone()).ok()),
+                            code: parsed
+                                .get("code")
+                                .and_then(|v| serde_json::from_value::<ErrorCode>(v.clone()).ok()),
+                            current_revision: parsed
+                                .get("current_revision")
+                                .and_then(|v| serde_json::from_value::<i64>(v.clone()).ok()),
+                            fix: parsed
+                                .get("fix")
+                                .and_then(|v| serde_json::from_value::<ErrorFix>(v.clone()).ok()),
+                            docs: parsed
+                                .get("docs")
+                                .and_then(|v| serde_json::from_value::<ErrorDocs>(v.clone()).ok()),
+                        };
+                    }
+                }
+                return Self::PreconditionFailedError {
+                    message: body.unwrap_or("Unknown error").to_string(),
+                    name: None,
+                    code: None,
+                    current_revision: None,
+                    fix: None,
+                    docs: None,
+                };
+            }
+            413 => {
+                // Parse error body for ContentTooLargeError;
+                if let Some(body_str) = body {
+                    if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(body_str) {
+                        return Self::ContentTooLargeError {
+                            message: parsed
+                                .get("message")
+                                .and_then(|v| v.as_str())
+                                .unwrap_or("Unknown error")
+                                .to_string(),
+                            name: parsed
+                                .get("name")
+                                .and_then(|v| serde_json::from_value::<ErrorName>(v.clone()).ok()),
+                            code: parsed
+                                .get("code")
+                                .and_then(|v| serde_json::from_value::<ErrorCode>(v.clone()).ok()),
+                            fix: parsed
+                                .get("fix")
+                                .and_then(|v| serde_json::from_value::<ErrorFix>(v.clone()).ok()),
+                            docs: parsed
+                                .get("docs")
+                                .and_then(|v| serde_json::from_value::<ErrorDocs>(v.clone()).ok()),
+                        };
+                    }
+                }
+                return Self::ContentTooLargeError {
+                    message: body.unwrap_or("Unknown error").to_string(),
+                    name: None,
+                    code: None,
+                    fix: None,
+                    docs: None,
+                };
+            }
+            429 => {
+                // Parse error body for TooManyRequestsError;
+                if let Some(body_str) = body {
+                    if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(body_str) {
+                        return Self::TooManyRequestsError {
+                            message: parsed
+                                .get("message")
+                                .and_then(|v| v.as_str())
+                                .unwrap_or("Unknown error")
+                                .to_string(),
+                            name: parsed
+                                .get("name")
+                                .and_then(|v| serde_json::from_value::<ErrorName>(v.clone()).ok()),
+                            code: parsed
+                                .get("code")
+                                .and_then(|v| serde_json::from_value::<ErrorCode>(v.clone()).ok()),
+                            fix: parsed
+                                .get("fix")
+                                .and_then(|v| serde_json::from_value::<ErrorFix>(v.clone()).ok()),
+                            docs: parsed
+                                .get("docs")
+                                .and_then(|v| serde_json::from_value::<ErrorDocs>(v.clone()).ok()),
+                        };
+                    }
+                }
+                return Self::TooManyRequestsError {
+                    message: body.unwrap_or("Unknown error").to_string(),
+                    name: None,
+                    code: None,
+                    fix: None,
+                    docs: None,
+                };
+            }
+            410 => {
+                // Parse error body for GoneError;
+                if let Some(body_str) = body {
+                    if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(body_str) {
+                        return Self::GoneError {
+                            message: parsed
+                                .get("message")
+                                .and_then(|v| v.as_str())
+                                .unwrap_or("Unknown error")
+                                .to_string(),
+                            name: parsed
+                                .get("name")
+                                .and_then(|v| serde_json::from_value::<ErrorName>(v.clone()).ok()),
+                            code: parsed
+                                .get("code")
+                                .and_then(|v| serde_json::from_value::<ErrorCode>(v.clone()).ok()),
+                            fix: parsed
+                                .get("fix")
+                                .and_then(|v| serde_json::from_value::<ErrorFix>(v.clone()).ok()),
+                            docs: parsed
+                                .get("docs")
+                                .and_then(|v| serde_json::from_value::<ErrorDocs>(v.clone()).ok()),
+                        };
+                    }
+                }
+                return Self::GoneError {
                     message: body.unwrap_or("Unknown error").to_string(),
                     name: None,
                     code: None,

@@ -16,6 +16,9 @@ pub struct InboxesCreateInboxRequest {
     pub display_name: Option<InboxesDisplayName>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub client_id: Option<InboxesClientId>,
+    /// Set `paused` to create the inbox paused.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub status: Option<InboxesInboxStatus>,
     /// Custom metadata to attach to the inbox.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub metadata: Option<InboxesMetadata>,
@@ -34,6 +37,7 @@ pub struct InboxesCreateInboxRequestBuilder {
     domain: Option<String>,
     display_name: Option<InboxesDisplayName>,
     client_id: Option<InboxesClientId>,
+    status: Option<InboxesInboxStatus>,
     metadata: Option<InboxesMetadata>,
 }
 
@@ -58,6 +62,11 @@ impl InboxesCreateInboxRequestBuilder {
         self
     }
 
+    pub fn status(mut self, value: InboxesInboxStatus) -> Self {
+        self.status = Some(value);
+        self
+    }
+
     pub fn metadata(mut self, value: InboxesMetadata) -> Self {
         self.metadata = Some(value);
         self
@@ -70,6 +79,7 @@ impl InboxesCreateInboxRequestBuilder {
             domain: self.domain,
             display_name: self.display_name,
             client_id: self.client_id,
+            status: self.status,
             metadata: self.metadata,
         })
     }

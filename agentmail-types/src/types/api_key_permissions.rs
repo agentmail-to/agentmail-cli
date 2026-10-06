@@ -20,6 +20,9 @@ pub struct ApiKeyPermissions {
     /// Read messages. Also required to read threads.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub message_read: Option<bool>,
+    /// Reply and reply-all when the request is signed with a registered public key. Bearer keys reply with `message_send`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub message_reply: Option<bool>,
     /// Send messages.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub message_send: Option<bool>,
@@ -104,23 +107,48 @@ pub struct ApiKeyPermissions {
     /// Delete API keys.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub api_key_delete: Option<bool>,
-    /// Sign in to providers as an inbox: connect a provider, authorize an inbox, and mint the
+    /// Sign in to apps as an inbox: connect an app, authorize an inbox, and mint the
     /// sign-in keys. Omitted on a new bearer key means false, whatever else the key holds.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub provider_connect: Option<bool>,
-    /// Share the organization owner's name and email with providers at sign-in. One permission
+    pub app_connect: Option<bool>,
+    /// Share the organization owner's name and email with apps at sign-in. One permission
     /// for both values.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub provider_share_owner: Option<bool>,
+    pub app_share_owner: Option<bool>,
+    /// Update accounts: disable or re-enable an inbox's sign-in at an app. Reading accounts
+    /// needs only `inbox_read`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub account_update: Option<bool>,
     /// Read pods.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pod_read: Option<bool>,
     /// Create pods.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pod_create: Option<bool>,
+    /// Update pods.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pod_update: Option<bool>,
     /// Delete pods.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pod_delete: Option<bool>,
+    /// Read inbox calendar settings.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub calendar_read: Option<bool>,
+    /// Update inbox calendar settings.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub calendar_update: Option<bool>,
+    /// Read calendar events, and receive `calendar.event.*` webhook and WebSocket events.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub calendar_event_read: Option<bool>,
+    /// Create calendar events.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub calendar_event_create: Option<bool>,
+    /// Update calendar events and respond to invitations.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub calendar_event_update: Option<bool>,
+    /// Delete calendar events.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub calendar_event_delete: Option<bool>,
 }
 
 impl ApiKeyPermissions {
@@ -137,6 +165,7 @@ pub struct ApiKeyPermissionsBuilder {
     inbox_update: Option<bool>,
     inbox_delete: Option<bool>,
     message_read: Option<bool>,
+    message_reply: Option<bool>,
     message_send: Option<bool>,
     message_update: Option<bool>,
     message_delete: Option<bool>,
@@ -165,11 +194,19 @@ pub struct ApiKeyPermissionsBuilder {
     api_key_create: Option<bool>,
     api_key_update: Option<bool>,
     api_key_delete: Option<bool>,
-    provider_connect: Option<bool>,
-    provider_share_owner: Option<bool>,
+    app_connect: Option<bool>,
+    app_share_owner: Option<bool>,
+    account_update: Option<bool>,
     pod_read: Option<bool>,
     pod_create: Option<bool>,
+    pod_update: Option<bool>,
     pod_delete: Option<bool>,
+    calendar_read: Option<bool>,
+    calendar_update: Option<bool>,
+    calendar_event_read: Option<bool>,
+    calendar_event_create: Option<bool>,
+    calendar_event_update: Option<bool>,
+    calendar_event_delete: Option<bool>,
 }
 
 impl ApiKeyPermissionsBuilder {
@@ -195,6 +232,11 @@ impl ApiKeyPermissionsBuilder {
 
     pub fn message_read(mut self, value: bool) -> Self {
         self.message_read = Some(value);
+        self
+    }
+
+    pub fn message_reply(mut self, value: bool) -> Self {
+        self.message_reply = Some(value);
         self
     }
 
@@ -338,13 +380,18 @@ impl ApiKeyPermissionsBuilder {
         self
     }
 
-    pub fn provider_connect(mut self, value: bool) -> Self {
-        self.provider_connect = Some(value);
+    pub fn app_connect(mut self, value: bool) -> Self {
+        self.app_connect = Some(value);
         self
     }
 
-    pub fn provider_share_owner(mut self, value: bool) -> Self {
-        self.provider_share_owner = Some(value);
+    pub fn app_share_owner(mut self, value: bool) -> Self {
+        self.app_share_owner = Some(value);
+        self
+    }
+
+    pub fn account_update(mut self, value: bool) -> Self {
+        self.account_update = Some(value);
         self
     }
 
@@ -358,8 +405,43 @@ impl ApiKeyPermissionsBuilder {
         self
     }
 
+    pub fn pod_update(mut self, value: bool) -> Self {
+        self.pod_update = Some(value);
+        self
+    }
+
     pub fn pod_delete(mut self, value: bool) -> Self {
         self.pod_delete = Some(value);
+        self
+    }
+
+    pub fn calendar_read(mut self, value: bool) -> Self {
+        self.calendar_read = Some(value);
+        self
+    }
+
+    pub fn calendar_update(mut self, value: bool) -> Self {
+        self.calendar_update = Some(value);
+        self
+    }
+
+    pub fn calendar_event_read(mut self, value: bool) -> Self {
+        self.calendar_event_read = Some(value);
+        self
+    }
+
+    pub fn calendar_event_create(mut self, value: bool) -> Self {
+        self.calendar_event_create = Some(value);
+        self
+    }
+
+    pub fn calendar_event_update(mut self, value: bool) -> Self {
+        self.calendar_event_update = Some(value);
+        self
+    }
+
+    pub fn calendar_event_delete(mut self, value: bool) -> Self {
+        self.calendar_event_delete = Some(value);
         self
     }
 
@@ -371,6 +453,7 @@ impl ApiKeyPermissionsBuilder {
             inbox_update: self.inbox_update,
             inbox_delete: self.inbox_delete,
             message_read: self.message_read,
+            message_reply: self.message_reply,
             message_send: self.message_send,
             message_update: self.message_update,
             message_delete: self.message_delete,
@@ -399,11 +482,19 @@ impl ApiKeyPermissionsBuilder {
             api_key_create: self.api_key_create,
             api_key_update: self.api_key_update,
             api_key_delete: self.api_key_delete,
-            provider_connect: self.provider_connect,
-            provider_share_owner: self.provider_share_owner,
+            app_connect: self.app_connect,
+            app_share_owner: self.app_share_owner,
+            account_update: self.account_update,
             pod_read: self.pod_read,
             pod_create: self.pod_create,
+            pod_update: self.pod_update,
             pod_delete: self.pod_delete,
+            calendar_read: self.calendar_read,
+            calendar_update: self.calendar_update,
+            calendar_event_read: self.calendar_event_read,
+            calendar_event_create: self.calendar_event_create,
+            calendar_event_update: self.calendar_event_update,
+            calendar_event_delete: self.calendar_event_delete,
         })
     }
 }

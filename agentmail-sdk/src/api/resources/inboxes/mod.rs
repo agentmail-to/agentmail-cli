@@ -2,8 +2,12 @@ use crate::api::*;
 use crate::{ApiError, ClientConfig, HttpClient, QueryBuilder, RequestOptions};
 use reqwest::Method;
 
+pub mod accounts;
+pub use accounts::AccountsClient2;
 pub mod api_keys;
 pub use api_keys::ApiKeysClient2;
+pub mod calendar;
+pub use calendar::CalendarClient;
 pub mod drafts;
 pub use drafts::DraftsClient2;
 pub mod events;
@@ -20,7 +24,9 @@ pub mod webhooks;
 pub use webhooks::WebhooksClient2;
 pub struct InboxesClient {
     pub http_client: HttpClient,
+    pub accounts: AccountsClient2,
     pub api_keys: ApiKeysClient2,
+    pub calendar: CalendarClient,
     pub drafts: DraftsClient2,
     pub events: EventsClient,
     pub lists: ListsClient2,
@@ -34,7 +40,9 @@ impl InboxesClient {
     pub fn new(config: ClientConfig) -> Result<Self, ApiError> {
         Ok(Self {
             http_client: HttpClient::new(config.clone())?,
+            accounts: AccountsClient2::new(config.clone())?,
             api_keys: ApiKeysClient2::new(config.clone())?,
+            calendar: CalendarClient::new(config.clone())?,
             drafts: DraftsClient2::new(config.clone())?,
             events: EventsClient::new(config.clone())?,
             lists: ListsClient2::new(config.clone())?,
@@ -313,6 +321,9 @@ impl InboxesClient {
     /// agentmail inboxes update --inbox-id <inbox_id> --display-name "Updated Name"
     /// ```
     ///
+    /// To pause an inbox, set `status` to `paused`; set it back to `active` to
+    /// resume. See [Pausing an inbox](/inboxes#pausing-an-inbox).
+    ///
     /// # Arguments
     ///
     /// * `options` - Additional request options such as headers, timeout, etc.
@@ -363,8 +374,10 @@ impl InboxesClient {
     }
 
     /// Authorizes the AgentID sign-in a client is already waiting in, for the
-    /// inbox in the path, and returns the pending public key it will activate. A
-    /// repeat for the same token, inbox, and bearer returns the same key.
+    /// inbox in the path, and returns the ID of the pending public key it will
+    /// activate. Read the key with Get API Key. A repeat for the same token,
+    /// inbox, and bearer returns the same key ID. A `403` `AppSignupLimitError`
+    /// means the app accepts no more sign-ups from your organization.
     ///
     /// # Arguments
     ///
@@ -404,7 +417,7 @@ impl InboxesClient {
         inbox_id: &InboxesInboxId,
         request: &InboxesAuthorizeInboxRequest,
         options: Option<RequestOptions>,
-    ) -> Result<PublicKeyCredential, ApiError> {
+    ) -> Result<InboxesAuthorizeInboxResponse, ApiError> {
         self.http_client
             .execute_request(
                 Method::POST,
