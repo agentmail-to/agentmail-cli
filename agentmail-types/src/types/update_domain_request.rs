@@ -2,15 +2,18 @@ pub use crate::prelude::*;
 #[allow(unused_imports)]
 use super::*;
 
-/// Provide at least one of `feedback_enabled`, `subdomains_enabled`, or
-/// `tracking_enabled`. Omitted
-/// fields are left unchanged; an empty body is rejected. Enabling
+/// Provide at least one of `feedback_enabled`, `inbound_enabled`,
+/// `subdomains_enabled`, or `tracking_enabled`. Omitted fields are left
+/// unchanged; an empty body is rejected. Enabling `inbound_enabled` or
 /// `subdomains_enabled` on a verified domain returns it to `PENDING` until the
-/// newly-required wildcard MX record (`*.<domain>`) is published and verified.
+/// newly required MX record (the apex MX, or the wildcard `*.<domain>`) is
+/// published and verified.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq, Hash)]
 pub struct UpdateDomainRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub feedback_enabled: Option<FeedbackEnabled>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub inbound_enabled: Option<InboundEnabled>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub subdomains_enabled: Option<SubdomainsEnabled>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -27,6 +30,7 @@ impl UpdateDomainRequest {
 #[non_exhaustive]
 pub struct UpdateDomainRequestBuilder {
     feedback_enabled: Option<FeedbackEnabled>,
+    inbound_enabled: Option<InboundEnabled>,
     subdomains_enabled: Option<SubdomainsEnabled>,
     tracking_enabled: Option<TrackingEnabled>,
 }
@@ -34,6 +38,11 @@ pub struct UpdateDomainRequestBuilder {
 impl UpdateDomainRequestBuilder {
     pub fn feedback_enabled(mut self, value: FeedbackEnabled) -> Self {
         self.feedback_enabled = Some(value);
+        self
+    }
+
+    pub fn inbound_enabled(mut self, value: InboundEnabled) -> Self {
+        self.inbound_enabled = Some(value);
         self
     }
 
@@ -51,6 +60,7 @@ impl UpdateDomainRequestBuilder {
     pub fn build(self) -> Result<UpdateDomainRequest, BuildError> {
         Ok(UpdateDomainRequest {
             feedback_enabled: self.feedback_enabled,
+            inbound_enabled: self.inbound_enabled,
             subdomains_enabled: self.subdomains_enabled,
             tracking_enabled: self.tracking_enabled,
         })

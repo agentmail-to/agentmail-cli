@@ -16,6 +16,12 @@ pub enum EventType {
     MessageRejected,
     MessageOpened,
     DomainVerified,
+    CalendarEventCreated,
+    CalendarEventUpdated,
+    CalendarEventDeleted,
+    CalendarEventResponded,
+    CalendarEventStarting,
+    CalendarEventEnding,
     /// This variant is used for forward compatibility.
     /// If the server sends a value not recognized by the current SDK version,
     /// it will be captured here with the raw string value.
@@ -35,6 +41,12 @@ impl Serialize for EventType {
             Self::MessageRejected => serializer.serialize_str("message.rejected"),
             Self::MessageOpened => serializer.serialize_str("message.opened"),
             Self::DomainVerified => serializer.serialize_str("domain.verified"),
+            Self::CalendarEventCreated => serializer.serialize_str("calendar.event.created"),
+            Self::CalendarEventUpdated => serializer.serialize_str("calendar.event.updated"),
+            Self::CalendarEventDeleted => serializer.serialize_str("calendar.event.deleted"),
+            Self::CalendarEventResponded => serializer.serialize_str("calendar.event.responded"),
+            Self::CalendarEventStarting => serializer.serialize_str("calendar.event.starting"),
+            Self::CalendarEventEnding => serializer.serialize_str("calendar.event.ending"),
             Self::__Unknown(val) => serializer.serialize_str(val),
         }
     }
@@ -55,6 +67,12 @@ impl<'de> Deserialize<'de> for EventType {
             "message.rejected" => Ok(Self::MessageRejected),
             "message.opened" => Ok(Self::MessageOpened),
             "domain.verified" => Ok(Self::DomainVerified),
+            "calendar.event.created" => Ok(Self::CalendarEventCreated),
+            "calendar.event.updated" => Ok(Self::CalendarEventUpdated),
+            "calendar.event.deleted" => Ok(Self::CalendarEventDeleted),
+            "calendar.event.responded" => Ok(Self::CalendarEventResponded),
+            "calendar.event.starting" => Ok(Self::CalendarEventStarting),
+            "calendar.event.ending" => Ok(Self::CalendarEventEnding),
             _ => Ok(Self::__Unknown(value)),
         }
     }
@@ -74,6 +92,12 @@ impl fmt::Display for EventType {
             Self::MessageRejected => write!(f, "message.rejected"),
             Self::MessageOpened => write!(f, "message.opened"),
             Self::DomainVerified => write!(f, "domain.verified"),
+            Self::CalendarEventCreated => write!(f, "calendar.event.created"),
+            Self::CalendarEventUpdated => write!(f, "calendar.event.updated"),
+            Self::CalendarEventDeleted => write!(f, "calendar.event.deleted"),
+            Self::CalendarEventResponded => write!(f, "calendar.event.responded"),
+            Self::CalendarEventStarting => write!(f, "calendar.event.starting"),
+            Self::CalendarEventEnding => write!(f, "calendar.event.ending"),
             Self::__Unknown(val) => write!(f, "{}", val),
         }
     }

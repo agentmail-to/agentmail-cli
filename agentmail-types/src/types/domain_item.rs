@@ -12,6 +12,9 @@ pub struct DomainItem {
     pub domain: DomainName,
     #[serde(default)]
     pub feedback_enabled: FeedbackEnabled,
+    /// Absent on domains created before this field existed; those receive email.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub inbound_enabled: Option<InboundEnabled>,
     #[serde(default)]
     pub subdomains_enabled: SubdomainsEnabled,
     #[serde(default)]
@@ -41,6 +44,7 @@ pub struct DomainItemBuilder {
     domain_id: Option<DomainId>,
     domain: Option<DomainName>,
     feedback_enabled: Option<FeedbackEnabled>,
+    inbound_enabled: Option<InboundEnabled>,
     subdomains_enabled: Option<SubdomainsEnabled>,
     tracking_enabled: Option<TrackingEnabled>,
     client_id: Option<ClientId>,
@@ -66,6 +70,11 @@ impl DomainItemBuilder {
 
     pub fn feedback_enabled(mut self, value: FeedbackEnabled) -> Self {
         self.feedback_enabled = Some(value);
+        self
+    }
+
+    pub fn inbound_enabled(mut self, value: InboundEnabled) -> Self {
+        self.inbound_enabled = Some(value);
         self
     }
 
@@ -109,6 +118,7 @@ impl DomainItemBuilder {
             domain_id: self.domain_id.ok_or_else(|| BuildError::missing_field("domain_id"))?,
             domain: self.domain.ok_or_else(|| BuildError::missing_field("domain"))?,
             feedback_enabled: self.feedback_enabled.ok_or_else(|| BuildError::missing_field("feedback_enabled"))?,
+            inbound_enabled: self.inbound_enabled,
             subdomains_enabled: self.subdomains_enabled.ok_or_else(|| BuildError::missing_field("subdomains_enabled"))?,
             tracking_enabled: self.tracking_enabled.ok_or_else(|| BuildError::missing_field("tracking_enabled"))?,
             client_id: self.client_id,

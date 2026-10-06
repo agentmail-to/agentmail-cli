@@ -131,6 +131,24 @@ pub struct ApiKeyPermissions {
     /// Delete pods.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pod_delete: Option<bool>,
+    /// Read inbox calendar settings.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub calendar_read: Option<bool>,
+    /// Update inbox calendar settings.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub calendar_update: Option<bool>,
+    /// Read calendar events, and receive `calendar.event.*` webhook and WebSocket events.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub calendar_event_read: Option<bool>,
+    /// Create calendar events.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub calendar_event_create: Option<bool>,
+    /// Update calendar events and respond to invitations.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub calendar_event_update: Option<bool>,
+    /// Delete calendar events.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub calendar_event_delete: Option<bool>,
 }
 
 impl ApiKeyPermissions {
@@ -183,6 +201,12 @@ pub struct ApiKeyPermissionsBuilder {
     pod_create: Option<bool>,
     pod_update: Option<bool>,
     pod_delete: Option<bool>,
+    calendar_read: Option<bool>,
+    calendar_update: Option<bool>,
+    calendar_event_read: Option<bool>,
+    calendar_event_create: Option<bool>,
+    calendar_event_update: Option<bool>,
+    calendar_event_delete: Option<bool>,
 }
 
 impl ApiKeyPermissionsBuilder {
@@ -391,6 +415,36 @@ impl ApiKeyPermissionsBuilder {
         self
     }
 
+    pub fn calendar_read(mut self, value: bool) -> Self {
+        self.calendar_read = Some(value);
+        self
+    }
+
+    pub fn calendar_update(mut self, value: bool) -> Self {
+        self.calendar_update = Some(value);
+        self
+    }
+
+    pub fn calendar_event_read(mut self, value: bool) -> Self {
+        self.calendar_event_read = Some(value);
+        self
+    }
+
+    pub fn calendar_event_create(mut self, value: bool) -> Self {
+        self.calendar_event_create = Some(value);
+        self
+    }
+
+    pub fn calendar_event_update(mut self, value: bool) -> Self {
+        self.calendar_event_update = Some(value);
+        self
+    }
+
+    pub fn calendar_event_delete(mut self, value: bool) -> Self {
+        self.calendar_event_delete = Some(value);
+        self
+    }
+
     /// Consumes the builder and constructs a [`ApiKeyPermissions`].
     pub fn build(self) -> Result<ApiKeyPermissions, BuildError> {
         Ok(ApiKeyPermissions {
@@ -435,6 +489,12 @@ impl ApiKeyPermissionsBuilder {
             pod_create: self.pod_create,
             pod_update: self.pod_update,
             pod_delete: self.pod_delete,
+            calendar_read: self.calendar_read,
+            calendar_update: self.calendar_update,
+            calendar_event_read: self.calendar_event_read,
+            calendar_event_create: self.calendar_event_create,
+            calendar_event_update: self.calendar_event_update,
+            calendar_event_delete: self.calendar_event_delete,
         })
     }
 }
