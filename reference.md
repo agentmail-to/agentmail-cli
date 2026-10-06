@@ -14,6 +14,7 @@ Full command reference for `agentmail`.
 - [`agentmail inboxes`](#agentmail-inboxes)
 - [`agentmail inboxes accounts`](#agentmail-inboxes-accounts)
 - [`agentmail inboxes api-keys`](#agentmail-inboxes-api-keys)
+- [`agentmail inboxes calendar`](#agentmail-inboxes-calendar)
 - [`agentmail inboxes drafts`](#agentmail-inboxes-drafts)
 - [`agentmail inboxes events`](#agentmail-inboxes-events)
 - [`agentmail inboxes lists`](#agentmail-inboxes-lists)
@@ -126,7 +127,7 @@ Create a new agent organization with an inbox and API key. This endpoint is for 
 
 A 6-digit OTP is sent to the human's email for verification.
 
-`human_email` is optional. Without it, the inbox can receive email but cannot send to anyone until a human is attached with the attach human endpoint. There is also no way to recover the API key, so store it durably. Calling sign-up again without `human_email` creates a new organization, which needs a different `username`: the original username stays with the lost organization's inbox.
+`human_email` is optional. Without it, the inbox can receive email but cannot send to anyone until a human is attached with the attach human endpoint or, for a US-region inbox, claims it in the AgentMail Console with the API key (see [How do I claim my agent's inbox?](https://docs.agentmail.to/knowledge-base/claiming-agent-inbox)). There is also no way to recover the API key, so store it durably. Calling sign-up again without `human_email` creates a new organization, which needs a different `username`: the original username stays with the lost organization's inbox.
 
 This endpoint is idempotent. Calling it again with the same `human_email` will rotate the API key and resend the OTP if expired.
 
@@ -251,6 +252,8 @@ by `client_id`; a sign-in key accepts only `app_connect` and
 Starts signing an inbox in to an app. Returns a single-use `magic_url`,
 valid for five minutes, to open in the client that will hold the sign-in;
 the client enrolls as the inbox and continues to the app.
+An app in the catalog can be named by its `slug`, as in
+`POST /v0/apps/firecrawl/connect`.
 A `404` names the missing resource: `App` or `Inbox`.
 A `403` `AppSignupLimitError` means the app accepts no more sign-ups from
 your organization; sign in with an inbox that already has an account there.
@@ -259,22 +262,23 @@ your organization; sign in with an inbox that already has an account there.
 
 | Flag | Type | Required | Description |
 |------|------|----------|-------------|
-| `--app-id` | `AppId` | Yes |  |
+| `--app-id` | `string` | Yes | ID of app, or the `slug` of an app in the catalog. A slug ignores case, spaces and punctuation. |
 | `--idempotency-key` | `string` | No | Unique key that makes the connect idempotent. The endpoint requires one; the CLI generates a UUID when the flag is omitted and reuses it across retries, so a transient failure cannot start a second sign-in. Pass a value to make a manual re-run resolve to the same attempt. |
 | `--json` | `JSON` | No | Request body as JSON (or use individual body-field flags) |
 
 #### `agentmail apps get`
 
-Gets one app by ID. An app in the catalog returns its full entry.
+Gets one app by ID or slug. A catalog app returns its full entry.
 A registered app that the catalog does not list returns its ID and
 name only, without `updated_at`, so anyone holding its ID can still look
-it up. List Apps and Search Apps show catalog entries only.
+it up; a slug finds catalog apps only. List Apps and Search Apps show
+catalog entries only.
 
 `GET /v0/apps/{app_id}`
 
 | Flag | Type | Required | Description |
 |------|------|----------|-------------|
-| `--app-id` | `AppId` | Yes |  |
+| `--app-id` | `string` | Yes | ID of app, or the `slug` of an app in the catalog. A slug ignores case, spaces and punctuation. |
 
 #### `agentmail apps list`
 
@@ -286,6 +290,7 @@ Lists apps, most popular first.
 |------|------|----------|-------------|
 | `--limit` | `Limit` | No |  |
 | `--page-token` | `PageToken` | No |  |
+| `--category` | `AppCategory` | No | Only apps in this category. A filtered page can hold fewer than `limit` apps while more remain, so page until `next_page_token` is absent. A `page_token` works only with the `category` it was returned for. |
 
 #### `agentmail apps list-accounts`
 
@@ -295,7 +300,7 @@ Lists accounts at one app, most recent sign-in first.
 
 | Flag | Type | Required | Description |
 |------|------|----------|-------------|
-| `--app-id` | `AppId` | Yes |  |
+| `--app-id` | `string` | Yes | ID of app, or the `slug` of an app in the catalog. A slug ignores case, spaces and punctuation. |
 | `--limit` | `Limit` | No |  |
 | `--page-token` | `PageToken` | No |  |
 
@@ -579,6 +584,9 @@ cannot exceed 100. A page can be empty and still carry a
 agentmail inboxes update --inbox-id <inbox_id> --display-name "Updated Name"
 ```
 
+To pause an inbox, set `status` to `paused`; set it back to `active` to
+resume. See [Pausing an inbox](/inboxes#pausing-an-inbox).
+
 `PATCH /v0/inboxes/{inbox_id}`
 
 | Flag | Type | Required | Description |
@@ -675,6 +683,287 @@ agentmail inboxes api-keys update --inbox-id <inbox_id> --api-key-id <api_key_id
 |------|------|----------|-------------|
 | `--inbox-id` | `inboxesInboxId` | Yes |  |
 | `--api-key-id` | `ApiKeyId` | Yes |  |
+| `--json` | `JSON` | Yes | Request body as JSON (or use individual body-field flags) |
+
+---
+
+### `agentmail inboxes calendar`
+
+#### `agentmail inboxes calendar create-event` `[PRE RELEASE]`
+
+Creates a one-off or recurring event on the inbox's calendar. Times are wall-clock values in
+`timezone` (the calendar's default time zone if omitted); the response also gives each
+boundary as a UTC instant in `start_at` and `end_at`.
+
+`calendar.event.created` is sent once the event is stored, then `calendar.event.starting`
+and `calendar.event.ending` as each date begins and ends. With `send_invites: true` the
+inbox also emails an invitation to every attendee.
+
+Pass `client_id` to make retries safe: repeating the request with the same `client_id` and
+body returns the original event with status `200` instead of `201`, for as long as the event
+exists.
+
+With `send_invites: true`, each attendee counts as one send against the organization, pod
+and inbox send limits, charged before the event is stored. An over-limit request returns
+`429` `rate_limit_exceeded` and creates nothing. A replay of an earlier create is not
+charged again.
+
+The event's `etag` is the value to send in `If-Match` to make a later update or delete
+conditional. Requires the `calendar_event_create` permission.
+
+Calendar is in private beta: organizations without access receive a `403`.
+
+`POST /v0/inboxes/{inbox_id}/calendar/events`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--inbox-id` | `inboxesInboxId` | Yes |  |
+| `--json` | `JSON` | Yes | Request body as JSON (or use individual body-field flags) |
+
+#### `agentmail inboxes calendar delete-event` `[PRE RELEASE]`
+
+Deletes an event, or cancels dates of a recurring event.
+
+- **One-off or series UUID:** deletes the event and every date of it. The event disappears
+  from reads immediately and is removed in the background; the response is `202` with a
+  `deletion_id`. A retry returns the same `deletion_id` while removal runs (send the same
+  `Idempotency-Key`, or none and the same `send_invites`); once it has finished, the event
+  no longer exists and a retry returns `404`. No `calendar.event.starting` or
+  `calendar.event.ending` webhook is sent for the event after the delete is accepted.
+- **Dated ID (`<uuid>_<slot>`):** cancels that date (`mode=single`, the default) or that date
+  and every later date (`mode=future`). Returns `202` with the cancelled date. A `mode=future`
+  delete from the first date deletes the whole series and returns a `deletion_id` instead.
+  A date that is already running still gets its `calendar.event.ending`.
+
+Deleting a one-off or series event sends `calendar.event.deleted`. Cancelling dates sends
+`calendar.event.updated` with the cancelled date. With `send_invites=true` the organizer
+inbox also emails a cancellation to every attendee. Requires the `calendar_event_delete`
+permission. To make the delete conditional, send the current `etag` in `If-Match`.
+
+Emailing cancellations counts one send per attendee against the organization, pod and inbox
+send limits, charged before the delete; an over-limit request returns `429`
+`rate_limit_exceeded` and deletes nothing.
+
+Calendar is in private beta: organizations without access receive a `403`.
+
+`DELETE /v0/inboxes/{inbox_id}/calendar/events/{event_id}`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--inbox-id` | `inboxesInboxId` | Yes |  |
+| `--event-id` | `CalendarEventId` | Yes |  |
+| `--mode` | `InstanceMutationMode` | No |  |
+| `--send-invites` | `boolean` | No | When `true`, emails a cancellation (iCalendar `CANCEL`) to every attendee. Only the organizer can send. Defaults to `false`. |
+| `--if-match` | `string` | No | The event's or date's current `etag`. Optional; makes the delete conditional; `*` matches any current version. |
+| `--idempotency-key` | `string` | No | 1 to 128 visible ASCII characters. Optional. Retrying a delete with the same key
+returns the original result; without a key, retries of the same delete share one
+derived from the event and `send_invites`, so a keyless retry that changes
+`send_invites` is a different delete and returns `404` while removal runs. Keys are
+unique across your organization: reusing one to delete a different event returns
+`409` `idempotency_conflict`. |
+
+#### `agentmail inboxes calendar get` `[PRE RELEASE]`
+
+Gets the inbox's calendar. Every inbox has one calendar, so this works before any event is
+created. Its `etag` (also the `ETag` response header) is the value to send in `If-Match` to
+make an update conditional.
+
+Requires the `calendar_read` permission. Calendar is in private beta: organizations without
+access receive a `403`.
+
+`GET /v0/inboxes/{inbox_id}/calendar`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--inbox-id` | `inboxesInboxId` | Yes |  |
+| `--consistency` | `CalendarConsistency` | No |  |
+
+#### `agentmail inboxes calendar get-agenda` `[PRE RELEASE]`
+
+Lists every date on the calendar in a time window, ordered by start time: one-off events,
+and recurring events expanded into their individual dates, with cancelled dates left out.
+Use it to answer "what is on the calendar".
+
+The window defaults to now through 90 days from now and can be at most 366 days. Items omit
+`description`, `metadata` and `attendees`; get an event by ID for the full object. Dates of
+recurring events appear only up to about 90 days from now; use List Event Instances for a
+recurring event's later dates. While a recurring event's dates are being regenerated after a
+schedule change, which takes a few seconds, the agenda can briefly leave out some of them;
+dates that have already started or ended stay as they ran.
+
+The agenda is read in the region that serves the request, so it can trail a change made
+moments earlier by a few seconds. Pass `consistency=primary` to read your own change right
+away. Requires the `calendar_event_read` permission.
+
+Calendar is in private beta: organizations without access receive a `403`.
+
+`GET /v0/inboxes/{inbox_id}/calendar/agenda`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--inbox-id` | `inboxesInboxId` | Yes |  |
+| `--consistency` | `CalendarConsistency` | No |  |
+| `--after` | `WindowAfter` | No |  |
+| `--before` | `WindowBefore` | No |  |
+| `--include-overlapping` | `IncludeOverlapping` | No |  |
+| `--limit` | `CalendarLimit` | No |  |
+| `--page-token` | `PageToken` | No |  |
+
+#### `agentmail inboxes calendar get-event` `[PRE RELEASE]`
+
+Gets an event by its UUID, or one date of a recurring event by its dated ID
+(`<uuid>_<slot>`). A dated ID returns the date as it currently stands, including any edit
+to it, with `kind: instance`.
+
+The response's `etag` (also the `ETag` header) is the value to send in `If-Match` to make an
+update, delete or response to this event or date conditional. Treat it as opaque.
+
+Reads can trail a change made moments earlier by a few seconds; pass `consistency=primary`
+to read the latest state of an event or a date. A date that has already started or ended
+reads back as it ran, even if a later change to the series no longer produces it. Requires
+the `calendar_event_read` permission.
+
+Calendar is in private beta: organizations without access receive a `403`.
+
+`GET /v0/inboxes/{inbox_id}/calendar/events/{event_id}`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--inbox-id` | `inboxesInboxId` | Yes |  |
+| `--event-id` | `CalendarEventId` | Yes |  |
+| `--consistency` | `CalendarConsistency` | No |  |
+
+#### `agentmail inboxes calendar list-event-instances` `[PRE RELEASE]`
+
+Lists the dates of one recurring event in a time window, in start order, with each date's
+edits applied. Dates are computed from the rule, so this works for any window up to 366
+days, including dates far in the future. Cancelled dates are left out.
+
+The window defaults to now through 90 days from now. Items omit `description`, `metadata`
+and `attendees`; get a date by its ID for the full object. Like other reads, the list can
+trail a change made moments earlier by a few seconds; pass `consistency=primary` to read
+your own change right away. Requires the `calendar_event_read` permission.
+
+Calendar is in private beta: organizations without access receive a `403`.
+
+`GET /v0/inboxes/{inbox_id}/calendar/events/{event_id}/instances`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--inbox-id` | `inboxesInboxId` | Yes |  |
+| `--event-id` | `string` | Yes | UUID of the recurring event. |
+| `--consistency` | `CalendarConsistency` | No |  |
+| `--after` | `WindowAfter` | No |  |
+| `--before` | `WindowBefore` | No |  |
+| `--include-overlapping` | `IncludeOverlapping` | No |  |
+| `--limit` | `CalendarLimit` | No |  |
+| `--page-token` | `PageToken` | No |  |
+
+#### `agentmail inboxes calendar list-events` `[PRE RELEASE]`
+
+Lists the events stored on the calendar: one item per one-off or recurring event, plus one
+item for each edited date of a recurring event (as that dated event, with
+`is_exception: true`). Ordered by most recently updated, and cancelled events are included.
+Use it to sync or manage what you created. To see what is on the calendar in a time window,
+use Get Agenda.
+
+The list is always read in the region that serves the request, so it can trail a change made
+moments earlier by a few seconds. Requires the `calendar_event_read` permission.
+
+Calendar is in private beta: organizations without access receive a `403`.
+
+`GET /v0/inboxes/{inbox_id}/calendar/events`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--inbox-id` | `inboxesInboxId` | Yes |  |
+| `--limit` | `CalendarLimit` | No |  |
+| `--page-token` | `PageToken` | No |  |
+
+#### `agentmail inboxes calendar respond-to-event` `[PRE RELEASE]`
+
+Accepts, declines or tentatively accepts an invitation the inbox received by email. Pass the
+event's UUID to respond for every date, or a dated ID to respond for one date only.
+
+Only works on `email` events where the inbox is an attendee; anything else returns 409
+`calendar_response_invalid`. Updates the inbox's attendee entry and sends
+`calendar.event.responded`. With `send_reply` (default `true`) the inbox emails the response
+to the organizer.
+
+Requires the `calendar_event_update` permission. To make the response conditional, send the
+current `etag` in `If-Match`.
+
+A reply email counts as one send against the organization, pod and inbox send limits,
+charged before the response is saved; an over-limit request returns `429`
+`rate_limit_exceeded` and changes nothing.
+
+Calendar is in private beta: organizations without access receive a `403`.
+
+`POST /v0/inboxes/{inbox_id}/calendar/events/{event_id}/respond`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--inbox-id` | `inboxesInboxId` | Yes |  |
+| `--event-id` | `CalendarEventId` | Yes |  |
+| `--if-match` | `string` | No | The event's or date's current `etag`. Optional; makes the response conditional; `*` matches any current version. |
+| `--json` | `JSON` | Yes | Request body as JSON (or use individual body-field flags) |
+
+#### `agentmail inboxes calendar update` `[PRE RELEASE]`
+
+Updates the calendar's default time zone. Existing events keep their own `timezone`; only
+events created later without a `timezone` use the new default.
+
+Requires the `calendar_update` permission. To make the update conditional, send the
+calendar's current `etag` in `If-Match`: a stale value returns `412`. Without `If-Match` the
+update applies to the calendar as it is.
+
+Calendar is in private beta: organizations without access receive a `403`.
+
+`PATCH /v0/inboxes/{inbox_id}/calendar`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--inbox-id` | `inboxesInboxId` | Yes |  |
+| `--if-match` | `string` | No | The calendar's current `etag`, for example `"rv-0"`. Optional; makes the update conditional; `*` matches any current version. |
+| `--json` | `JSON` | Yes | Request body as JSON (or use individual body-field flags) |
+
+#### `agentmail inboxes calendar update-event` `[PRE RELEASE]`
+
+Updates an event. Send only the fields to change. To make the update conditional, send the
+event's current `etag` in `If-Match`: a stale value returns `412`. Without `If-Match` the
+update applies to the event as it is; a change that lands while it runs returns `409`
+`race_condition`, so retry. Send `If-Match` when replacing `attendees`, so you don't
+overwrite a response that arrived in the meantime.
+
+- **One-off or series UUID:** changes the event itself. For a series, the change applies to
+  every date that has not been edited individually.
+- **Dated ID (`<uuid>_<slot>`):** changes one date (`mode=single`, the default) or that date
+  and every later date (`mode=future`). `all_day`, `timezone` and `recurrence` cannot be sent
+  for a dated ID.
+
+Once a date has started, its start can no longer change (409 `event_already_started`), but
+its end and status can; for a one-off or series UUID, send the unchanged `start` with the new
+`end`. Once it has ended, only `title`, `description`, `location`,
+`metadata` and `attendees` can change. During the few seconds a date is starting, schedule
+changes return 409 `event_starting`; retry shortly.
+
+Sends `calendar.event.updated`. With `send_invites: true` the organizer inbox also emails the
+updated invitation to every attendee. Requires the `calendar_event_update` permission.
+
+Emailing attendees counts one send per attendee against the organization, pod and inbox
+send limits, charged before the change is saved; an over-limit request returns `429`
+`rate_limit_exceeded` and changes nothing.
+
+Calendar is in private beta: organizations without access receive a `403`.
+
+`PATCH /v0/inboxes/{inbox_id}/calendar/events/{event_id}`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--inbox-id` | `inboxesInboxId` | Yes |  |
+| `--event-id` | `CalendarEventId` | Yes |  |
+| `--mode` | `InstanceMutationMode` | No |  |
+| `--if-match` | `string` | No | The event's or date's current `etag`, from the latest read or write response. Optional; makes the update conditional; `*` matches any current version. |
 | `--json` | `JSON` | Yes | Request body as JSON (or use individual body-field flags) |
 
 ---

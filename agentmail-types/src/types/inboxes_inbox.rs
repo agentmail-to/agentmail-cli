@@ -14,6 +14,11 @@ pub struct InboxesInbox {
     pub display_name: Option<InboxesDisplayName>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub client_id: Option<InboxesClientId>,
+    /// `paused` when the inbox is paused. Omitted when the inbox is active.
+    /// Treat any value other than `paused` as an inbox that sends and
+    /// receives normally.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub status: Option<InboxesInboxStatus>,
     /// Custom metadata attached to the inbox.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub metadata: Option<InboxesMetadata>,
@@ -41,6 +46,7 @@ pub struct InboxesInboxBuilder {
     email: Option<InboxesEmail>,
     display_name: Option<InboxesDisplayName>,
     client_id: Option<InboxesClientId>,
+    status: Option<InboxesInboxStatus>,
     metadata: Option<InboxesMetadata>,
     updated_at: Option<DateTime<FixedOffset>>,
     created_at: Option<DateTime<FixedOffset>>,
@@ -69,6 +75,11 @@ impl InboxesInboxBuilder {
 
     pub fn client_id(mut self, value: InboxesClientId) -> Self {
         self.client_id = Some(value);
+        self
+    }
+
+    pub fn status(mut self, value: InboxesInboxStatus) -> Self {
+        self.status = Some(value);
         self
     }
 
@@ -101,6 +112,7 @@ impl InboxesInboxBuilder {
             email: self.email.ok_or_else(|| BuildError::missing_field("email"))?,
             display_name: self.display_name,
             client_id: self.client_id,
+            status: self.status,
             metadata: self.metadata,
             updated_at: self.updated_at.ok_or_else(|| BuildError::missing_field("updated_at"))?,
             created_at: self.created_at.ok_or_else(|| BuildError::missing_field("created_at"))?,

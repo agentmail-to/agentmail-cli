@@ -6,6 +6,8 @@ pub mod accounts;
 pub use accounts::AccountsClient2;
 pub mod api_keys;
 pub use api_keys::ApiKeysClient2;
+pub mod calendar;
+pub use calendar::CalendarClient;
 pub mod drafts;
 pub use drafts::DraftsClient2;
 pub mod events;
@@ -24,6 +26,7 @@ pub struct InboxesClient {
     pub http_client: HttpClient,
     pub accounts: AccountsClient2,
     pub api_keys: ApiKeysClient2,
+    pub calendar: CalendarClient,
     pub drafts: DraftsClient2,
     pub events: EventsClient,
     pub lists: ListsClient2,
@@ -39,6 +42,7 @@ impl InboxesClient {
             http_client: HttpClient::new(config.clone())?,
             accounts: AccountsClient2::new(config.clone())?,
             api_keys: ApiKeysClient2::new(config.clone())?,
+            calendar: CalendarClient::new(config.clone())?,
             drafts: DraftsClient2::new(config.clone())?,
             events: EventsClient::new(config.clone())?,
             lists: ListsClient2::new(config.clone())?,
@@ -316,6 +320,9 @@ impl InboxesClient {
     /// ```bash
     /// agentmail inboxes update --inbox-id <inbox_id> --display-name "Updated Name"
     /// ```
+    ///
+    /// To pause an inbox, set `status` to `paused`; set it back to `active` to
+    /// resume. See [Pausing an inbox](/inboxes#pausing-an-inbox).
     ///
     /// # Arguments
     ///

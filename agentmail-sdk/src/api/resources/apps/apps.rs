@@ -17,6 +17,7 @@ impl AppsClient {
     ///
     /// # Arguments
     ///
+    /// * `category` - Only apps in this category. A filtered page can hold fewer than `limit` apps while more remain, so page until `next_page_token` is absent. A `page_token` works only with the `category` it was returned for.
     /// * `options` - Additional request options such as headers, timeout, etc.
     ///
     /// # Returns
@@ -59,6 +60,7 @@ impl AppsClient {
                 QueryBuilder::new()
                     .serialize("limit", request.limit.clone())
                     .serialize("page_token", request.page_token.clone())
+                    .serialize("category", request.category.clone())
                     .build(),
                 options,
             )
@@ -119,13 +121,15 @@ impl AppsClient {
             .await
     }
 
-    /// Gets one app by ID. An app in the catalog returns its full entry.
+    /// Gets one app by ID or slug. A catalog app returns its full entry.
     /// A registered app that the catalog does not list returns its ID and
     /// name only, without `updated_at`, so anyone holding its ID can still look
-    /// it up. List Apps and Search Apps show catalog entries only.
+    /// it up; a slug finds catalog apps only. List Apps and Search Apps show
+    /// catalog entries only.
     ///
     /// # Arguments
     ///
+    /// * `app_id` - ID of app, or the `slug` of an app in the catalog. A slug ignores case, spaces and punctuation.
     /// * `options` - Additional request options such as headers, timeout, etc.
     ///
     /// # Returns
@@ -144,18 +148,18 @@ impl AppsClient {
     ///         ..Default::default()
     ///     };
     ///     let client = AgentmailClient::new(config).expect("Failed to build client");
-    ///     client.apps.get(&AppID("app_id".to_string()), None).await;
+    ///     client.apps.get(&"app_id".to_string(), None).await;
     /// }
     /// ```
     pub async fn get(
         &self,
-        app_id: &AppId,
+        app_id: &str,
         options: Option<RequestOptions>,
     ) -> Result<App, ApiError> {
         self.http_client
             .execute_request(
                 Method::GET,
-                &format!("v0/apps/{}", app_id.0),
+                &format!("v0/apps/{}", app_id),
                 None,
                 None,
                 options,
@@ -167,6 +171,7 @@ impl AppsClient {
     ///
     /// # Arguments
     ///
+    /// * `app_id` - ID of app, or the `slug` of an app in the catalog. A slug ignores case, spaces and punctuation.
     /// * `options` - Additional request options such as headers, timeout, etc.
     ///
     /// # Returns
@@ -188,7 +193,7 @@ impl AppsClient {
     ///     client
     ///         .apps
     ///         .list_accounts(
-    ///             &AppID("app_id".to_string()),
+    ///             &"app_id".to_string(),
     ///             &ListAccountsQueryRequest {
     ///                 ..Default::default()
     ///             },
@@ -199,14 +204,14 @@ impl AppsClient {
     /// ```
     pub async fn list_accounts(
         &self,
-        app_id: &AppId,
+        app_id: &str,
         request: &ListAccountsQueryRequest,
         options: Option<RequestOptions>,
     ) -> Result<ListAppAccountsResponse, ApiError> {
         self.http_client
             .execute_request(
                 Method::GET,
-                &format!("v0/apps/{}/accounts", app_id.0),
+                &format!("v0/apps/{}/accounts", app_id),
                 None,
                 QueryBuilder::new()
                     .serialize("limit", request.limit.clone())
@@ -220,12 +225,15 @@ impl AppsClient {
     /// Starts signing an inbox in to an app. Returns a single-use `magic_url`,
     /// valid for five minutes, to open in the client that will hold the sign-in;
     /// the client enrolls as the inbox and continues to the app.
+    /// An app in the catalog can be named by its `slug`, as in
+    /// `POST /v0/apps/firecrawl/connect`.
     /// A `404` names the missing resource: `App` or `Inbox`.
     /// A `403` `AppSignupLimitError` means the app accepts no more sign-ups from
     /// your organization; sign in with an inbox that already has an account there.
     ///
     /// # Arguments
     ///
+    /// * `app_id` - ID of app, or the `slug` of an app in the catalog. A slug ignores case, spaces and punctuation.
     /// * `options` - Additional request options such as headers, timeout, etc.
     ///
     /// # Returns
@@ -247,7 +255,7 @@ impl AppsClient {
     ///     client
     ///         .apps
     ///         .connect(
-    ///             &AppID("app_id".to_string()),
+    ///             &"app_id".to_string(),
     ///             &ConnectAppBody {
     ///                 ..Default::default()
     ///             },
@@ -258,14 +266,14 @@ impl AppsClient {
     /// ```
     pub async fn connect(
         &self,
-        app_id: &AppId,
+        app_id: &str,
         request: &ConnectAppBody,
         options: Option<RequestOptions>,
     ) -> Result<ConnectAccepted, ApiError> {
         self.http_client
             .execute_request(
                 Method::POST,
-                &format!("v0/apps/{}/connect", app_id.0),
+                &format!("v0/apps/{}/connect", app_id),
                 Some(serde_json::to_value(request).map_err(ApiError::Serialization)?),
                 None,
                 options,

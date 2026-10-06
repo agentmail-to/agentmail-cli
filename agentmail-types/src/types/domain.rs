@@ -16,12 +16,16 @@ pub struct Domain {
     pub reason: Option<String>,
     #[serde(default)]
     pub feedback_enabled: FeedbackEnabled,
+    /// Absent on domains created before this field existed; those receive email.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub inbound_enabled: Option<InboundEnabled>,
     #[serde(default)]
     pub subdomains_enabled: SubdomainsEnabled,
     #[serde(default)]
     pub tracking_enabled: TrackingEnabled,
-    /// A list of DNS records required to verify the domain. Includes a
-    /// wildcard MX record (`*.<domain>`) when `subdomains_enabled` is true.
+    /// A list of DNS records required to verify the domain. Includes the apex
+    /// MX record unless `inbound_enabled` is false, and a wildcard MX record
+    /// (`*.<domain>`) when `subdomains_enabled` is true.
     #[serde(default)]
     pub records: Vec<VerificationRecord>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -51,6 +55,7 @@ pub struct DomainBuilder {
     status: Option<Status>,
     reason: Option<String>,
     feedback_enabled: Option<FeedbackEnabled>,
+    inbound_enabled: Option<InboundEnabled>,
     subdomains_enabled: Option<SubdomainsEnabled>,
     tracking_enabled: Option<TrackingEnabled>,
     records: Option<Vec<VerificationRecord>>,
@@ -87,6 +92,11 @@ impl DomainBuilder {
 
     pub fn feedback_enabled(mut self, value: FeedbackEnabled) -> Self {
         self.feedback_enabled = Some(value);
+        self
+    }
+
+    pub fn inbound_enabled(mut self, value: InboundEnabled) -> Self {
+        self.inbound_enabled = Some(value);
         self
     }
 
@@ -139,6 +149,7 @@ impl DomainBuilder {
             status: self.status.ok_or_else(|| BuildError::missing_field("status"))?,
             reason: self.reason,
             feedback_enabled: self.feedback_enabled.ok_or_else(|| BuildError::missing_field("feedback_enabled"))?,
+            inbound_enabled: self.inbound_enabled,
             subdomains_enabled: self.subdomains_enabled.ok_or_else(|| BuildError::missing_field("subdomains_enabled"))?,
             tracking_enabled: self.tracking_enabled.ok_or_else(|| BuildError::missing_field("tracking_enabled"))?,
             records: self.records.ok_or_else(|| BuildError::missing_field("records"))?,
