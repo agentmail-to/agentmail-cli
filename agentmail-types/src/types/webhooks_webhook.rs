@@ -14,10 +14,21 @@ pub struct WebhooksWebhook {
     pub pod_ids: Option<PodIds>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub inbox_ids: Option<InboxIds>,
+    /// ID of the pod the webhook belongs to: the pod it was created in, or the pod of the inbox it
+    /// belongs to. Absent for an organization webhook and on some inbox webhooks. This is not the
+    /// list of pods it receives events for; see `pod_ids`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pod_id: Option<String>,
+    /// ID of the inbox the webhook belongs to, if it was created for an inbox. This is not the list
+    /// of inboxes it receives events for; see `inbox_ids`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub inbox_id: Option<String>,
     /// Secret for webhook signature verification.
     #[serde(default)]
     pub secret: String,
-    /// Webhook is enabled.
+    /// Whether the webhook is enabled. It becomes false when you disable it, and also when deliveries to
+    /// the URL have failed for 5 days, in which case AgentMail sends no notification. Re-enable it with
+    /// update and `enabled` set to true.
     #[serde(default)]
     pub enabled: bool,
     /// Time at which webhook was last updated.
@@ -46,6 +57,8 @@ pub struct WebhooksWebhookBuilder {
     event_types: Option<EventTypes>,
     pod_ids: Option<PodIds>,
     inbox_ids: Option<InboxIds>,
+    pod_id: Option<String>,
+    inbox_id: Option<String>,
     secret: Option<String>,
     enabled: Option<bool>,
     updated_at: Option<DateTime<FixedOffset>>,
@@ -76,6 +89,16 @@ impl WebhooksWebhookBuilder {
 
     pub fn inbox_ids(mut self, value: InboxIds) -> Self {
         self.inbox_ids = Some(value);
+        self
+    }
+
+    pub fn pod_id(mut self, value: impl Into<String>) -> Self {
+        self.pod_id = Some(value.into());
+        self
+    }
+
+    pub fn inbox_id(mut self, value: impl Into<String>) -> Self {
+        self.inbox_id = Some(value.into());
         self
     }
 
@@ -119,6 +142,8 @@ impl WebhooksWebhookBuilder {
             event_types: self.event_types,
             pod_ids: self.pod_ids,
             inbox_ids: self.inbox_ids,
+            pod_id: self.pod_id,
+            inbox_id: self.inbox_id,
             secret: self.secret.ok_or_else(|| BuildError::missing_field("secret"))?,
             enabled: self.enabled.ok_or_else(|| BuildError::missing_field("enabled"))?,
             updated_at: self.updated_at.ok_or_else(|| BuildError::missing_field("updated_at"))?,

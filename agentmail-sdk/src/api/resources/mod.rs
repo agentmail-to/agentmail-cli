@@ -8,13 +8,13 @@
 //! - **Accounts**
 //! - **Agent**
 //! - **ApiKeys**
+//! - **Apps**
 //! - **Auth**
 //! - **Domains**
 //! - **Drafts**
 //! - **Lists**
 //! - **Metrics**
 //! - **Organizations**
-//! - **Providers**
 //! - **Threads**
 
 use crate::{ApiError, ClientConfig};
@@ -22,6 +22,7 @@ use crate::{ApiError, ClientConfig};
 pub mod accounts;
 pub mod agent;
 pub mod api_keys;
+pub mod apps;
 pub mod auth;
 pub mod domains;
 pub mod drafts;
@@ -30,7 +31,6 @@ pub mod lists;
 pub mod metrics;
 pub mod organizations;
 pub mod pods;
-pub mod providers;
 pub mod threads;
 pub mod webhooks;
 pub struct ApiClient {
@@ -41,13 +41,13 @@ pub struct ApiClient {
     pub accounts: AccountsClient,
     pub agent: AgentClient,
     pub api_keys: ApiKeysClient,
+    pub apps: AppsClient,
     pub auth: AuthClient,
     pub domains: DomainsClient,
     pub drafts: DraftsClient,
     pub lists: ListsClient,
     pub metrics: MetricsClient,
     pub organizations: OrganizationsClient,
-    pub providers: ProvidersClient,
     pub threads: ThreadsClient,
 }
 
@@ -61,13 +61,13 @@ impl ApiClient {
             accounts: AccountsClient::new(config.clone())?,
             agent: AgentClient::new(config.clone())?,
             api_keys: ApiKeysClient::new(config.clone())?,
+            apps: AppsClient::new(config.clone())?,
             auth: AuthClient::new(config.clone())?,
             domains: DomainsClient::new(config.clone())?,
             drafts: DraftsClient::new(config.clone())?,
             lists: ListsClient::new(config.clone())?,
             metrics: MetricsClient::new(config.clone())?,
             organizations: OrganizationsClient::new(config.clone())?,
-            providers: ProvidersClient::new(config.clone())?,
             threads: ThreadsClient::new(config.clone())?,
         })
     }
@@ -76,6 +76,7 @@ impl ApiClient {
 pub use accounts::AccountsClient;
 pub use agent::AgentClient;
 pub use api_keys::ApiKeysClient;
+pub use apps::AppsClient;
 pub use auth::AuthClient;
 pub use domains::DomainsClient;
 pub use drafts::DraftsClient;
@@ -84,6 +85,5 @@ pub use lists::ListsClient;
 pub use metrics::MetricsClient;
 pub use organizations::OrganizationsClient;
 pub use pods::PodsClient;
-pub use providers::ProvidersClient;
 pub use threads::ThreadsClient;
 pub use webhooks::WebhooksClient;

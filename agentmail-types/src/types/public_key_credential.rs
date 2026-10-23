@@ -5,8 +5,8 @@ use super::*;
 /// An AgentID sign-in credential, scoped like a bearer key; `api_key_id` is
 /// the JWS `kid`. A sign-in key carries `status`, gains `public_key` once
 /// the client has proved it, expires 30 days after
-/// activation, and carries exactly `provider_connect` and
-/// `provider_share_owner`, snapshotted from the bearer key that created it
+/// activation, and carries exactly `app_connect` and
+/// `app_share_owner`, snapshotted from the bearer key that created it
 /// and enforced from the key itself.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct PublicKeyCredential {

@@ -16,10 +16,13 @@ pub struct AttachmentResponse {
     pub content_disposition: Option<AttachmentContentDisposition>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub content_id: Option<AttachmentContentId>,
-    /// URL to download the attachment.
+    /// Signed HTTPS CDN URL to download the attachment bytes. Retrieve a fresh URL when needed rather than storing it permanently.
     #[serde(default)]
     pub download_url: String,
-    /// Time at which the download URL expires.
+    /// Signed HTTPS CDN URL to download extracted plain text, when available. Omitted when no extracted text is available. Expires at the same time as download_url.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub text_url: Option<String>,
+    /// Time at which download_url and text_url (when present) expire. Retrieve the attachment again to obtain fresh URLs.
     #[serde(default)]
     #[serde(with = "crate::core::flexible_datetime::offset")]
     pub expires_at: DateTime<FixedOffset>,
@@ -41,6 +44,7 @@ pub struct AttachmentResponseBuilder {
     content_disposition: Option<AttachmentContentDisposition>,
     content_id: Option<AttachmentContentId>,
     download_url: Option<String>,
+    text_url: Option<String>,
     expires_at: Option<DateTime<FixedOffset>>,
 }
 
@@ -80,6 +84,11 @@ impl AttachmentResponseBuilder {
         self
     }
 
+    pub fn text_url(mut self, value: impl Into<String>) -> Self {
+        self.text_url = Some(value.into());
+        self
+    }
+
     pub fn expires_at(mut self, value: DateTime<FixedOffset>) -> Self {
         self.expires_at = Some(value);
         self
@@ -100,6 +109,7 @@ impl AttachmentResponseBuilder {
             content_disposition: self.content_disposition,
             content_id: self.content_id,
             download_url: self.download_url.ok_or_else(|| BuildError::missing_field("download_url"))?,
+            text_url: self.text_url,
             expires_at: self.expires_at.ok_or_else(|| BuildError::missing_field("expires_at"))?,
         })
     }

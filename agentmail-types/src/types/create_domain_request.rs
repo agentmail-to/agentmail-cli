@@ -11,10 +11,13 @@ pub struct CreateDomainRequest {
     /// provider is detected.
     /// This flag does not configure DNS or inbound routing. For shared Google
     /// Workspace domains, follow the [Google Workspace guide](/google-workspace).
+    /// Only checked when `inbound_enabled` is true; a send-only domain skips the check.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub allow_conflicting_provider: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub feedback_enabled: Option<FeedbackEnabled>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub inbound_enabled: Option<InboundEnabled>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub subdomains_enabled: Option<SubdomainsEnabled>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -33,6 +36,7 @@ pub struct CreateDomainRequestBuilder {
     domain: Option<DomainName>,
     allow_conflicting_provider: Option<bool>,
     feedback_enabled: Option<FeedbackEnabled>,
+    inbound_enabled: Option<InboundEnabled>,
     subdomains_enabled: Option<SubdomainsEnabled>,
     tracking_enabled: Option<TrackingEnabled>,
 }
@@ -50,6 +54,11 @@ impl CreateDomainRequestBuilder {
 
     pub fn feedback_enabled(mut self, value: FeedbackEnabled) -> Self {
         self.feedback_enabled = Some(value);
+        self
+    }
+
+    pub fn inbound_enabled(mut self, value: InboundEnabled) -> Self {
+        self.inbound_enabled = Some(value);
         self
     }
 
@@ -71,6 +80,7 @@ impl CreateDomainRequestBuilder {
             domain: self.domain.ok_or_else(|| BuildError::missing_field("domain"))?,
             allow_conflicting_provider: self.allow_conflicting_provider,
             feedback_enabled: self.feedback_enabled,
+            inbound_enabled: self.inbound_enabled,
             subdomains_enabled: self.subdomains_enabled,
             tracking_enabled: self.tracking_enabled,
         })

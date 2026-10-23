@@ -5,8 +5,9 @@ use super::*;
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq, Hash)]
 pub struct AgentSignupRequest {
     /// Email address of the human who owns the agent. A 6-digit OTP will be sent to this address.
-    #[serde(default)]
-    pub human_email: String,
+    /// Omit it to get a receive-only inbox: it can receive email but cannot send until a human is attached with the attach human endpoint.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub human_email: Option<String>,
     /// Username for the auto-created inbox (e.g. "my-agent" creates my-agent@agentmail.to).
     #[serde(default)]
     pub username: String,
@@ -60,11 +61,10 @@ impl AgentSignupRequestBuilder {
 
     /// Consumes the builder and constructs a [`AgentSignupRequest`].
     /// This method will fail if any of the following fields are not set:
-    /// - [`human_email`](AgentSignupRequestBuilder::human_email)
     /// - [`username`](AgentSignupRequestBuilder::username)
     pub fn build(self) -> Result<AgentSignupRequest, BuildError> {
         Ok(AgentSignupRequest {
-            human_email: self.human_email.ok_or_else(|| BuildError::missing_field("human_email"))?,
+            human_email: self.human_email,
             username: self.username.ok_or_else(|| BuildError::missing_field("username"))?,
             source: self.source,
             referrer: self.referrer,

@@ -10,8 +10,8 @@
 pub mod resources;
 
 pub use resources::{
-    AccountsClient, AgentClient, ApiClient, ApiKeysClient, AuthClient, DomainsClient, DraftsClient,
-    InboxesClient, ListsClient, MetricsClient, OrganizationsClient, PodsClient, ProvidersClient,
+    AccountsClient, AgentClient, ApiClient, ApiKeysClient, AppsClient, AuthClient, DomainsClient,
+    DraftsClient, InboxesClient, ListsClient, MetricsClient, OrganizationsClient, PodsClient,
     ThreadsClient, WebhooksClient,
 };
 

@@ -4,8 +4,13 @@ use super::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct WebhooksCreateWebhookRequest {
+    /// Pods for which to send events. A webhook can list at most 10 pods and inboxes combined; more returns
+    /// `403` with `limit_exceeded`. The webhook receives an event that matches any listed pod or inbox, so a
+    /// listed pod already covers every inbox in it.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pod_ids: Option<PodIds>,
+    /// Inboxes for which to send events. A webhook can list at most 10 inboxes and pods combined;
+    /// more returns `403` with `limit_exceeded`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub inbox_ids: Option<InboxIds>,
     #[serde(default)]
