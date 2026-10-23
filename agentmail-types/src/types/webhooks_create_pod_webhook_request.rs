@@ -9,6 +9,8 @@ use super::*;
 pub struct WebhooksCreatePodWebhookRequest {
     #[serde(flatten)]
     pub webhooks_create_inbox_webhook_request_fields: WebhooksCreateInboxWebhookRequest,
+    /// Inboxes for which to send events. A webhook can list at most 10 inboxes and pods combined;
+    /// more returns `403` with `limit_exceeded`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub inbox_ids: Option<InboxIds>,
 }

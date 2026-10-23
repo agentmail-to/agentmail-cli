@@ -34,6 +34,16 @@ pub struct Organization {
     /// Authentication provider type.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub authentication_type: Option<String>,
+    /// Time at which the organization was suspended. Absent when it is not suspended. A suspended
+    /// organization cannot send, but it still receives mail, its webhooks and WebSocket events still
+    /// fire, and API reads keep working. See [account_suspended](https://docs.agentmail.to/errors#account_suspended).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub suspended_at: Option<DateTime<FixedOffset>>,
+    /// Why the organization is suspended, in a short machine-readable form such as `message.bounced`
+    /// or `message.complained`. Absent when it is not suspended. Email support@agentmail.cc to resolve
+    /// a suspension.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub suspended_reason: Option<String>,
     /// Time at which organization was last updated.
     #[serde(default)]
     #[serde(with = "crate::core::flexible_datetime::offset")]
@@ -63,6 +73,8 @@ pub struct OrganizationBuilder {
     billing_subscription_id: Option<String>,
     authentication_id: Option<String>,
     authentication_type: Option<String>,
+    suspended_at: Option<DateTime<FixedOffset>>,
+    suspended_reason: Option<String>,
     updated_at: Option<DateTime<FixedOffset>>,
     created_at: Option<DateTime<FixedOffset>>,
 }
@@ -118,6 +130,16 @@ impl OrganizationBuilder {
         self
     }
 
+    pub fn suspended_at(mut self, value: DateTime<FixedOffset>) -> Self {
+        self.suspended_at = Some(value);
+        self
+    }
+
+    pub fn suspended_reason(mut self, value: impl Into<String>) -> Self {
+        self.suspended_reason = Some(value.into());
+        self
+    }
+
     pub fn updated_at(mut self, value: DateTime<FixedOffset>) -> Self {
         self.updated_at = Some(value);
         self
@@ -147,6 +169,8 @@ impl OrganizationBuilder {
             billing_subscription_id: self.billing_subscription_id,
             authentication_id: self.authentication_id,
             authentication_type: self.authentication_type,
+            suspended_at: self.suspended_at,
+            suspended_reason: self.suspended_reason,
             updated_at: self.updated_at.ok_or_else(|| BuildError::missing_field("updated_at"))?,
             created_at: self.created_at.ok_or_else(|| BuildError::missing_field("created_at"))?,
         })

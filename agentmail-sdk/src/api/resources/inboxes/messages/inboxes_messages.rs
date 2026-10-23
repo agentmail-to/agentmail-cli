@@ -336,6 +336,129 @@ impl MessagesClient {
             .await
     }
 
+    /// Tell us whether Agent Armor's verdict on a message was right. The message needs a completed result. A message
+    /// accepts up to 20 pieces of feedback. Requires permission to read the message.
+    ///
+    /// # Arguments
+    ///
+    /// * `options` - Additional request options such as headers, timeout, etc.
+    ///
+    /// # Returns
+    ///
+    /// JSON response from the API
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use agentmail_sdk::prelude::*;
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let config = ClientConfig {
+    ///         token: Some("<token>".to_string()),
+    ///         ..Default::default()
+    ///     };
+    ///     let client = AgentmailClient::new(config).expect("Failed to build client");
+    ///     client
+    ///         .inboxes
+    ///         .messages
+    ///         .create_agent_armor_feedback(
+    ///             &InboxesInboxID("inbox_id".to_string()),
+    ///             &MessageID("message_id".to_string()),
+    ///             &CreateAgentArmorFeedbackRequest {
+    ///                 feedback: AgentArmorFeedbackValue::CorrectReview,
+    ///                 notes: None,
+    ///             },
+    ///             None,
+    ///         )
+    ///         .await;
+    /// }
+    /// ```
+    pub async fn create_agent_armor_feedback(
+        &self,
+        inbox_id: &InboxesInboxId,
+        message_id: &MessageId,
+        request: &CreateAgentArmorFeedbackRequest,
+        options: Option<RequestOptions>,
+    ) -> Result<AgentArmorFeedback, ApiError> {
+        self.http_client
+            .execute_request(
+                Method::POST,
+                &format!(
+                    "v0/inboxes/{}/messages/{}/agent-armor/feedback",
+                    inbox_id.0, message_id.0
+                ),
+                Some(serde_json::to_value(request).map_err(ApiError::Serialization)?),
+                None,
+                options,
+            )
+            .await
+    }
+
+    /// Release a message Agent Armor held for review in hold mode: your agents are sent its `message.received`
+    /// event, `message.security.override` is sent too, in either order, and its `agent-armor-held` label is removed.
+    /// Only a message whose verdict is `review` and that is still held can be released; anything else answers `409`.
+    /// Repeating a release with the same reason and the same API key returns the first release; any other repeat
+    /// answers `409`.
+    ///
+    /// Requires the opt-in `agent_armor_release` permission and permission to read the message. An organization
+    /// admin can also release from the console.
+    ///
+    /// # Arguments
+    ///
+    /// * `options` - Additional request options such as headers, timeout, etc.
+    ///
+    /// # Returns
+    ///
+    /// JSON response from the API
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use agentmail_sdk::prelude::*;
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let config = ClientConfig {
+    ///         token: Some("<token>".to_string()),
+    ///         ..Default::default()
+    ///     };
+    ///     let client = AgentmailClient::new(config).expect("Failed to build client");
+    ///     client
+    ///         .inboxes
+    ///         .messages
+    ///         .release_agent_armor_message(
+    ///             &InboxesInboxID("inbox_id".to_string()),
+    ///             &MessageID("message_id".to_string()),
+    ///             &ReleaseAgentArmorMessageRequest {
+    ///                 reason: "reason".to_string(),
+    ///             },
+    ///             None,
+    ///         )
+    ///         .await;
+    /// }
+    /// ```
+    pub async fn release_agent_armor_message(
+        &self,
+        inbox_id: &InboxesInboxId,
+        message_id: &MessageId,
+        request: &ReleaseAgentArmorMessageRequest,
+        options: Option<RequestOptions>,
+    ) -> Result<ReleaseAgentArmorMessageResponse, ApiError> {
+        self.http_client
+            .execute_request(
+                Method::POST,
+                &format!(
+                    "v0/inboxes/{}/messages/{}/agent-armor/release",
+                    inbox_id.0, message_id.0
+                ),
+                Some(serde_json::to_value(request).map_err(ApiError::Serialization)?),
+                None,
+                options,
+            )
+            .await
+    }
+
     /// Fetch metadata for up to 500 messages in one request. Missing or
     /// restricted IDs are silently omitted; compare `count` against `limit`
     /// to detect misses.

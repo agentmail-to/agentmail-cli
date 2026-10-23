@@ -12,6 +12,8 @@ pub mod drafts;
 pub use drafts::DraftsClient2;
 pub mod events;
 pub use events::EventsClient;
+pub mod files;
+pub use files::FilesClient;
 pub mod lists;
 pub use lists::ListsClient2;
 pub mod messages;
@@ -29,6 +31,7 @@ pub struct InboxesClient {
     pub calendar: CalendarClient,
     pub drafts: DraftsClient2,
     pub events: EventsClient,
+    pub files: FilesClient,
     pub lists: ListsClient2,
     pub messages: MessagesClient,
     pub metrics: MetricsClient2,
@@ -45,6 +48,7 @@ impl InboxesClient {
             calendar: CalendarClient::new(config.clone())?,
             drafts: DraftsClient2::new(config.clone())?,
             events: EventsClient::new(config.clone())?,
+            files: FilesClient::new(config.clone())?,
             lists: ListsClient2::new(config.clone())?,
             messages: MessagesClient::new(config.clone())?,
             metrics: MetricsClient2::new(config.clone())?,

@@ -17,11 +17,13 @@ Full command reference for `agentmail`.
 - [`agentmail inboxes calendar`](#agentmail-inboxes-calendar)
 - [`agentmail inboxes drafts`](#agentmail-inboxes-drafts)
 - [`agentmail inboxes events`](#agentmail-inboxes-events)
+- [`agentmail inboxes files`](#agentmail-inboxes-files)
 - [`agentmail inboxes lists`](#agentmail-inboxes-lists)
 - [`agentmail inboxes messages`](#agentmail-inboxes-messages)
 - [`agentmail inboxes metrics`](#agentmail-inboxes-metrics)
 - [`agentmail inboxes threads`](#agentmail-inboxes-threads)
 - [`agentmail inboxes webhooks`](#agentmail-inboxes-webhooks)
+- [`agentmail inboxes webhooks polling`](#agentmail-inboxes-webhooks-polling)
 - [`agentmail lists`](#agentmail-lists)
 - [`agentmail metrics`](#agentmail-metrics)
 - [`agentmail organizations`](#agentmail-organizations)
@@ -35,8 +37,10 @@ Full command reference for `agentmail`.
 - [`agentmail pods metrics`](#agentmail-pods-metrics)
 - [`agentmail pods threads`](#agentmail-pods-threads)
 - [`agentmail pods webhooks`](#agentmail-pods-webhooks)
+- [`agentmail pods webhooks polling`](#agentmail-pods-webhooks-polling)
 - [`agentmail threads`](#agentmail-threads)
 - [`agentmail webhooks`](#agentmail-webhooks)
+- [`agentmail webhooks polling`](#agentmail-webhooks-polling)
 
 ---
 
@@ -127,6 +131,8 @@ Create a new agent organization with an inbox and API key. This endpoint is for 
 
 A 6-digit OTP is sent to the human's email for verification.
 
+The new organization starts with 1 inbox, no custom domains, and 10 emails per day, which can be sent only to `human_email` until the organization is verified.
+
 `human_email` is optional. Without it, the inbox can receive email but cannot send to anyone until a human is attached with the attach human endpoint or, for a US-region inbox, claims it in the AgentMail Console with the API key (see [How do I claim my agent's inbox?](https://docs.agentmail.to/knowledge-base/claiming-agent-inbox)). There is also no way to recover the API key, so store it durably. Calling sign-up again without `human_email` creates a new organization, which needs a different `username`: the original username stays with the lost organization's inbox.
 
 This endpoint is idempotent. Calling it again with the same `human_email` will rotate the API key and resend the OTP if expired.
@@ -148,7 +154,7 @@ agentmail agent sign-up --human-email user@example.com --username my-agent
 
 Verify an agent organization using the 6-digit OTP sent to the human's email during sign-up.
 
-On success, the organization is upgraded from `agent_unverified` to `agent_verified`, the send allowlist is removed, and free plan entitlements are applied.
+On success, the organization is upgraded from `agent_unverified` to `agent_verified`, the send allowlist is removed, and the Free plan's entitlements are applied: 3 inboxes and 100 emails per day, at first to at most 3 distinct recipients in the first hour, 5 in the first day, and 10 in the first week.
 
 The OTP expires after 24 hours and allows a maximum of 10 attempts. If the OTP expired, call the attach human endpoint with the same `human_email` to get a new one without rotating the API key. Once all 10 attempts are used, even the correct OTP is rejected, and attach human keeps returning the same OTP until it expires, so wait for it to expire before asking for a new one. An organization that signed up without a `human_email` has no OTP until a human is attached. If you run into any difficulties receiving the OTP code, you can also create an account on [console.agentmail.to](https://console.agentmail.to) using the human email address you provided to verify your account.
 
@@ -711,7 +717,8 @@ charged again.
 The event's `etag` is the value to send in `If-Match` to make a later update or delete
 conditional. Requires the `calendar_event_create` permission.
 
-Calendar is in private beta: organizations without access receive a `403`.
+Calendar is available in US production (`api.agentmail.to`) but not yet in EU production
+(`api.agentmail.eu`), which returns `403`.
 
 `POST /v0/inboxes/{inbox_id}/calendar/events`
 
@@ -744,7 +751,8 @@ Emailing cancellations counts one send per attendee against the organization, po
 send limits, charged before the delete; an over-limit request returns `429`
 `rate_limit_exceeded` and deletes nothing.
 
-Calendar is in private beta: organizations without access receive a `403`.
+Calendar is available in US production (`api.agentmail.to`) but not yet in EU production
+(`api.agentmail.eu`), which returns `403`.
 
 `DELETE /v0/inboxes/{inbox_id}/calendar/events/{event_id}`
 
@@ -768,8 +776,8 @@ Gets the inbox's calendar. Every inbox has one calendar, so this works before an
 created. Its `etag` (also the `ETag` response header) is the value to send in `If-Match` to
 make an update conditional.
 
-Requires the `calendar_read` permission. Calendar is in private beta: organizations without
-access receive a `403`.
+Requires the `calendar_read` permission. Calendar is available in US production
+(`api.agentmail.to`) but not yet in EU production (`api.agentmail.eu`), which returns `403`.
 
 `GET /v0/inboxes/{inbox_id}/calendar`
 
@@ -785,7 +793,9 @@ and recurring events expanded into their individual dates, with cancelled dates 
 Use it to answer "what is on the calendar".
 
 The window defaults to now through 90 days from now and can be at most 366 days. Items omit
-`description`, `metadata` and `attendees`; get an event by ID for the full object. Dates of
+`description`, `metadata` and `attendees`; get an event by ID for the full object. An item
+the inbox is invited to still carries `response_status`, so `needs_action` marks an
+invitation waiting for a reply. Dates of
 recurring events appear only up to about 90 days from now; use List Event Instances for a
 recurring event's later dates. While a recurring event's dates are being regenerated after a
 schedule change, which takes a few seconds, the agenda can briefly leave out some of them;
@@ -795,7 +805,8 @@ The agenda is read in the region that serves the request, so it can trail a chan
 moments earlier by a few seconds. Pass `consistency=primary` to read your own change right
 away. Requires the `calendar_event_read` permission.
 
-Calendar is in private beta: organizations without access receive a `403`.
+Calendar is available in US production (`api.agentmail.to`) but not yet in EU production
+(`api.agentmail.eu`), which returns `403`.
 
 `GET /v0/inboxes/{inbox_id}/calendar/agenda`
 
@@ -823,7 +834,8 @@ to read the latest state of an event or a date. A date that has already started 
 reads back as it ran, even if a later change to the series no longer produces it. Requires
 the `calendar_event_read` permission.
 
-Calendar is in private beta: organizations without access receive a `403`.
+Calendar is available in US production (`api.agentmail.to`) but not yet in EU production
+(`api.agentmail.eu`), which returns `403`.
 
 `GET /v0/inboxes/{inbox_id}/calendar/events/{event_id}`
 
@@ -844,7 +856,8 @@ and `attendees`; get a date by its ID for the full object. Like other reads, the
 trail a change made moments earlier by a few seconds; pass `consistency=primary` to read
 your own change right away. Requires the `calendar_event_read` permission.
 
-Calendar is in private beta: organizations without access receive a `403`.
+Calendar is available in US production (`api.agentmail.to`) but not yet in EU production
+(`api.agentmail.eu`), which returns `403`.
 
 `GET /v0/inboxes/{inbox_id}/calendar/events/{event_id}/instances`
 
@@ -870,7 +883,8 @@ use Get Agenda.
 The list is always read in the region that serves the request, so it can trail a change made
 moments earlier by a few seconds. Requires the `calendar_event_read` permission.
 
-Calendar is in private beta: organizations without access receive a `403`.
+Calendar is available in US production (`api.agentmail.to`) but not yet in EU production
+(`api.agentmail.eu`), which returns `403`.
 
 `GET /v0/inboxes/{inbox_id}/calendar/events`
 
@@ -897,7 +911,8 @@ A reply email counts as one send against the organization, pod and inbox send li
 charged before the response is saved; an over-limit request returns `429`
 `rate_limit_exceeded` and changes nothing.
 
-Calendar is in private beta: organizations without access receive a `403`.
+Calendar is available in US production (`api.agentmail.to`) but not yet in EU production
+(`api.agentmail.eu`), which returns `403`.
 
 `POST /v0/inboxes/{inbox_id}/calendar/events/{event_id}/respond`
 
@@ -917,7 +932,8 @@ Requires the `calendar_update` permission. To make the update conditional, send 
 calendar's current `etag` in `If-Match`: a stale value returns `412`. Without `If-Match` the
 update applies to the calendar as it is.
 
-Calendar is in private beta: organizations without access receive a `403`.
+Calendar is available in US production (`api.agentmail.to`) but not yet in EU production
+(`api.agentmail.eu`), which returns `403`.
 
 `PATCH /v0/inboxes/{inbox_id}/calendar`
 
@@ -954,7 +970,8 @@ Emailing attendees counts one send per attendee against the organization, pod an
 send limits, charged before the change is saved; an over-limit request returns `429`
 `rate_limit_exceeded` and changes nothing.
 
-Calendar is in private beta: organizations without access receive a `403`.
+Calendar is available in US production (`api.agentmail.to`) but not yet in EU production
+(`api.agentmail.eu`), which returns `403`.
 
 `PATCH /v0/inboxes/{inbox_id}/calendar/events/{event_id}`
 
@@ -1111,6 +1128,112 @@ agentmail inboxes events list --inbox-id <inbox_id>
 
 ---
 
+### `agentmail inboxes files`
+
+#### `agentmail inboxes files complete` `[PRE RELEASE]`
+
+Makes a pending file `ready` once its bytes are uploaded, and returns it, with its `download_url` if the key
+has `file_read`. Calling it on a file that is already `ready` returns the file.
+
+Returns `409` if the bytes haven't been uploaded yet, or if what was uploaded doesn't match the file's `size`
+and `sha256`. Returns `404` for a file that has expired or was deleted, including a pending file not
+completed within a day of its creation.
+
+Requires the `file_create` permission. Only a key with `file_read`, or the key that created the file, can
+complete it; any other key gets `404`.
+
+`POST /v0/inboxes/{inbox_id}/files/{file_id}/complete`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--inbox-id` | `inboxesInboxId` | Yes |  |
+| `--file-id` | `FileId` | Yes |  |
+
+#### `agentmail inboxes files create` `[PRE RELEASE]`
+
+Starts an upload: creates a pending file at `path` and returns an `upload` to `PUT` its bytes to. The bytes go
+straight to storage, not through the API. Then call Complete File to make the file `ready`.
+
+Retry-safe: sending the identical request again (same `path`, `size`, `sha256`, `content_type` and
+`expires_at`) returns the existing file with `200` instead of `201`: a pending one with a fresh `upload`, or
+a `ready` one without. If its bytes were uploaded but the upload was never completed, it is completed then. A
+different request at a path whose file is still pending and has no bytes replaces that file; at any other
+taken path it returns `409`.
+
+The file counts against the organization's Drive quota from creation, pending or not: 1 GiB and 10,000 files
+by default. A file that doesn't fit returns `403` with code `limit_exceeded`. Deleting a file frees its
+space within seconds. Expired files count until a create needs their space: a create that doesn't fit first
+gives back what expired files hold, a batch at a time, so retry a refusal while many expired files remain.
+
+Requires the `file_create` permission, which an unverified organization's keys don't have at any scope until
+it completes agent verification. A key without `file_read` can still create files, but gets the plain `409` at
+any taken path, even for an identical request at a file it didn't create.
+
+Agent Drive is in AgentMail Labs, available in US production (`api.agentmail.to`) but not yet in EU
+production (`api.agentmail.eu`). Organizations that have not joined Labs receive a `403`.
+
+`POST /v0/inboxes/{inbox_id}/files`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--inbox-id` | `inboxesInboxId` | Yes |  |
+| `--json` | `JSON` | Yes | Request body as JSON (or use individual body-field flags) |
+
+#### `agentmail inboxes files delete` `[PRE RELEASE]`
+
+Deletes a file, pending or `ready`, and frees its path at once. Its bytes are deleted, and its space given
+back to the organization's quota, within seconds. A download URL signed before the delete keeps working
+until it expires, at most an hour. Deleting a file that is already gone returns `404`.
+
+Requires the `file_delete` permission. Only a key with `file_read`, or the key that created the file, can
+delete it; any other key gets `404`.
+
+`DELETE /v0/inboxes/{inbox_id}/files/{file_id}`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--inbox-id` | `inboxesInboxId` | Yes |  |
+| `--file-id` | `FileId` | Yes |  |
+
+#### `agentmail inboxes files get` `[PRE RELEASE]`
+
+Gets a file. A `ready` file comes with a fresh `download_url`, valid for up to an hour.
+
+A get reads the region that serves the request, so for about a second after a delete it can still return
+the deleted file. A file that has expired returns `404` at once.
+
+Requires the `file_read` permission.
+
+`GET /v0/inboxes/{inbox_id}/files/{file_id}`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--inbox-id` | `inboxesInboxId` | Yes |  |
+| `--file-id` | `FileId` | Yes |  |
+
+#### `agentmail inboxes files list` `[PRE RELEASE]`
+
+Lists the inbox's files in path order, pending ones included, optionally only those whose path starts with
+`path_prefix`. A prefix matches characters, not whole segments: `reports/q` matches `reports/q3.pdf`. Items
+carry no download URL; get a file for one.
+
+The list is read in the region that serves the request, so a file created or deleted a moment ago may not
+show yet. Expired files never show.
+
+Requires the `file_read` permission.
+
+`GET /v0/inboxes/{inbox_id}/files`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--inbox-id` | `inboxesInboxId` | Yes |  |
+| `--path-prefix` | `string` | No | Only files whose path starts with this. Held to the path rules, except it may stop partway. |
+| `--limit` | `Limit` | No | Page size, 100 by default and at most 500. |
+| `--page-token` | `PageToken` | No |  |
+| `--ascending` | `boolean` | No | Path order, `true` by default. `false` lists in reverse. |
+
+---
+
 ### `agentmail inboxes lists`
 
 #### `agentmail inboxes lists create`
@@ -1221,6 +1344,19 @@ agentmail inboxes messages batch-update --inbox-id <inbox_id> --message-ids <id1
 | `--inbox-id` | `inboxesInboxId` | Yes |  |
 | `--json` | `JSON` | Yes | Request body as JSON (or use individual body-field flags) |
 
+#### `agentmail inboxes messages create-agent-armor-feedback` `[PRE RELEASE]`
+
+Tell us whether Agent Armor's verdict on a message was right. The message needs a completed result. A message
+accepts up to 20 pieces of feedback. Requires permission to read the message.
+
+`POST /v0/inboxes/{inbox_id}/messages/{message_id}/agent-armor/feedback`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--inbox-id` | `inboxesInboxId` | Yes |  |
+| `--message-id` | `MessageId` | Yes |  |
+| `--json` | `JSON` | Yes | Request body as JSON (or use individual body-field flags) |
+
 #### `agentmail inboxes messages delete`
 
 Permanently deletes a message.
@@ -1327,6 +1463,25 @@ agentmail inboxes messages list --inbox-id <inbox_id>
 | `--from` | `string[]` | No | Filter to messages whose sender contains this value (substring match). Repeatable; all values must match. |
 | `--to` | `string[]` | No | Filter to messages whose recipients (to, cc, or bcc) contain this value (substring match). Repeatable; all values must match. |
 | `--subject` | `string[]` | No | Filter to messages whose subject contains this value (substring match). Repeatable; all values must match. |
+
+#### `agentmail inboxes messages release-agent-armor-message` `[PRE RELEASE]`
+
+Release a message Agent Armor held for review in hold mode: your agents are sent its `message.received`
+event, `message.security.override` is sent too, in either order, and its `agent-armor-held` label is removed.
+Only a message whose verdict is `review` and that is still held can be released; anything else answers `409`.
+Repeating a release with the same reason and the same API key returns the first release; any other repeat
+answers `409`.
+
+Requires the opt-in `agent_armor_release` permission and permission to read the message. An organization
+admin can also release from the console.
+
+`POST /v0/inboxes/{inbox_id}/messages/{message_id}/agent-armor/release`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--inbox-id` | `inboxesInboxId` | Yes |  |
+| `--message-id` | `MessageId` | Yes |  |
+| `--json` | `JSON` | Yes | Request body as JSON (or use individual body-field flags) |
 
 #### `agentmail inboxes messages reply`
 
@@ -1708,6 +1863,72 @@ inbox-scoped webhook. Header values remain write-only.
 
 ---
 
+### `agentmail inboxes webhooks polling`
+
+#### `agentmail inboxes webhooks polling create`
+
+Create a polling webhook scoped to this inbox and return the `token` that reads it.
+
+**CLI:**
+```bash
+agentmail inboxes webhooks polling create --inbox-id <inbox_id> --client-id my-agent --event-types message.received
+```
+
+`POST /v0/inboxes/{inbox_id}/webhooks/polling`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--inbox-id` | `inboxesInboxId` | Yes |  |
+| `--json` | `JSON` | Yes | Request body as JSON (or use individual body-field flags) |
+
+#### `agentmail inboxes webhooks polling delete`
+
+**CLI:**
+```bash
+agentmail inboxes webhooks polling delete --inbox-id <inbox_id> --webhook-id <webhook_id>
+```
+
+`DELETE /v0/inboxes/{inbox_id}/webhooks/polling/{webhook_id}`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--inbox-id` | `inboxesInboxId` | Yes |  |
+| `--webhook-id` | `webhooksWebhookId` | Yes |  |
+
+#### `agentmail inboxes webhooks polling get`
+
+**CLI:**
+```bash
+agentmail inboxes webhooks polling get --inbox-id <inbox_id> --webhook-id <webhook_id>
+```
+
+`GET /v0/inboxes/{inbox_id}/webhooks/polling/{webhook_id}`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--inbox-id` | `inboxesInboxId` | Yes |  |
+| `--webhook-id` | `webhooksWebhookId` | Yes |  |
+
+#### `agentmail inboxes webhooks polling list`
+
+Lists the polling webhooks created through this inbox route.
+
+**CLI:**
+```bash
+agentmail inboxes webhooks polling list --inbox-id <inbox_id>
+```
+
+`GET /v0/inboxes/{inbox_id}/webhooks/polling`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--inbox-id` | `inboxesInboxId` | Yes |  |
+| `--limit` | `Limit` | No |  |
+| `--page-token` | `PageToken` | No |  |
+| `--ascending` | `Ascending` | No |  |
+
+---
+
 ### `agentmail lists`
 
 #### `agentmail lists create`
@@ -1805,10 +2026,9 @@ Rolling bounce and complaint rates for the organization. At each
 `period` grid point, the bounced (or complained) messages over the
 preceding `window` divided by the messages sent over the same window,
 with the send count alongside so you can see the volume behind
-it. This is the number AgentMail's account moderation acts on: a
-warning at a 5% bounce rate and suspension at 10%, evaluated over a
-rolling 24 hours once at least 1,000 messages were sent in that
-window. Defaults to the rolling 24-hour rate sampled hourly over the
+it. AgentMail weighs bounce and complaint signals when deciding
+whether to suspend an account's sending, so keep both rates low.
+Defaults to the rolling 24-hour rate sampled hourly over the
 last day; `start` must be within the last 90 days, `window` must be a
 whole multiple of `period`, and the range plus window divided by
 `period` must not exceed 1000 buckets.
@@ -1863,6 +2083,32 @@ agentmail organizations get
 ```
 
 `GET /v0/organizations`
+
+#### `agentmail organizations get-labs`
+
+Returns whether the organization is in AgentMail Labs, which turns on features that are still in preview, such as [Agent Armor](https://docs.agentmail.to/agent-armor). Requires an organization-scoped API key.
+
+**CLI:**
+```bash
+agentmail organizations get-labs
+```
+
+`GET /v0/organizations/labs`
+
+#### `agentmail organizations join-labs`
+
+Joins AgentMail Labs for the whole organization, which turns on every feature in Labs for every inbox. Joining again has no effect. There is no leave on the API; an organization admin can leave in the console under [Settings, then Labs](https://console.agentmail.to/dashboard/settings/labs).
+
+Join only when your organization has decided to. Get Labs reads the same for an organization that never joined and one whose admin left Labs on purpose, so don't join just because `enabled` is `false`.
+
+Requires an organization-scoped API key with no permissions restriction, and a verified organization. API keys see the change within five minutes. Where Labs isn't offered (`available` is `false` on Get Labs), joining returns `403`.
+
+**CLI:**
+```bash
+agentmail organizations join-labs
+```
+
+`POST /v0/organizations/labs`
 
 ---
 
@@ -2634,6 +2880,72 @@ pod-scoped webhook. Header values remain write-only.
 
 ---
 
+### `agentmail pods webhooks polling`
+
+#### `agentmail pods webhooks polling create`
+
+Create a polling webhook scoped to this pod and return the `token` that reads it.
+
+**CLI:**
+```bash
+agentmail pods webhooks polling create --pod-id <pod_id> --client-id my-agent --event-types message.received
+```
+
+`POST /v0/pods/{pod_id}/webhooks/polling`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--pod-id` | `podsPodId` | Yes |  |
+| `--json` | `JSON` | Yes | Request body as JSON (or use individual body-field flags) |
+
+#### `agentmail pods webhooks polling delete`
+
+**CLI:**
+```bash
+agentmail pods webhooks polling delete --pod-id <pod_id> --webhook-id <webhook_id>
+```
+
+`DELETE /v0/pods/{pod_id}/webhooks/polling/{webhook_id}`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--pod-id` | `podsPodId` | Yes |  |
+| `--webhook-id` | `webhooksWebhookId` | Yes |  |
+
+#### `agentmail pods webhooks polling get`
+
+**CLI:**
+```bash
+agentmail pods webhooks polling get --pod-id <pod_id> --webhook-id <webhook_id>
+```
+
+`GET /v0/pods/{pod_id}/webhooks/polling/{webhook_id}`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--pod-id` | `podsPodId` | Yes |  |
+| `--webhook-id` | `webhooksWebhookId` | Yes |  |
+
+#### `agentmail pods webhooks polling list`
+
+Lists the polling webhooks created through this pod route.
+
+**CLI:**
+```bash
+agentmail pods webhooks polling list --pod-id <pod_id>
+```
+
+`GET /v0/pods/{pod_id}/webhooks/polling`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--pod-id` | `podsPodId` | Yes |  |
+| `--limit` | `Limit` | No |  |
+| `--page-token` | `PageToken` | No |  |
+| `--ascending` | `Ascending` | No |  |
+
+---
+
 ### `agentmail threads`
 
 #### `agentmail threads delete`
@@ -2837,6 +3149,75 @@ Header values remain write-only.
 |------|------|----------|-------------|
 | `--webhook-id` | `webhooksWebhookId` | Yes |  |
 | `--json` | `JSON` | Yes | Request body as JSON (or use individual body-field flags) |
+
+---
+
+### `agentmail webhooks polling`
+
+#### `agentmail webhooks polling create`
+
+Creates a subscription the agent polls for events, and returns the `token` that reads it. Each
+organization, pod, and inbox holds at most 10 polling webhooks; a repeat create with the same
+`client_id` re-issues the token of the existing one instead of counting against that limit.
+
+**CLI:**
+```bash
+agentmail webhooks polling create --client-id my-agent --event-types message.received
+```
+
+`POST /v0/webhooks/polling`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--json` | `JSON` | Yes | Request body as JSON (or use individual body-field flags) |
+
+#### `agentmail webhooks polling delete`
+
+Stops delivery and invalidates the subscription's token.
+
+**CLI:**
+```bash
+agentmail webhooks polling delete --webhook-id <webhook_id>
+```
+
+`DELETE /v0/webhooks/polling/{webhook_id}`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--webhook-id` | `webhooksWebhookId` | Yes |  |
+
+#### `agentmail webhooks polling get`
+
+The `token` is never returned here: create again with the same `client_id` to get a new one.
+
+**CLI:**
+```bash
+agentmail webhooks polling get --webhook-id <webhook_id>
+```
+
+`GET /v0/webhooks/polling/{webhook_id}`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--webhook-id` | `webhooksWebhookId` | Yes |  |
+
+#### `agentmail webhooks polling list`
+
+Lists the polling webhooks created through this route. `page_token` must come from this
+endpoint; a token from another list endpoint is rejected.
+
+**CLI:**
+```bash
+agentmail webhooks polling list
+```
+
+`GET /v0/webhooks/polling`
+
+| Flag | Type | Required | Description |
+|------|------|----------|-------------|
+| `--limit` | `Limit` | No |  |
+| `--page-token` | `PageToken` | No |  |
+| `--ascending` | `Ascending` | No |  |
 
 ---
 

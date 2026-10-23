@@ -4,7 +4,8 @@ use super::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq, Hash)]
 pub struct WebhooksUpdateWebhookRequest {
-    /// Pod IDs to subscribe to the webhook.
+    /// Pod IDs to subscribe to the webhook. The webhook can list at most 10 pods and inboxes combined
+    /// after the update.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub add_pod_ids: Option<PodIds>,
     /// Pod IDs to unsubscribe from the webhook.
@@ -12,7 +13,8 @@ pub struct WebhooksUpdateWebhookRequest {
     pub remove_pod_ids: Option<PodIds>,
     /// Inbox IDs to subscribe to the webhook. This only adds to what the webhook receives: on a webhook
     /// that covers its whole pod, it changes nothing. To receive only specific inboxes, create a webhook
-    /// with `inbox_ids` instead.
+    /// with `inbox_ids` instead. The webhook can list at most 10 inboxes and pods combined after the
+    /// update.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub add_inbox_ids: Option<InboxIds>,
     /// Inbox IDs to unsubscribe from the webhook.
@@ -21,10 +23,12 @@ pub struct WebhooksUpdateWebhookRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub event_types: Option<WebhooksUpdateWebhookEventTypes>,
     /// Set to true to re-enable a webhook that was disabled after repeated failed deliveries, or false
-    /// to disable it. Events that occurred while the webhook was disabled are not redelivered.
-    /// Re-enabling a webhook subscribed to `message.received.spam`, `message.received.blocked`, or
-    /// `message.received.unauthenticated` (or to every event type, with no filter) requires the
-    /// matching label permissions on the API key.
+    /// to disable it. AgentMail does not notify you when a webhook is disabled automatically; check this
+    /// field when you get or list webhooks. Events that occurred while the webhook was disabled are not
+    /// redelivered. Re-enabling requires the read permission for every restricted event type the webhook
+    /// subscribes to: `label_spam_read`, `label_blocked_read`, or `label_unauthenticated_read` for the
+    /// received variants, `message_read` for `message.security.*`, and `calendar_event_read` for
+    /// `calendar.event.*`. A webhook with no event type filter is checked against all of them.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub enabled: Option<bool>,
 }

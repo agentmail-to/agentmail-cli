@@ -66,6 +66,12 @@ pub struct CalendarEvent {
     /// Number of attendees.
     #[serde(default)]
     pub attendee_count: i64,
+    /// The inbox's own response: the `status` of its entry in `attendees`. Present only on events
+    /// the inbox can respond to: `email` events with an `organizer_email` and an
+    /// `origin_message_id` that list the inbox as an attendee. Included on agenda and instance list
+    /// items, which omit `attendees`. `needs_action` means the invitation is waiting for a reply.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub response_status: Option<AttendeeStatus>,
     /// iCalendar UID of the event. Invitations about this event carry the same UID.
     #[serde(default)]
     pub uid: String,
@@ -132,6 +138,7 @@ pub struct CalendarEventBuilder {
     recurrence: Option<Recurrence>,
     attendees: Option<Vec<Attendee>>,
     attendee_count: Option<i64>,
+    response_status: Option<AttendeeStatus>,
     uid: Option<String>,
     sequence: Option<i64>,
     source: Option<CalendarEventSource>,
@@ -254,6 +261,11 @@ impl CalendarEventBuilder {
         self
     }
 
+    pub fn response_status(mut self, value: AttendeeStatus) -> Self {
+        self.response_status = Some(value);
+        self
+    }
+
     pub fn uid(mut self, value: impl Into<String>) -> Self {
         self.uid = Some(value.into());
         self
@@ -343,6 +355,7 @@ impl CalendarEventBuilder {
             recurrence: self.recurrence,
             attendees: self.attendees,
             attendee_count: self.attendee_count.ok_or_else(|| BuildError::missing_field("attendee_count"))?,
+            response_status: self.response_status,
             uid: self.uid.ok_or_else(|| BuildError::missing_field("uid"))?,
             sequence: self.sequence.ok_or_else(|| BuildError::missing_field("sequence"))?,
             source: self.source.ok_or_else(|| BuildError::missing_field("source"))?,

@@ -10,7 +10,7 @@ pub struct MessageReceivedEvent {
     #[serde(default)]
     pub event_id: EventId,
     #[serde(default)]
-    pub message: Message,
+    pub message: ReceivedMessage,
     #[serde(default)]
     pub thread: ThreadItem,
 }
@@ -27,7 +27,7 @@ pub struct MessageReceivedEventBuilder {
     r#type: Option<MessageReceivedEventType>,
     event_type: Option<MessageReceivedEventType>,
     event_id: Option<EventId>,
-    message: Option<Message>,
+    message: Option<ReceivedMessage>,
     thread: Option<ThreadItem>,
 }
 
@@ -47,7 +47,7 @@ impl MessageReceivedEventBuilder {
         self
     }
 
-    pub fn message(mut self, value: Message) -> Self {
+    pub fn message(mut self, value: ReceivedMessage) -> Self {
         self.message = Some(value);
         self
     }
