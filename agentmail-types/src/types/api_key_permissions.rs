@@ -32,6 +32,10 @@ pub struct ApiKeyPermissions {
     /// Delete messages. Also required to delete threads.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub message_delete: Option<bool>,
+    /// Release mail Agent Armor holds for review. Opt-in: no key has it unless it was granted explicitly, even one
+    /// without a `permissions` object. See [Permissions](/permissions#agent-armor).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub agent_armor_release: Option<bool>,
     /// Access messages labeled spam.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub label_spam_read: Option<bool>,
@@ -149,6 +153,18 @@ pub struct ApiKeyPermissions {
     /// Delete calendar events.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub calendar_event_delete: Option<bool>,
+    /// Reserved; not released yet.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub file_read: Option<bool>,
+    /// Reserved; not released yet.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub file_create: Option<bool>,
+    /// Reserved; not released yet.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub file_update: Option<bool>,
+    /// Reserved; not released yet.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub file_delete: Option<bool>,
 }
 
 impl ApiKeyPermissions {
@@ -169,6 +185,7 @@ pub struct ApiKeyPermissionsBuilder {
     message_send: Option<bool>,
     message_update: Option<bool>,
     message_delete: Option<bool>,
+    agent_armor_release: Option<bool>,
     label_spam_read: Option<bool>,
     label_blocked_read: Option<bool>,
     label_unauthenticated_read: Option<bool>,
@@ -207,6 +224,10 @@ pub struct ApiKeyPermissionsBuilder {
     calendar_event_create: Option<bool>,
     calendar_event_update: Option<bool>,
     calendar_event_delete: Option<bool>,
+    file_read: Option<bool>,
+    file_create: Option<bool>,
+    file_update: Option<bool>,
+    file_delete: Option<bool>,
 }
 
 impl ApiKeyPermissionsBuilder {
@@ -252,6 +273,11 @@ impl ApiKeyPermissionsBuilder {
 
     pub fn message_delete(mut self, value: bool) -> Self {
         self.message_delete = Some(value);
+        self
+    }
+
+    pub fn agent_armor_release(mut self, value: bool) -> Self {
+        self.agent_armor_release = Some(value);
         self
     }
 
@@ -445,6 +471,26 @@ impl ApiKeyPermissionsBuilder {
         self
     }
 
+    pub fn file_read(mut self, value: bool) -> Self {
+        self.file_read = Some(value);
+        self
+    }
+
+    pub fn file_create(mut self, value: bool) -> Self {
+        self.file_create = Some(value);
+        self
+    }
+
+    pub fn file_update(mut self, value: bool) -> Self {
+        self.file_update = Some(value);
+        self
+    }
+
+    pub fn file_delete(mut self, value: bool) -> Self {
+        self.file_delete = Some(value);
+        self
+    }
+
     /// Consumes the builder and constructs a [`ApiKeyPermissions`].
     pub fn build(self) -> Result<ApiKeyPermissions, BuildError> {
         Ok(ApiKeyPermissions {
@@ -457,6 +503,7 @@ impl ApiKeyPermissionsBuilder {
             message_send: self.message_send,
             message_update: self.message_update,
             message_delete: self.message_delete,
+            agent_armor_release: self.agent_armor_release,
             label_spam_read: self.label_spam_read,
             label_blocked_read: self.label_blocked_read,
             label_unauthenticated_read: self.label_unauthenticated_read,
@@ -495,6 +542,10 @@ impl ApiKeyPermissionsBuilder {
             calendar_event_create: self.calendar_event_create,
             calendar_event_update: self.calendar_event_update,
             calendar_event_delete: self.calendar_event_delete,
+            file_read: self.file_read,
+            file_create: self.file_create,
+            file_update: self.file_update,
+            file_delete: self.file_delete,
         })
     }
 }

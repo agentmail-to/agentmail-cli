@@ -10,7 +10,8 @@ pub struct WebhooksUpdatePodWebhookRequest {
     pub webhooks_update_inbox_webhook_request_fields: WebhooksUpdateInboxWebhookRequest,
     /// Inbox IDs to subscribe to the webhook. This only adds to what the webhook receives: on a webhook
     /// that covers its whole pod, it changes nothing. To receive only specific inboxes, create a webhook
-    /// with `inbox_ids` instead.
+    /// with `inbox_ids` instead. The webhook can list at most 10 inboxes and pods combined after the
+    /// update.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub add_inbox_ids: Option<InboxIds>,
     /// Inbox IDs to unsubscribe from the webhook.

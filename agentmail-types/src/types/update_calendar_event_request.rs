@@ -32,7 +32,8 @@ pub struct UpdateCalendarEventRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub duration_mode: Option<DurationMode>,
     /// Replaces the recurrence. Set to `null` to turn a series into a one-off event (only when no
-    /// date of it has been edited). Not accepted for dated event IDs.
+    /// date of it has been edited). Not accepted for dated event IDs. A series ended with a
+    /// `mode=future` delete stays ended: the new rule keeps its `truncate_before`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub recurrence: Option<RecurrenceInput>,
     /// Replaces the attendee list.

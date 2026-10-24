@@ -31,9 +31,15 @@ pub struct MessageItem {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub in_reply_to: Option<MessageInReplyTo>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub calendar_event_id: Option<MessageCalendarEventId>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub references: Option<MessageReferences>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub headers: Option<MessageHeaders>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub authentication_results: Option<MessageAuthenticationResults>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub agent_armor: Option<AgentArmorResult>,
     #[serde(default)]
     pub size: MessageSize,
     #[serde(default)]
@@ -64,8 +70,11 @@ pub struct MessageItemBuilder {
     preview: Option<MessagePreview>,
     attachments: Option<MessageAttachments>,
     in_reply_to: Option<MessageInReplyTo>,
+    calendar_event_id: Option<MessageCalendarEventId>,
     references: Option<MessageReferences>,
     headers: Option<MessageHeaders>,
+    authentication_results: Option<MessageAuthenticationResults>,
+    agent_armor: Option<AgentArmorResult>,
     size: Option<MessageSize>,
     updated_at: Option<MessageUpdatedAt>,
     created_at: Option<MessageCreatedAt>,
@@ -137,6 +146,11 @@ impl MessageItemBuilder {
         self
     }
 
+    pub fn calendar_event_id(mut self, value: MessageCalendarEventId) -> Self {
+        self.calendar_event_id = Some(value);
+        self
+    }
+
     pub fn references(mut self, value: MessageReferences) -> Self {
         self.references = Some(value);
         self
@@ -144,6 +158,16 @@ impl MessageItemBuilder {
 
     pub fn headers(mut self, value: MessageHeaders) -> Self {
         self.headers = Some(value);
+        self
+    }
+
+    pub fn authentication_results(mut self, value: MessageAuthenticationResults) -> Self {
+        self.authentication_results = Some(value);
+        self
+    }
+
+    pub fn agent_armor(mut self, value: AgentArmorResult) -> Self {
+        self.agent_armor = Some(value);
         self
     }
 
@@ -189,8 +213,11 @@ impl MessageItemBuilder {
             preview: self.preview,
             attachments: self.attachments,
             in_reply_to: self.in_reply_to,
+            calendar_event_id: self.calendar_event_id,
             references: self.references,
             headers: self.headers,
+            authentication_results: self.authentication_results,
+            agent_armor: self.agent_armor,
             size: self.size.ok_or_else(|| BuildError::missing_field("size"))?,
             updated_at: self.updated_at.ok_or_else(|| BuildError::missing_field("updated_at"))?,
             created_at: self.created_at.ok_or_else(|| BuildError::missing_field("created_at"))?,

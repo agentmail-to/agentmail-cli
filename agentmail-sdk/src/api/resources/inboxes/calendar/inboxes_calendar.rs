@@ -17,8 +17,8 @@ impl CalendarClient {
     /// created. Its `etag` (also the `ETag` response header) is the value to send in `If-Match` to
     /// make an update conditional.
     ///
-    /// Requires the `calendar_read` permission. Calendar is in private beta: organizations without
-    /// access receive a `403`.
+    /// Requires the `calendar_read` permission. Calendar is available in US production
+    /// (`api.agentmail.to`) but not yet in EU production (`api.agentmail.eu`), which returns `403`.
     ///
     /// # Arguments
     ///
@@ -79,7 +79,8 @@ impl CalendarClient {
     /// calendar's current `etag` in `If-Match`: a stale value returns `412`. Without `If-Match` the
     /// update applies to the calendar as it is.
     ///
-    /// Calendar is in private beta: organizations without access receive a `403`.
+    /// Calendar is available in US production (`api.agentmail.to`) but not yet in EU production
+    /// (`api.agentmail.eu`), which returns `403`.
     ///
     /// # Arguments
     ///
@@ -109,7 +110,7 @@ impl CalendarClient {
     ///             &UpdateCalendarRequest {
     ///                 timezone: IanaTimezone("America/New_York".to_string()),
     ///             },
-    ///             Some(RequestOptions::new().additional_header("If-Match", "\"rv-0\"")),
+    ///             None,
     ///         )
     ///         .await;
     /// }
@@ -140,7 +141,8 @@ impl CalendarClient {
     /// The list is always read in the region that serves the request, so it can trail a change made
     /// moments earlier by a few seconds. Requires the `calendar_event_read` permission.
     ///
-    /// Calendar is in private beta: organizations without access receive a `403`.
+    /// Calendar is available in US production (`api.agentmail.to`) but not yet in EU production
+    /// (`api.agentmail.eu`), which returns `403`.
     ///
     /// # Arguments
     ///
@@ -215,7 +217,8 @@ impl CalendarClient {
     /// The event's `etag` is the value to send in `If-Match` to make a later update or delete
     /// conditional. Requires the `calendar_event_create` permission.
     ///
-    /// Calendar is in private beta: organizations without access receive a `403`.
+    /// Calendar is available in US production (`api.agentmail.to`) but not yet in EU production
+    /// (`api.agentmail.eu`), which returns `403`.
     ///
     /// # Arguments
     ///
@@ -289,7 +292,9 @@ impl CalendarClient {
     /// Use it to answer "what is on the calendar".
     ///
     /// The window defaults to now through 90 days from now and can be at most 366 days. Items omit
-    /// `description`, `metadata` and `attendees`; get an event by ID for the full object. Dates of
+    /// `description`, `metadata` and `attendees`; get an event by ID for the full object. An item
+    /// the inbox is invited to still carries `response_status`, so `needs_action` marks an
+    /// invitation waiting for a reply. Dates of
     /// recurring events appear only up to about 90 days from now; use List Event Instances for a
     /// recurring event's later dates. While a recurring event's dates are being regenerated after a
     /// schedule change, which takes a few seconds, the agenda can briefly leave out some of them;
@@ -299,7 +304,8 @@ impl CalendarClient {
     /// moments earlier by a few seconds. Pass `consistency=primary` to read your own change right
     /// away. Requires the `calendar_event_read` permission.
     ///
-    /// Calendar is in private beta: organizations without access receive a `403`.
+    /// Calendar is available in US production (`api.agentmail.to`) but not yet in EU production
+    /// (`api.agentmail.eu`), which returns `403`.
     ///
     /// # Arguments
     ///
@@ -370,7 +376,8 @@ impl CalendarClient {
     /// reads back as it ran, even if a later change to the series no longer produces it. Requires
     /// the `calendar_event_read` permission.
     ///
-    /// Calendar is in private beta: organizations without access receive a `403`.
+    /// Calendar is available in US production (`api.agentmail.to`) but not yet in EU production
+    /// (`api.agentmail.eu`), which returns `403`.
     ///
     /// # Arguments
     ///
@@ -448,7 +455,8 @@ impl CalendarClient {
     /// send limits, charged before the delete; an over-limit request returns `429`
     /// `rate_limit_exceeded` and deletes nothing.
     ///
-    /// Calendar is in private beta: organizations without access receive a `403`.
+    /// Calendar is available in US production (`api.agentmail.to`) but not yet in EU production
+    /// (`api.agentmail.eu`), which returns `403`.
     ///
     /// # Arguments
     ///
@@ -480,11 +488,7 @@ impl CalendarClient {
     ///             &DeleteEventQueryRequest {
     ///                 ..Default::default()
     ///             },
-    ///             Some(
-    ///                 RequestOptions::new()
-    ///                     .additional_header("If-Match", "\"rv-1\"")
-    ///                     .additional_header("Idempotency-Key", "delete-intro-acme"),
-    ///             ),
+    ///             Some(RequestOptions::new().additional_header("Idempotency-Key", "delete-intro-acme")),
     ///         )
     ///         .await;
     /// }
@@ -535,7 +539,8 @@ impl CalendarClient {
     /// send limits, charged before the change is saved; an over-limit request returns `429`
     /// `rate_limit_exceeded` and changes nothing.
     ///
-    /// Calendar is in private beta: organizations without access receive a `403`.
+    /// Calendar is available in US production (`api.agentmail.to`) but not yet in EU production
+    /// (`api.agentmail.eu`), which returns `403`.
     ///
     /// # Arguments
     ///
@@ -569,7 +574,7 @@ impl CalendarClient {
     ///                 send_invites: Some(true),
     ///                 ..Default::default()
     ///             },
-    ///             Some(RequestOptions::new().additional_header("If-Match", "\"rv-0\"")),
+    ///             None,
     ///         )
     ///         .await;
     /// }
@@ -603,7 +608,8 @@ impl CalendarClient {
     /// trail a change made moments earlier by a few seconds; pass `consistency=primary` to read
     /// your own change right away. Requires the `calendar_event_read` permission.
     ///
-    /// Calendar is in private beta: organizations without access receive a `403`.
+    /// Calendar is available in US production (`api.agentmail.to`) but not yet in EU production
+    /// (`api.agentmail.eu`), which returns `403`.
     ///
     /// # Arguments
     ///
@@ -683,7 +689,8 @@ impl CalendarClient {
     /// charged before the response is saved; an over-limit request returns `429`
     /// `rate_limit_exceeded` and changes nothing.
     ///
-    /// Calendar is in private beta: organizations without access receive a `403`.
+    /// Calendar is available in US production (`api.agentmail.to`) but not yet in EU production
+    /// (`api.agentmail.eu`), which returns `403`.
     ///
     /// # Arguments
     ///
@@ -716,7 +723,7 @@ impl CalendarClient {
     ///                 comment: Some("See you there.".to_string()),
     ///                 send_reply: None,
     ///             },
-    ///             Some(RequestOptions::new().additional_header("If-Match", "\"rv-0\"")),
+    ///             None,
     ///         )
     ///         .await;
     /// }
