@@ -13,6 +13,10 @@
 //! Types are available via `agentmail_sdk::api::*`.
 
 use fern_cli_sdk::app::CliApp;
+use fern_cli_sdk::auth::TokenPasteLoginFlow;
+
+/// Where `agentmail auth login` sends people to get an API key.
+const API_KEYS_URL: &str = "https://console.agentmail.to/dashboard/api-keys";
 
 /// Register custom commands on the CLI app builder.
 ///
@@ -41,5 +45,12 @@ pub fn register(app: CliApp) -> CliApp {
     //         Ok(())
     //     }),
     // );
-    app
+
+    // AgentMail authenticates with API keys; there is no OAuth flow to run.
+    // Without a declared flow, bare `agentmail auth login` fails with
+    // "No login flow declared for scheme `BearerAuth`". A paste flow makes it
+    // prompt for a key and say where to get one. It adds no request-time
+    // provider, so main.rs's BearerAuth binding (AGENTMAIL_API_KEY, then the
+    // keyring) is untouched.
+    app.login_flow(TokenPasteLoginFlow::new("BearerAuth").token_paste_url(API_KEYS_URL))
 }
