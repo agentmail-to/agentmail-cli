@@ -34,3 +34,10 @@ install-path = "CARGO_HOME"
 install-updater = false
 default-features = false
 features = ["rustls"]
+
+# GitHub retired the macos-14 image, which is dist 0.31.0's default runner for
+# aarch64-apple-darwin, so that build never gets a runner and the release is
+# cancelled. dist maps macos-latest to an arm64 host, and ci.yml's npm publish
+# builds darwin on macos-latest too.
+[dist.github-custom-runners]
+aarch64-apple-darwin = "macos-latest"
