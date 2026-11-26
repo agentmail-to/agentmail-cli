@@ -11,3 +11,6 @@ SECURITY.md
 # entry itself; it is repeated here because this patch replaces the whole
 # file, and dropping the line would remove protection the generator added.
 cli/agentmail/custom.rs
+
+# The automated-review workflow is hand-added; the generator would delete it as an unknown file.
+.github/workflows/ai-review.yml
